@@ -10,7 +10,7 @@ from company_knowledge_rag.providers.base import (
 
 
 class ProviderRouter:
-    name = "gemini-with-openrouter-fallback"
+    name = "provider-router"
 
     def __init__(
         self,

@@ -15,12 +15,13 @@ from company_knowledge_rag.ingestion.service import IngestionService
 from company_knowledge_rag.observability.tracing import Tracer
 from company_knowledge_rag.providers.base import GenerationProvider, ProviderError
 from company_knowledge_rag.providers.gemini import GeminiEmbeddingProvider, GeminiProvider
+from company_knowledge_rag.providers.openai import OpenAIProvider
 from company_knowledge_rag.providers.openrouter import OpenRouterProvider
 from company_knowledge_rag.providers.router import ProviderRouter
 from company_knowledge_rag.retrieval.base import ChunkStore
 from company_knowledge_rag.retrieval.memory_store import MemoryChunkStore
 from company_knowledge_rag.retrieval.qdrant_store import QdrantChunkStore
-from company_knowledge_rag.settings import Settings
+from company_knowledge_rag.settings import MainProvider, Settings
 from company_knowledge_rag.storage.registry import DocumentRegistry
 
 
@@ -151,20 +152,45 @@ def create_app(
 
 
 def _build_provider(settings: Settings) -> GenerationProvider:
-    primary = GeminiProvider(
-        settings.gemini_api_key,
-        settings.gemini_model,
-        settings.provider_timeout_seconds,
-    )
-    fallback = None
-    if settings.openrouter_api_key:
-        fallback = OpenRouterProvider(
-            settings.openrouter_api_key,
-            settings.openrouter_model,
-            settings.openrouter_allowed_models,
-            settings.provider_timeout_seconds,
-        )
+    primary = _build_configured_provider(settings, settings.main_provider)
+    fallback = _build_fallback_provider(settings)
     return ProviderRouter(primary, fallback, max_attempts=settings.provider_max_attempts)
+
+
+def _build_configured_provider(settings: Settings, provider: MainProvider) -> GenerationProvider:
+    match provider:
+        case MainProvider.GEMINI:
+            return GeminiProvider(
+                settings.gemini_api_key,
+                settings.gemini_model,
+                settings.provider_timeout_seconds,
+            )
+        case MainProvider.OPENROUTER:
+            return OpenRouterProvider(
+                settings.openrouter_api_key,
+                settings.openrouter_model,
+                settings.openrouter_allowed_models,
+                settings.provider_timeout_seconds,
+            )
+        case MainProvider.OPENAI:
+            return OpenAIProvider(
+                settings.openai_api_key,
+                settings.openai_model,
+                settings.provider_timeout_seconds,
+            )
+    raise AssertionError(f"Unsupported main provider: {provider}")
+
+
+def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
+    # MAIN_PROVIDER always remains primary; only configured alternatives handle transient failures.
+    for provider in MainProvider:
+        if provider is settings.main_provider:
+            continue
+        try:
+            return _build_configured_provider(settings, provider)
+        except ValueError:
+            continue
+    return None
 
 
 def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:

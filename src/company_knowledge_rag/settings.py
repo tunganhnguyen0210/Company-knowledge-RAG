@@ -17,6 +17,12 @@ class TraceMode(StrEnum):
     FULL = "full"
 
 
+class MainProvider(StrEnum):
+    GEMINI = "gemini"
+    OPENROUTER = "openrouter"
+    OPENAI = "openai"
+
+
 def _parse_api_key_mapping(raw: str) -> dict[str, list[str]]:
     try:
         mapping = json.loads(raw)
@@ -37,10 +43,11 @@ def _parse_api_key_mapping(raw: str) -> dict[str, list[str]]:
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="RAG_", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = "development"
     api_keys: str = '{"change-me": ["employee"]}'
+    main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.6-flash"
     embedding_model: str = "gemini-embedding-001"
@@ -49,6 +56,8 @@ class Settings(BaseSettings):
     openrouter_allowed_models: set[str] = Field(
         default_factory=lambda: {"google/gemini-3.6-flash"}
     )
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4.1-mini"
     provider_timeout_seconds: float = 30.0
     provider_max_attempts: int = 2
     qdrant_url: str = "http://localhost:6333"
@@ -75,8 +84,6 @@ class Settings(BaseSettings):
             raise ValueError("full tracing requires allow_sensitive_tracing=true")
         if self.environment == "production" and "change-me" in self.api_keys:
             raise ValueError("production requires explicit API keys")
-        if self.openrouter_model not in self.openrouter_allowed_models:
-            raise ValueError("openrouter_model must be included in openrouter_allowed_models")
         return self
 
     def principal_for_key(self, api_key: str) -> Principal:

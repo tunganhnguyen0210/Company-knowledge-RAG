@@ -1,13 +1,13 @@
 # Company Knowledge RAG
 
-Dịch vụ RAG cho tài liệu nội bộ công ty, ưu tiên kiểm soát truy cập, câu trả lời có nguồn và khả năng quan sát. Gemini là provider chính; OpenRouter chỉ được dùng làm fallback cho lỗi tạm thời.
+Dịch vụ RAG cho tài liệu nội bộ công ty, ưu tiên kiểm soát truy cập, câu trả lời có nguồn và khả năng quan sát. `MAIN_PROVIDER` chọn LLM chính: Gemini, OpenRouter hoặc OpenAI; các provider khác có cấu hình hợp lệ có thể xử lý lỗi tạm thời.
 
 ## Kiến trúc
 
 ```text
 Upload/CLI → Parse → Versioned chunks → Gemini embeddings → Qdrant
                                                      ↓ ACL filter
-Client → FastAPI/API key → Dense + BM25 + RRF → Prompt answer_v1 → Gemini/OpenRouter
+Client → FastAPI/API key → Dense + BM25 + RRF → Prompt answer_v1 → MAIN_PROVIDER
                             └──────── Langfuse trace ────────┘
 ```
 
@@ -19,7 +19,7 @@ Yêu cầu: Python 3.11+, [uv](https://docs.astral.sh/uv/) và Qdrant.
 
 ```powershell
 Copy-Item .env.example .env
-# Điền RAG_GEMINI_API_KEY và thay API key mẫu trong .env
+# Đặt MAIN_PROVIDER, điền GEMINI_API_KEY (luôn cần cho embeddings), API key của LLM đã chọn và thay API key mẫu trong .env
 uv sync --locked --group dev --no-group eval
 docker compose up -d qdrant
 uv run company-rag-serve --reload
@@ -47,7 +47,7 @@ curl -X POST http://localhost:8000/v1/documents \
 
 Hỗ trợ UTF-8 Markdown, text và PDF. PDF scan không có text được ghi nhận với trạng thái `needs_ocr`; OCR chưa thuộc phạm vi v1. Upload cùng nội dung là idempotent; nội dung mới của cùng tên nguồn tạo version mới và thay chunks active.
 
-Đặt `RAG_ENABLE_ENRICHMENT=true` để tạo summary, câu hỏi giả định, contextual prefix và metadata bằng một structured JSON call cho mỗi chunk. Mặc định tắt để tránh chi phí ingest ngoài ý muốn; nội dung gốc luôn được giữ riêng để citation.
+Đặt `ENABLE_ENRICHMENT=true` để tạo summary, câu hỏi giả định, contextual prefix và metadata bằng một structured JSON call cho mỗi chunk. Mặc định tắt để tránh chi phí ingest ngoài ý muốn; nội dung gốc luôn được giữ riêng để citation.
 
 ## Hỏi đáp
 
@@ -62,7 +62,7 @@ Response gồm `answer`, `citations`, thống kê retrieval và `request_id`. AC
 
 ## Langfuse và quyền riêng tư
 
-`RAG_TRACE_MODE=metadata-only` là mặc định: chỉ gửi request ID, roles, model, latency và metadata kỹ thuật. Chế độ `full` bị từ chối nếu chưa đặt `RAG_ALLOW_SENSITIVE_TRACING=true`.
+`TRACE_MODE=metadata-only` là mặc định: chỉ gửi request ID, roles, model, latency và metadata kỹ thuật. Chế độ `full` bị từ chối nếu chưa đặt `ALLOW_SENSITIVE_TRACING=true`.
 
 Có thể dùng Langfuse Cloud hoặc [self-host Langfuse](https://langfuse.com/self-hosting). Với instance self-host chạy ở cổng 3000:
 
@@ -81,7 +81,7 @@ uv run mypy
 
 Golden-set đo retrieval hit, groundedness proxy, citation coverage, abstention accuracy và latency. Nhóm `eval` chứa RAGAS cho đánh giá offline mở rộng: `uv sync --group dev --group eval`.
 
-Metadata v1 dùng JSON registry với khóa đồng bộ trong một process; vì vậy mỗi volume chỉ chạy một API replica. Khi cần nhiều replica hoặc ingest song song qua nhiều service, chuyển registry sang PostgreSQL trước khi scale-out. Nhánh lexical BM25 xét tối đa `RAG_LEXICAL_CANDIDATE_LIMIT` tài liệu ACL-eligible; tăng giới hạn hoặc chuyển sang sparse index native khi corpus lớn.
+Metadata v1 dùng JSON registry với khóa đồng bộ trong một process; vì vậy mỗi volume chỉ chạy một API replica. Khi cần nhiều replica hoặc ingest song song qua nhiều service, chuyển registry sang PostgreSQL trước khi scale-out. Nhánh lexical BM25 xét tối đa `LEXICAL_CANDIDATE_LIMIT` tài liệu ACL-eligible; tăng giới hạn hoặc chuyển sang sparse index native khi corpus lớn.
 
 ## Docker Compose
 
@@ -96,7 +96,7 @@ Không expose Qdrant ra mạng công cộng ở production. API key v1 là bư�
 
 ## Sự cố thường gặp
 
-- `/ready` trả 503: kiểm tra `RAG_GEMINI_API_KEY`, kết nối Qdrant và dimension của embedding model.
-- Chat trả 401: thiếu hoặc sai `X-API-Key`; key phải tồn tại trong JSON `RAG_API_KEYS`.
+- `/ready` trả 503: kiểm tra `GEMINI_API_KEY`, API key của `MAIN_PROVIDER`, kết nối Qdrant và dimension của embedding model.
+- Chat trả 401: thiếu hoặc sai `X-API-Key`; key phải tồn tại trong JSON `API_KEYS`.
 - Upload PDF trả `needs_ocr`: tài liệu là bản scan, cần OCR trước khi reindex.
-- OpenRouter không chạy: model phải có trong `RAG_OPENROUTER_ALLOWED_MODELS`; fallback chỉ xảy ra với timeout, rate limit hoặc lỗi 5xx.
+- OpenRouter không chạy: model phải có trong `OPENROUTER_ALLOWED_MODELS`. Nếu lỗi tạm thời, hệ thống thử provider khác đã được cấu hình.

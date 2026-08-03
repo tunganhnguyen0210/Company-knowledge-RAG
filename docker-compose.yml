@@ -5,8 +5,8 @@ services:
       - path: .env
         required: false
     environment:
-      RAG_ENVIRONMENT: production
-      RAG_QDRANT_URL: http://qdrant:6333
+      ENVIRONMENT: production
+      QDRANT_URL: http://qdrant:6333
     ports:
       - "8000:8000"
     volumes:
@@ -19,7 +19,7 @@ services:
   qdrant:
     image: qdrant/qdrant:v1.15.4
     environment:
-      QDRANT__SERVICE__API_KEY: ${RAG_QDRANT_API_KEY:-}
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
     ports:
       - "127.0.0.1:6333:6333"
       - "127.0.0.1:6334:6334"
