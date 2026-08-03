@@ -38,6 +38,13 @@ def test_health_reports_active_model(tmp_path: Path) -> None:
     assert response.json() == {"status": "ok", "active_model": "stub-model"}
 
 
+def test_development_docs_pre_authorize_default_api_key(tmp_path: Path) -> None:
+    response = _client(tmp_path).get("/docs")
+
+    assert response.status_code == 200
+    assert 'preauthorizeApiKey("ApiKeyAuth", "secret")' in response.text
+
+
 def test_upload_then_chat_returns_source_citation(tmp_path: Path) -> None:
     client = _client(tmp_path)
     headers = {"X-API-Key": "secret"}

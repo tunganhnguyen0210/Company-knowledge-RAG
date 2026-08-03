@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 
 from company_knowledge_rag.api.auth import require_principal
@@ -43,6 +45,7 @@ def create_app(
         title="Company Knowledge RAG",
         version="0.1.0",
         description="ACL-aware RAG API for internal company documents",
+        docs_url=None,
     )
     app.state.settings = settings
     app.state.store = store
@@ -50,6 +53,24 @@ def create_app(
     app.state.registry = registry
     app.state.ingestion = ingestion
     app.state.chat = chat
+
+    @app.get("/docs", include_in_schema=False)
+    def swagger_docs() -> HTMLResponse:
+        response = get_swagger_ui_html(
+            openapi_url=app.openapi_url,
+            title=f"{app.title} - Swagger UI",
+            swagger_ui_parameters={"persistAuthorization": True},
+        )
+        default_api_key = settings.swagger_default_api_key()
+        if default_api_key is None:
+            return response
+        html = response.body.decode("utf-8")
+        html = html.replace("const ui = SwaggerUIBundle(", "window.ui = SwaggerUIBundle(")
+        authorization = (
+            "<script>window.addEventListener(\"load\", () => "
+            f"window.ui.preauthorizeApiKey(\"ApiKeyAuth\", {json.dumps(default_api_key)}));</script>"
+        )
+        return HTMLResponse(html.replace("</body>", f"{authorization}</body>"))
 
     @app.get("/health", tags=["operations"])
     def health(request: Request) -> dict[str, str]:

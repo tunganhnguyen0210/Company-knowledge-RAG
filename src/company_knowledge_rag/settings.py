@@ -94,3 +94,8 @@ class Settings(BaseSettings):
             raise KeyError("invalid API key") from exc
         key_fingerprint = sha256(api_key.encode("utf-8")).hexdigest()[:12]
         return Principal(subject=f"api-key:{key_fingerprint}", roles=set(roles))
+
+    def swagger_default_api_key(self) -> str | None:
+        if self.environment != "development":
+            return None
+        return next(iter(_parse_api_key_mapping(self.api_keys)))
