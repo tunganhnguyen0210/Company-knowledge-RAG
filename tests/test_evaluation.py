@@ -41,4 +41,4 @@ def test_score_response_rewards_correct_abstention() -> None:
 
     assert scores.abstention_accuracy == 1.0
     assert scores.groundedness == 1.0
-    assert scores.retrieval_hit == 1.0
+    assert scores.retrieval_hit == 0.0

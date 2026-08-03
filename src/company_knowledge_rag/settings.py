@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import StrEnum
+from hashlib import sha256
 from pathlib import Path
 
 from pydantic import Field, model_validator
@@ -14,6 +15,25 @@ class TraceMode(StrEnum):
     OFF = "off"
     METADATA_ONLY = "metadata-only"
     FULL = "full"
+
+
+def _parse_api_key_mapping(raw: str) -> dict[str, list[str]]:
+    try:
+        mapping = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("api_keys must be a valid JSON object") from exc
+    if not isinstance(mapping, dict) or not mapping:
+        raise ValueError("api_keys must be a non-empty JSON object")
+    if any(
+        not isinstance(key, str)
+        or not key
+        or not isinstance(roles, list)
+        or not roles
+        or not all(isinstance(role, str) and role for role in roles)
+        for key, roles in mapping.items()
+    ):
+        raise ValueError("api_keys must map non-empty keys to non-empty role lists")
+    return mapping
 
 
 class Settings(BaseSettings):
@@ -40,6 +60,7 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 20 * 1024 * 1024
     retrieval_limit: int = 5
     lexical_candidate_limit: int = 500
+    min_dense_score: float = 0.35
     enable_enrichment: bool = False
     trace_mode: TraceMode = TraceMode.METADATA_ONLY
     allow_sensitive_tracing: bool = False
@@ -49,6 +70,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_sensitive_tracing(self) -> Settings:
+        _parse_api_key_mapping(self.api_keys)
         if self.trace_mode is TraceMode.FULL and not self.allow_sensitive_tracing:
             raise ValueError("full tracing requires allow_sensitive_tracing=true")
         if self.environment == "production" and "change-me" in self.api_keys:
@@ -59,10 +81,9 @@ class Settings(BaseSettings):
 
     def principal_for_key(self, api_key: str) -> Principal:
         try:
-            mapping = json.loads(self.api_keys)
+            mapping = _parse_api_key_mapping(self.api_keys)
             roles = mapping[api_key]
-        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        except KeyError as exc:
             raise KeyError("invalid API key") from exc
-        if not isinstance(roles, list) or not all(isinstance(role, str) for role in roles):
-            raise ValueError("RAG_API_KEYS must map API keys to role lists")
-        return Principal(subject=f"api-key:{api_key[:6]}", roles=set(roles))
+        key_fingerprint = sha256(api_key.encode("utf-8")).hexdigest()[:12]
+        return Principal(subject=f"api-key:{key_fingerprint}", roles=set(roles))

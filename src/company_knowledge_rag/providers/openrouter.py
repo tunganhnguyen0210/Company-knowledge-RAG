@@ -1,5 +1,15 @@
 from company_knowledge_rag.providers.base import GenerationRequest, GenerationResult, ProviderError
 
+TRANSIENT_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+
+
+def is_transient_openrouter_error(exc: Exception) -> bool:
+    status = getattr(exc, "status_code", 0)
+    return status in TRANSIENT_STATUS_CODES or exc.__class__.__name__ in {
+        "APIConnectionError",
+        "APITimeoutError",
+    }
+
 
 class OpenRouterProvider:
     name = "openrouter"
@@ -41,6 +51,10 @@ class OpenRouterProvider:
         except ProviderError:
             raise
         except Exception as exc:
-            status = getattr(exc, "status_code", 0)
-            transient = status in {408, 429, 500, 502, 503, 504} or isinstance(exc, TimeoutError)
-            raise ProviderError(f"OpenRouter request failed: {exc}", transient=transient) from exc
+            raise ProviderError(
+                f"OpenRouter request failed: {exc}",
+                transient=is_transient_openrouter_error(exc),
+            ) from exc
+
+    def ready(self) -> bool:
+        return bool(self._client and self.model)

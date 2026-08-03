@@ -63,3 +63,47 @@ def test_upload_cannot_assign_roles_not_owned_by_caller(tmp_path: Path) -> None:
     )
 
     assert response.status_code == 403
+
+
+def test_upload_cannot_replace_same_source_owned_by_another_role(tmp_path: Path) -> None:
+    settings = Settings(
+        api_keys='{"hr-secret": ["hr"], "employee-secret": ["employee"]}',
+        gemini_api_key="unused",
+        registry_path=tmp_path / "registry.json",
+        upload_dir=tmp_path / "uploads",
+    )
+    client = TestClient(create_app(settings=settings, provider=AnswerProvider()))
+    first = client.post(
+        "/v1/documents",
+        headers={"X-API-Key": "hr-secret"},
+        files={"file": ("policy.md", b"HR-only policy", "text/markdown")},
+        data={"allowed_roles": "hr"},
+    )
+
+    replacement = client.post(
+        "/v1/documents",
+        headers={"X-API-Key": "employee-secret"},
+        files={"file": ("policy.md", b"Attacker replacement", "text/markdown")},
+        data={"allowed_roles": "employee"},
+    )
+
+    assert first.status_code == 201
+    assert replacement.status_code == 403
+
+
+def test_ready_fails_when_provider_reports_not_ready(tmp_path: Path) -> None:
+    class NotReadyProvider(AnswerProvider):
+        def ready(self) -> bool:
+            return False
+
+    settings = Settings(
+        api_keys='{"secret": ["employee"]}',
+        gemini_api_key="unused",
+        registry_path=tmp_path / "registry.json",
+        upload_dir=tmp_path / "uploads",
+    )
+    client = TestClient(create_app(settings=settings, provider=NotReadyProvider()))
+
+    response = client.get("/ready")
+
+    assert response.status_code == 503

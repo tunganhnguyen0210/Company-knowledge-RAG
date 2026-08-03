@@ -7,7 +7,7 @@ Dịch vụ RAG cho tài liệu nội bộ công ty, ưu tiên kiểm soát truy
 ```text
 Upload/CLI → Parse → Versioned chunks → Gemini embeddings → Qdrant
                                                      ↓ ACL filter
-Client → FastAPI/API key → Retrieval → Prompt answer_v1 → Gemini/OpenRouter
+Client → FastAPI/API key → Dense + BM25 + RRF → Prompt answer_v1 → Gemini/OpenRouter
                             └──────── Langfuse trace ────────┘
 ```
 
@@ -25,7 +25,7 @@ docker compose up -d qdrant
 uv run company-rag-serve --reload
 ```
 
-Swagger: `http://localhost:8000/docs`. Health chỉ kiểm tra process; readiness kiểm tra provider và Qdrant.
+Swagger: `http://localhost:8000/docs`. Health chỉ kiểm tra process; readiness kiểm tra provider đã được cấu hình và kết nối Qdrant. Readiness không gọi model trả phí nên không xác thực credential Gemini bằng network request.
 
 ## Nạp tài liệu
 
@@ -80,6 +80,8 @@ uv run mypy
 ```
 
 Golden-set đo retrieval hit, groundedness proxy, citation coverage, abstention accuracy và latency. Nhóm `eval` chứa RAGAS cho đánh giá offline mở rộng: `uv sync --group dev --group eval`.
+
+Metadata v1 dùng JSON registry với khóa đồng bộ trong một process; vì vậy mỗi volume chỉ chạy một API replica. Khi cần nhiều replica hoặc ingest song song qua nhiều service, chuyển registry sang PostgreSQL trước khi scale-out. Nhánh lexical BM25 xét tối đa `RAG_LEXICAL_CANDIDATE_LIMIT` tài liệu ACL-eligible; tăng giới hạn hoặc chuyển sang sparse index native khi corpus lớn.
 
 ## Docker Compose
 

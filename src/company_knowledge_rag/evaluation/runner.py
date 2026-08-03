@@ -41,7 +41,7 @@ def score_response(
     coverage = 1.0 if abstained else cited_sentences / max(len(sentences), 1)
     retrieval_hit = (
         1.0
-        if (case.should_abstain and not citation_sources)
+        if (case.should_abstain and retrieval_count == 0)
         or (not case.should_abstain and bool(case.expected_sources & citation_sources))
         else 0.0
     )

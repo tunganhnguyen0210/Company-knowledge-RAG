@@ -25,3 +25,4 @@ jobs:
         env:
           RUN_QDRANT_INTEGRATION: "1"
       - run: docker compose config --quiet
+      - run: docker build --tag company-knowledge-rag:ci .

@@ -1,5 +1,5 @@
 from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus, SearchHit
-from company_knowledge_rag.retrieval.hybrid import reciprocal_rank_fusion
+from company_knowledge_rag.retrieval.hybrid import filter_by_min_score, reciprocal_rank_fusion
 
 
 def _hit(chunk_id: str, score: float) -> SearchHit:
@@ -27,3 +27,9 @@ def test_rrf_promotes_results_found_by_dense_and_lexical_search() -> None:
 
     assert fused[0].chunk.id == "both"
     assert {hit.chunk.id for hit in fused} == {"both", "dense-only", "lexical-only"}
+
+
+def test_dense_relevance_gate_removes_weak_candidates() -> None:
+    results = filter_by_min_score([_hit("weak", 0.2), _hit("strong", 0.8)], 0.35)
+
+    assert [hit.chunk.id for hit in results] == ["strong"]

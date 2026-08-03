@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 from pathlib import Path
+from threading import Lock
 from uuid import NAMESPACE_URL, uuid5
 
 from company_knowledge_rag.domain.schemas import Document, DocumentStatus
@@ -24,6 +25,7 @@ class IngestionService:
         self.store = store
         self.upload_dir = upload_dir
         self.enricher = enricher
+        self._ingest_lock = Lock()
 
     def ingest_bytes(
         self,
@@ -33,9 +35,35 @@ class IngestionService:
         metadata: dict[str, str] | None = None,
         *,
         force: bool = False,
+        actor_roles: set[str] | None = None,
+    ) -> Document:
+        with self._ingest_lock:
+            return self._ingest_bytes(
+                filename,
+                content,
+                allowed_roles,
+                metadata,
+                force=force,
+                actor_roles=actor_roles or allowed_roles,
+            )
+
+    def _ingest_bytes(
+        self,
+        filename: str,
+        content: bytes,
+        allowed_roles: set[str],
+        metadata: dict[str, str] | None,
+        *,
+        force: bool,
+        actor_roles: set[str],
     ) -> Document:
         digest = sha256(content).hexdigest()
         previous = self.registry.find_by_source(filename)
+        if previous is not None and (
+            previous.allowed_roles != allowed_roles
+            or not previous.allowed_roles.issubset(actor_roles)
+        ):
+            raise PermissionError("Existing document ACL cannot be changed through ingestion")
         same_content = False
         if previous is not None and previous.content_hash == digest:
             same_content = True
@@ -49,7 +77,12 @@ class IngestionService:
         else:
             version = previous.version + 1
         text, mime_type = parse_document(filename, content)
-        status = DocumentStatus.READY if text.strip() else DocumentStatus.NEEDS_OCR
+        if text.strip():
+            status = DocumentStatus.READY
+        elif mime_type == "application/pdf":
+            status = DocumentStatus.NEEDS_OCR
+        else:
+            status = DocumentStatus.FAILED
         document = Document(
             id=document_id,
             version=version,
@@ -63,10 +96,11 @@ class IngestionService:
         chunks = chunk_document(document, text) if status is DocumentStatus.READY else []
         if self.enricher is not None:
             chunks = [self.enricher.enrich(chunk) for chunk in chunks]
-        self.store.replace_document(document.id, chunks)
-        self.registry.upsert(document)
         if self.upload_dir is not None:
             self.upload_dir.mkdir(parents=True, exist_ok=True)
             suffix = Path(filename).suffix.lower()
-            (self.upload_dir / f"{document.id}{suffix}").write_bytes(content)
+            (self.upload_dir / f"{document.id}.v{document.version}{suffix}").write_bytes(content)
+        if status is DocumentStatus.READY:
+            self.store.replace_document(document.id, chunks)
+        self.registry.upsert(document)
         return document

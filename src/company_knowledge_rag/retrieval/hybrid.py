@@ -7,6 +7,10 @@ from rank_bm25 import BM25Okapi  # type: ignore[import-untyped]
 from company_knowledge_rag.domain.schemas import Chunk, SearchHit
 
 
+def filter_by_min_score(hits: list[SearchHit], min_score: float) -> list[SearchHit]:
+    return [hit for hit in hits if hit.score >= min_score]
+
+
 def lexical_rank(query: str, chunks: list[Chunk], limit: int) -> list[SearchHit]:
     if not chunks:
         return []

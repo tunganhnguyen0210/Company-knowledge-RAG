@@ -21,7 +21,6 @@ def parse_document(filename: str, content: bytes) -> tuple[str, str]:
             reader = PdfReader(BytesIO(content))
             text = "\n\n".join(page.extract_text() or "" for page in reader.pages).strip()
             return text, "application/pdf"
-        except Exception:
-            return "", "application/pdf"
+        except Exception as exc:
+            raise UnsupportedDocumentError("Unable to parse PDF; it may be corrupt or encrypted") from exc
     raise UnsupportedDocumentError("Only .md, .txt and .pdf files are supported")
-

@@ -50,11 +50,11 @@ class ChatService:
             ),
         ) as retrieval_observation:
             hits = self.store.search(question, principal, self.retrieval_limit)
-        latency_ms = (time.perf_counter() - started) * 1000
-        self.tracer.update(
-            retrieval_observation,
-            {"result_count": len(hits), "latency_ms": latency_ms},
-        )
+            latency_ms = (time.perf_counter() - started) * 1000
+            self.tracer.update(
+                retrieval_observation,
+                {"result_count": len(hits), "latency_ms": latency_ms},
+            )
         if not hits:
             return ChatResponse(
                 answer=ABSTENTION,
@@ -79,12 +79,16 @@ class ChatService:
             result = self.provider.generate(
                 GenerationRequest(prompt.system_instruction, prompt.user_prompt)
             )
-        self.tracer.update(
-            generation_observation,
-            {"provider": result.provider, "model": result.model, **result.usage},
-        )
+            self.tracer.update(
+                generation_observation,
+                {"provider": result.provider, "model": result.model, **result.usage},
+            )
         cited_indexes = sorted(
-            {int(value) for value in re.findall(r"\[C(\d+)\]", result.text) if int(value) <= len(chunks)}
+            {
+                int(value)
+                for value in re.findall(r"\[C(\d+)\]", result.text)
+                if 1 <= int(value) <= len(chunks)
+            }
         )
         citations = [
             Citation(

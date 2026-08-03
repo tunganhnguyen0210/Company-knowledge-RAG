@@ -1,4 +1,5 @@
 import time
+from dataclasses import replace
 
 from company_knowledge_rag.providers.base import (
     GenerationProvider,
@@ -26,7 +27,15 @@ class ProviderRouter:
         last_error: ProviderError | None = None
         for attempt in range(self.max_attempts):
             try:
-                return self.primary.generate(request)
+                result = self.primary.generate(request)
+                return replace(
+                    result,
+                    usage={
+                        **result.usage,
+                        "primary_attempts": attempt + 1,
+                        "fallback_used": 0,
+                    },
+                )
             except ProviderError as exc:
                 if not exc.transient:
                     raise
@@ -34,7 +43,18 @@ class ProviderRouter:
                 if attempt + 1 < self.max_attempts:
                     time.sleep(0.1 * (2**attempt))
         if self.fallback is not None:
-            return self.fallback.generate(request)
+            result = self.fallback.generate(request)
+            return replace(
+                result,
+                usage={
+                    **result.usage,
+                    "primary_attempts": self.max_attempts,
+                    "fallback_used": 1,
+                },
+            )
         assert last_error is not None
         raise last_error
 
+    def ready(self) -> bool:
+        ready = getattr(self.primary, "ready", None)
+        return bool(ready and ready())
