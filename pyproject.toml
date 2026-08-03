@@ -12,6 +12,7 @@ dependencies = [
   "openai>=1.99,<2",
   "pydantic-settings>=2.10,<3",
   "pypdf>=5.9,<6",
+  "PyYAML>=6,<7",
   "python-multipart>=0.0.20,<1",
   "qdrant-client>=1.15,<2",
   "rank-bm25>=0.2.2,<1",
