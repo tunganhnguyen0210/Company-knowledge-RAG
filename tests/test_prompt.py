@@ -1,5 +1,9 @@
+import importlib
+
 from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus
+from company_knowledge_rag.prompts import answer_v1
 from company_knowledge_rag.prompts.answer_v1 import PROMPT_VERSION, render_answer_prompt
+from company_knowledge_rag.prompts.loader import PromptDefinition
 
 
 def test_prompt_marks_context_as_untrusted_and_assigns_citation_ids() -> None:
@@ -22,3 +26,21 @@ def test_prompt_marks_context_as_untrusted_and_assigns_citation_ids() -> None:
     assert "[C1]" in prompt.user_prompt
     assert chunk.text in prompt.user_prompt
 
+
+def test_answer_prompt_uses_loaded_yaml_definition(monkeypatch) -> None:
+    definition = PromptDefinition(
+        id="answer",
+        version="v1",
+        system_instruction="YAML system instruction",
+        user_template="CONTEXT={{ context }}\nQUESTION={{ question }}",
+    )
+    monkeypatch.setattr("company_knowledge_rag.prompts.loader.load_prompt", lambda _: definition)
+
+    try:
+        module = importlib.reload(answer_v1)
+        prompt = module.render_answer_prompt("Câu hỏi", [])
+
+        assert prompt.system_instruction == "YAML system instruction"
+        assert prompt.user_prompt == "CONTEXT=\nQUESTION=Câu hỏi"
+    finally:
+        importlib.reload(answer_v1)
