@@ -9,6 +9,7 @@ from company_knowledge_rag.settings import Settings
 
 class AnswerProvider:
     name = "stub"
+    model = "stub-model"
 
     def generate(self, request: GenerationRequest) -> GenerationResult:
         return GenerationResult("Nhân viên được nghỉ 15 ngày [C1].", "stub", "stub-model")
@@ -28,6 +29,13 @@ def test_chat_requires_api_key(tmp_path: Path) -> None:
     response = _client(tmp_path).post("/v1/chat", json={"question": "Nghỉ phép?"})
 
     assert response.status_code == 401
+
+
+def test_health_reports_active_model(tmp_path: Path) -> None:
+    response = _client(tmp_path).get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "active_model": "stub-model"}
 
 
 def test_upload_then_chat_returns_source_citation(tmp_path: Path) -> None:

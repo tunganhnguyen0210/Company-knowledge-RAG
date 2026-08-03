@@ -52,8 +52,11 @@ def create_app(
     app.state.chat = chat
 
     @app.get("/health", tags=["operations"])
-    def health() -> dict[str, str]:
-        return {"status": "ok"}
+    def health(request: Request) -> dict[str, str]:
+        provider = request.app.state.provider
+        primary = getattr(provider, "primary", provider)
+        active_model = str(getattr(primary, "model", getattr(primary, "name", "unknown")))
+        return {"status": "ok", "active_model": active_model}
 
     @app.get("/ready", tags=["operations"])
     def ready(request: Request) -> dict[str, str]:
