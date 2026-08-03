@@ -14,7 +14,7 @@ dependencies = [
   "pypdf>=5.9,<6",
   "PyYAML>=6,<7",
   "python-multipart>=0.0.20,<1",
-  "qdrant-client>=1.15,<2",
+  "qdrant-client>=1.16,<1.17",
   "rank-bm25>=0.2.2,<1",
   "uvicorn[standard]>=0.35,<1",
 ]
