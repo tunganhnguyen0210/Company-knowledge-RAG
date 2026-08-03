@@ -1,0 +1,8 @@
+services:
+  api:
+    environment:
+      RAG_LANGFUSE_HOST: ${RAG_LANGFUSE_HOST:-http://host.docker.internal:3000}
+      RAG_LANGFUSE_PUBLIC_KEY: ${RAG_LANGFUSE_PUBLIC_KEY}
+      RAG_LANGFUSE_SECRET_KEY: ${RAG_LANGFUSE_SECRET_KEY}
+      RAG_TRACE_MODE: ${RAG_TRACE_MODE:-metadata-only}
+

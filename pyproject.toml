@@ -1,0 +1,61 @@
+[project]
+name = "company-knowledge-rag"
+version = "0.1.0"
+description = "Production-oriented RAG service for internal company documents"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.116,<0.117",
+  "google-genai>=1.30,<2",
+  "httpx>=0.28,<1",
+  "langfuse>=3.3.1,<4",
+  "openai>=1.99,<2",
+  "pydantic-settings>=2.10,<3",
+  "pypdf>=5.9,<6",
+  "python-multipart>=0.0.20,<1",
+  "qdrant-client>=1.15,<2",
+  "rank-bm25>=0.2.2,<1",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.scripts]
+company-rag-serve = "company_knowledge_rag.cli:serve"
+company-rag-ingest = "company_knowledge_rag.cli:ingest"
+company-rag-evaluate = "company_knowledge_rag.cli:evaluate"
+
+[dependency-groups]
+dev = [
+  "mypy>=1.17,<2",
+  "pytest>=8.4,<9",
+  "pytest-cov>=6.2,<7",
+  "ruff>=0.12,<1",
+]
+eval = ["ragas>=0.3,<1"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/company_knowledge_rag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["integration: requires external infrastructure"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/company_knowledge_rag/api/*.py" = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+strict = true
+packages = ["company_knowledge_rag"]
