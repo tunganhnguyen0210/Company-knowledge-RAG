@@ -7,7 +7,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from pydantic import AliasChoices, Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from providers.gemini_key_pool import GeminiKeyPool
 from providers.structured import STRUCTURED_MAX_RETRIES
@@ -27,6 +27,17 @@ class MainProvider(StrEnum):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (dotenv_settings, init_settings, env_settings, file_secret_settings)
 
     environment: str = "development"
     main_provider: MainProvider = MainProvider.GEMINI
@@ -58,8 +69,8 @@ class Settings(BaseSettings):
     lexical_candidate_limit: int = 500
     min_dense_score: float = 0.35
     enable_enrichment: bool = False
-    trace_mode: TraceMode = TraceMode.METADATA_ONLY
-    allow_sensitive_tracing: bool = False
+    trace_mode: TraceMode = TraceMode.FULL
+    allow_sensitive_tracing: bool = True
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_host: str = Field(
