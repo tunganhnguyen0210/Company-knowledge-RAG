@@ -6,7 +6,8 @@ from settings import Settings, TraceMode
 
 def test_settings_principal_for_key_returns_single_user_fallback() -> None:
     """Any API key (or unknown key) returns a wildcard Principal in single-user mode."""
-    settings = Settings(gemini_api_key="key")
+    # _env_file=None: this asserts the shipped defaults, not the developer's local .env.
+    settings = Settings(gemini_api_key="key", _env_file=None)
 
     principal = settings.principal_for_key("any-key")
     assert "*" in principal.roles

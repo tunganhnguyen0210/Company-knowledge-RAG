@@ -14,9 +14,8 @@ from ingestion.enrichment import LLMChunkEnricher
 from ingestion.parser import UnsupportedDocumentError
 from ingestion.service import IngestionService
 from observability.tracing import Tracer
-from providers.base import EmbeddingProvider, GenerationProvider, ProviderError
-from providers.gemini import GeminiProvider
-from providers.jina import JinaEmbeddingProvider
+from providers.base import GenerationProvider, ProviderError
+from providers.gemini import GeminiEmbeddingProvider, GeminiProvider
 from providers.openai import OpenAIProvider
 from providers.openrouter import OpenRouterProvider
 from providers.probe import probe_generation
@@ -39,8 +38,9 @@ def create_app(
     provider = provider or _build_provider(settings)
     registry = DocumentRegistry(settings.registry_path)
     enricher = LLMChunkEnricher(provider) if settings.enable_enrichment else None
-    ingestion = IngestionService(registry, store, settings.upload_dir, enricher)
-    chat = ChatService(store, provider, Tracer(settings), settings.retrieval_limit)
+    tracer = Tracer(settings)
+    ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
+    chat = ChatService(store, provider, tracer, settings.retrieval_limit)
 
     app = FastAPI(
         title="Company Knowledge RAG",
@@ -195,16 +195,13 @@ def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
 
 
 def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
+    # Embeddings always run on Gemini, regardless of MAIN_PROVIDER.
     embedder = GeminiEmbeddingProvider(
         settings.build_gemini_key_pool(),
         settings.embedding_model,
         settings.vector_size,
         settings.provider_timeout_seconds,
     )
-
-
-def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
-    embedder = _build_embedder(settings)
     return QdrantChunkStore(
         settings.qdrant_url,
         settings.qdrant_api_key,

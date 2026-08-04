@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from langchain_core.runnables import Runnable, RunnableLambda
 
 from providers.base import GenerationRequest
 from providers.gemini import GeminiEmbeddingProvider, GeminiProvider
@@ -91,6 +92,25 @@ def test_runnable_automatically_retries_next_key_on_429() -> None:
 
     assert result == "Success response"
     assert used_keys == ["key-1", "key-2"]
+
+
+def test_rotating_runnable_composes_in_lcel_chains() -> None:
+    """Guards the real base class: an ImportError fallback once made this a plain object."""
+    pool = GeminiKeyPool.from_environment({"GEMINI_API_KEY": "key-1"})
+
+    class MockModel:
+        def __init__(self, api_key: str) -> None:
+            pass
+
+        def invoke(self, prompt: str, config: Any = None, **kwargs: Any) -> str:
+            return f"answer:{prompt}"
+
+    runnable = GeminiRotatingRunnable(pool, lambda key: MockModel(key))
+
+    assert isinstance(runnable, Runnable)
+    assert (runnable | RunnableLambda(lambda text: text.upper())).invoke("hi") == "ANSWER:HI"
+    # batch() is inherited, not implemented here; it only exists on a real Runnable.
+    assert runnable.batch(["a", "b"]) == ["answer:a", "answer:b"]
 
 
 def test_runnable_fallback_provider() -> None:

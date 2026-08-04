@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from enum import StrEnum
 from hashlib import sha256
 from pathlib import Path
@@ -9,6 +10,8 @@ from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from domain.schemas import Principal
+from providers.gemini_key_pool import GeminiKeyPool
+from providers.structured import STRUCTURED_MAX_RETRIES
 
 
 class TraceMode(StrEnum):
@@ -42,11 +45,10 @@ class Settings(BaseSettings):
     api_keys: str = '{"change-me": ["*"]}'
     main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-3.5-flash-lites"
-    embedding_model: str = "jina-embeddings-v3"
-    jina_api_key: str = ""
+    gemini_model: str = "gemini-3.5-flash-lite"
+    embedding_model: str = "gemini-embedding-001"
     openrouter_api_key: str = ""
-    openrouter_model: str = "google/gemini-3.6-flash"
+    openrouter_model: str = "deepseek/deepseek-v4-flash-0731"
     openrouter_allowed_models: set[str] = Field(
         default_factory=lambda: {"google/gemini-3.6-flash"}
     )
@@ -54,6 +56,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4.1-mini"
     provider_timeout_seconds: float = 30.0
     provider_max_attempts: int = 2
+    structured_max_retries: int = STRUCTURED_MAX_RETRIES
     gemini_key_cooldown_seconds: float = 60.0
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str = ""
@@ -82,9 +85,6 @@ class Settings(BaseSettings):
         return self
 
     def build_gemini_key_pool(self, environment: dict[str, str] | None = None) -> GeminiKeyPool:
-        import os
-        from providers.gemini_key_pool import GeminiKeyPool
-
         env = dict(os.environ if environment is None else environment)
         if self.gemini_api_key and "GEMINI_API_KEY" not in env:
             env["GEMINI_API_KEY"] = self.gemini_api_key

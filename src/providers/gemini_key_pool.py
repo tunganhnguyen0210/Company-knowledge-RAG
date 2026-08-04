@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from threading import Lock
-from typing import Callable, Mapping, TypeVar
+from typing import TypeVar
 
 _NUMBERED_FALLBACK_KEY = re.compile(r"^GEMINI_API_FALLBACK_KEY([1-9][0-9]*)$")
 T = TypeVar("T")
@@ -83,6 +84,11 @@ class GeminiKeyPool:
     def key_count(self) -> int:
         """Return total number of unique configured keys."""
         return len(self._keys)
+
+    @property
+    def cooldown_seconds(self) -> float:
+        """How long a quota-limited key stays parked; callers use it to pace retries."""
+        return self._cooldown_seconds
 
     def next_key(self) -> GeminiKeyLease:
         """Return the next healthy key and advance the cursor atomically."""
