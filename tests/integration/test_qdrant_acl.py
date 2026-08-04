@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import pytest
 
-from domain.schemas import Chunk, DocumentStatus, Principal
+from domain.schemas import Chunk, DocumentStatus
 from retrieval.qdrant_store import QdrantChunkStore
 
 pytestmark = pytest.mark.skipif(
@@ -26,7 +26,7 @@ class FakeEmbedder:
         ]
 
 
-def _chunk(chunk_id: str, document_id: str, text: str, roles: set[str]) -> Chunk:
+def _chunk(chunk_id: str, document_id: str, text: str) -> Chunk:
     return Chunk(
         id=chunk_id,
         document_id=document_id,
@@ -36,11 +36,10 @@ def _chunk(chunk_id: str, document_id: str, text: str, roles: set[str]) -> Chunk
         source_name=f"{document_id}.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
-        allowed_roles=roles,
     )
 
 
-def test_qdrant_enforces_acl_and_replaces_document_chunks() -> None:
+def test_qdrant_replaces_document_chunks() -> None:
     collection = f"test_company_rag_{uuid4().hex}"
     store = QdrantChunkStore(
         "http://localhost:6333",
@@ -51,17 +50,18 @@ def test_qdrant_enforces_acl_and_replaces_document_chunks() -> None:
         100,
     )
     try:
-        store.replace_document("leave", [_chunk("leave-v1", "leave", "Nghỉ 12 ngày", {"employee"})])
-        store.replace_document("salary", [_chunk("salary-v1", "salary", "Lương giám đốc", {"executive"})])
-        store.replace_document("leave", [_chunk("leave-v2", "leave", "Nghỉ 15 ngày", {"employee"})])
+        store.replace_document("leave", [_chunk("leave-v1", "leave", "Nghỉ 12 ngày")])
+        store.replace_document("salary", [_chunk("salary-v1", "salary", "Lương giám đốc")])
+        store.replace_document("leave", [_chunk("leave-v2", "leave", "Nghỉ 15 ngày")])
 
         results = store.search(
             "lương và nghỉ phép",
-            Principal(subject="employee", roles={"employee"}),
             limit=10,
         )
 
-        assert [hit.chunk.id for hit in results] == ["leave-v2"]
+        chunk_ids = {hit.chunk.id for hit in results}
+        assert "leave-v2" in chunk_ids
+        assert "leave-v1" not in chunk_ids
     finally:
         if store.client.collection_exists(collection):
             store.client.delete_collection(collection)

@@ -23,7 +23,6 @@ def chunk_document(document: Document, text: str, max_chars: int = 1200) -> list
                     source_name=document.source_name,
                     mime_type=document.mime_type,
                     status=document.status,
-                    allowed_roles=document.allowed_roles,
                     section=section,
                     position=position,
                 )

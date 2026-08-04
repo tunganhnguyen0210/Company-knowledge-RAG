@@ -97,13 +97,11 @@ def create_app(
     @app.post("/v1/documents", response_model=Document, status_code=status.HTTP_201_CREATED)
     async def upload_document(
         file: UploadFile = File(...),
-        allowed_roles: str = Form("public"),
         metadata: str = Form("{}"),
     ) -> Document:
         content = await file.read(settings.max_upload_bytes + 1)
         if len(content) > settings.max_upload_bytes:
             raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File is too large")
-        roles = {role.strip() for role in allowed_roles.split(",") if role.strip()} or {"*"}
         source_name = Path(file.filename or "upload").name
         try:
             parsed_metadata = json.loads(metadata)
@@ -113,7 +111,6 @@ def create_app(
                 ingestion.ingest_bytes,
                 source_name,
                 content,
-                roles,
                 {str(key): str(value) for key, value in parsed_metadata.items()},
             )
         except UnsupportedDocumentError as exc:
@@ -141,7 +138,6 @@ def create_app(
         return ingestion.ingest_bytes(
             document.source_name,
             source_path.read_bytes(),
-            document.allowed_roles,
             document.metadata,
             force=True,
         )

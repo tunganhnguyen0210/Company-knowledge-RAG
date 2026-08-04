@@ -13,7 +13,6 @@ def _hit(chunk_id: str, score: float) -> SearchHit:
             source_name=f"{chunk_id}.md",
             mime_type="text/markdown",
             status=DocumentStatus.READY,
-            allowed_roles={"employee"},
         ),
         score=score,
     )

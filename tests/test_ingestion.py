@@ -95,8 +95,8 @@ def test_reingesting_same_content_is_idempotent(tmp_path: Path) -> None:
     service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
     content = b"# Nghi phep\n\nNhan vien duoc nghi 15 ngay."
 
-    first = service.ingest_bytes("policy.md", content, {"employee"})
-    second = service.ingest_bytes("policy.md", content, {"employee"})
+    first = service.ingest_bytes("policy.md", content)
+    second = service.ingest_bytes("policy.md", content)
 
     assert first.id == second.id
     assert first.version == second.version == 1
@@ -217,8 +217,8 @@ def test_new_content_replaces_active_document_version(tmp_path: Path) -> None:
     store = MemoryChunkStore()
     service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
 
-    old = service.ingest_bytes("policy.md", b"Old policy", {"employee"})
-    new = service.ingest_bytes("policy.md", b"New policy", {"employee"})
+    old = service.ingest_bytes("policy.md", b"Old policy")
+    new = service.ingest_bytes("policy.md", b"New policy")
 
     assert new.id == old.id
     assert new.version == 2
@@ -233,7 +233,7 @@ def test_scanned_pdf_is_marked_needs_ocr(tmp_path: Path) -> None:
     writer.add_blank_page(width=100, height=100)
     writer.write(buffer)
 
-    document = service.ingest_bytes("scan.pdf", buffer.getvalue(), {"employee"})
+    document = service.ingest_bytes("scan.pdf", buffer.getvalue())
 
     assert document.status is DocumentStatus.NEEDS_OCR
     assert store.all_chunks == []
@@ -245,6 +245,7 @@ def test_corrupt_pdf_is_rejected() -> None:
 
 
 def _docx_bytes(build) -> bytes:
+    pytest.importorskip("docx")
     from docx import Document as DocxDocument
 
     document = DocxDocument()
@@ -303,7 +304,7 @@ def test_docx_sections_survive_chunking(tmp_path: Path) -> None:
     store = MemoryChunkStore()
     service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
 
-    document = service.ingest_bytes("suco.docx", _docx_bytes(build), {"employee"})
+    document = service.ingest_bytes("suco.docx", _docx_bytes(build))
 
     assert document.status is DocumentStatus.READY
     assert [chunk.section for chunk in store.all_chunks] == ["Quy trinh su co"]
@@ -325,7 +326,7 @@ def test_empty_markdown_is_failed_not_needs_ocr(tmp_path: Path) -> None:
         MemoryChunkStore(),
     )
 
-    document = service.ingest_bytes("empty.md", b"", {"employee"})
+    document = service.ingest_bytes("empty.md", b"")
 
     assert document.status is DocumentStatus.FAILED
 
@@ -334,10 +335,10 @@ def test_force_reindex_replaces_chunks_without_creating_new_version(tmp_path: Pa
     store = MemoryChunkStore()
     service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
     content = b"Current policy"
-    document = service.ingest_bytes("policy.md", content, {"employee"})
+    document = service.ingest_bytes("policy.md", content)
     store.all_chunks = []
 
-    reindexed = service.ingest_bytes("policy.md", content, {"employee"}, force=True)
+    reindexed = service.ingest_bytes("policy.md", content, force=True)
 
     assert reindexed.version == document.version
     assert [chunk.text for chunk in store.all_chunks] == ["Current policy"]
@@ -354,8 +355,8 @@ def test_unprocessable_new_version_keeps_last_ready_chunks(
         lambda filename, content: next(responses),
     )
 
-    active = service.ingest_bytes("policy.pdf", b"version-1", {"employee"})
-    pending = service.ingest_bytes("policy.pdf", b"version-2-scan", {"employee"})
+    active = service.ingest_bytes("policy.pdf", b"version-1")
+    pending = service.ingest_bytes("policy.pdf", b"version-2-scan")
 
     assert active.status is DocumentStatus.READY
     assert pending.status is DocumentStatus.NEEDS_OCR
@@ -375,7 +376,7 @@ def test_upload_storage_failure_does_not_publish_document(
     monkeypatch.setattr(Path, "write_bytes", fail_write)
 
     with pytest.raises(OSError, match="disk full"):
-        service.ingest_bytes("policy.md", b"New policy", {"employee"})
+        service.ingest_bytes("policy.md", b"New policy")
 
     assert registry.list() == []
     assert store.all_chunks == []

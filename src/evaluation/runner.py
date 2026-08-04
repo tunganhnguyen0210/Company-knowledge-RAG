@@ -7,7 +7,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from domain.schemas import Principal
 from generation.service import ABSTENTION, ChatService
 
 
@@ -15,7 +14,6 @@ class GoldenCase(BaseModel):
     question: str
     expected_sources: set[str] = Field(default_factory=set)
     should_abstain: bool = False
-    roles: set[str] = Field(default_factory=lambda: {"*"})
     category: str = "lookup"
 
 
@@ -58,10 +56,7 @@ def run_golden_set(chat: ChatService, path: Path) -> dict[str, object]:
     cases = [GoldenCase.model_validate(item) for item in json.loads(path.read_text(encoding="utf-8"))]
     details: list[dict[str, Any]] = []
     for case in cases:
-        response = chat.answer(
-            case.question,
-            Principal(subject="evaluation", roles=case.roles),
-        )
+        response = chat.answer(case.question)
         scores = score_response(
             case,
             answer=response.answer,

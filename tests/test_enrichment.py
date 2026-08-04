@@ -33,7 +33,6 @@ def _chunk() -> Chunk:
         source_name="leave.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
-        allowed_roles={"employee"},
     )
 
 

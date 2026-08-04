@@ -25,7 +25,6 @@ class AnswerProvider:
 
 def _client(tmp_path: Path) -> TestClient:
     settings = Settings(
-        api_keys='{"secret": ["employee"]}',
         gemini_api_key="unused",
         registry_path=tmp_path / "registry.json",
         upload_dir=tmp_path / "uploads",
@@ -94,44 +93,12 @@ def test_ready_fails_when_the_live_probe_cannot_reach_the_model(tmp_path: Path) 
     assert "no allowed providers" in response.json()["detail"]
 
 
-def test_upload_with_optional_roles(tmp_path: Path) -> None:
-    response = _client(tmp_path).post(
-        "/v1/documents",
-        files={"file": ("secret.md", b"Executive content", "text/markdown")},
-        data={"allowed_roles": "executive"},
-    )
-
-    assert response.status_code == 201
-
-
-def test_upload_replaces_same_source_file(tmp_path: Path) -> None:
-    settings = Settings(
-        gemini_api_key="unused",
-        registry_path=tmp_path / "registry.json",
-        upload_dir=tmp_path / "uploads",
-    )
-    client = TestClient(create_app(settings=settings, provider=AnswerProvider()))
-    first = client.post(
-        "/v1/documents",
-        files={"file": ("policy.md", b"HR-only policy", "text/markdown")},
-    )
-
-    replacement = client.post(
-        "/v1/documents",
-        files={"file": ("policy.md", b"Attacker replacement", "text/markdown")},
-    )
-
-    assert first.status_code == 201
-    assert replacement.status_code == 201
-
-
 def test_ready_fails_when_provider_reports_not_ready(tmp_path: Path) -> None:
     class NotReadyProvider(AnswerProvider):
         def ready(self) -> bool:
             return False
 
     settings = Settings(
-        api_keys='{"secret": ["employee"]}',
         gemini_api_key="unused",
         registry_path=tmp_path / "registry.json",
         upload_dir=tmp_path / "uploads",

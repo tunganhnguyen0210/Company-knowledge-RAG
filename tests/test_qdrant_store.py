@@ -43,7 +43,6 @@ def test_embedding_failure_does_not_delete_active_document(monkeypatch: pytest.M
         source_name="policy.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
-        allowed_roles={"employee"},
     )
 
     with pytest.raises(RuntimeError, match="embedding unavailable"):

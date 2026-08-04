@@ -272,7 +272,7 @@ from ragas import evaluate
 from ragas.metrics import faithfulness, answer_relevance, context_recall, context_precision
 
 # 1. Thiết lập API Key cho LLM trọng tài (LLM Judge)
-os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
+os.environ["GEMINI_API_KEY"] = "your-gemini-api-key"
 
 # 2. Chuẩn bị tập dữ liệu đánh giá (từ Reference Dataset)
 # Dữ liệu bắt buộc phải có đủ 4 cột: question, contexts (list), answer, ground_truth

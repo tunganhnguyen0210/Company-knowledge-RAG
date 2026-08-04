@@ -13,11 +13,6 @@ class DocumentStatus(StrEnum):
     FAILED = "failed"
 
 
-class Principal(BaseModel):
-    subject: str = "user"
-    roles: set[str] = Field(default_factory=lambda: {"*"})
-
-
 class Document(BaseModel):
     id: str
     version: int
@@ -26,7 +21,6 @@ class Document(BaseModel):
     mime_type: str
     uploaded_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: DocumentStatus
-    allowed_roles: set[str] = Field(default_factory=lambda: {"*"})
     metadata: dict[str, str] = Field(default_factory=dict)
 
 
@@ -39,7 +33,6 @@ class Chunk(BaseModel):
     source_name: str
     mime_type: str
     status: DocumentStatus
-    allowed_roles: set[str] = Field(default_factory=lambda: {"*"})
     section: str | None = None
     position: int = 0
     retrieval_text: str | None = None

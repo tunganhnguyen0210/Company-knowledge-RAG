@@ -5,7 +5,7 @@ from threading import Lock
 
 from qdrant_client import QdrantClient, models
 
-from domain.schemas import Chunk, Principal, SearchHit
+from domain.schemas import Chunk, SearchHit
 from providers.base import EmbeddingProvider
 from retrieval.hybrid import (
     filter_by_min_score,
@@ -60,7 +60,7 @@ class QdrantChunkStore:
                     f"Qdrant vector size is {actual_size}; expected {self.vector_size}"
                 )
             payload_schema = info.payload_schema or {}
-            for field in ("document_id", "status", "allowed_roles", "version"):
+            for field in ("document_id", "status", "version"):
                 if field in payload_schema:
                     continue
                 schema = (
@@ -117,7 +117,7 @@ class QdrantChunkStore:
             wait=True,
         )
 
-    def search(self, query: str, principal: Principal | None = None, limit: int = 5) -> list[SearchHit]:
+    def search(self, query: str, limit: int = 5) -> list[SearchHit]:
         self.ensure_collection()
         query_filter = models.Filter(
             must=[

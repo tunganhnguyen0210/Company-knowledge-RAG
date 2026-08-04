@@ -4,13 +4,9 @@ from pydantic import ValidationError
 from settings import Settings, TraceMode
 
 
-def test_settings_principal_for_key_returns_single_user_fallback() -> None:
-    """Any API key (or unknown key) returns a wildcard Principal in single-user mode."""
-    # _env_file=None: this asserts the shipped defaults, not the developer's local .env.
+def test_settings_default_trace_mode(monkeypatch) -> None:
+    monkeypatch.delenv("TRACE_MODE", raising=False)
     settings = Settings(gemini_api_key="key", _env_file=None)
-
-    principal = settings.principal_for_key("any-key")
-    assert "*" in principal.roles
     assert settings.trace_mode is TraceMode.METADATA_ONLY
 
 

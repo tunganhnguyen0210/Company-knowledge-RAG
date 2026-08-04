@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from domain.schemas import Chunk, DocumentStatus, Principal, SearchHit
+from domain.schemas import Chunk, DocumentStatus, SearchHit
 
 
 class MemoryChunkStore:
@@ -13,7 +13,7 @@ class MemoryChunkStore:
         self.all_chunks = [chunk for chunk in self.all_chunks if chunk.document_id != document_id]
         self.all_chunks.extend(chunks)
 
-    def search(self, query: str, principal: Principal | None = None, limit: int = 5) -> list[SearchHit]:
+    def search(self, query: str, limit: int = 5) -> list[SearchHit]:
         query_tokens = _tokens(query)
         authorized = [
             chunk

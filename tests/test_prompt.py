@@ -16,7 +16,6 @@ def test_prompt_marks_context_as_untrusted_and_assigns_citation_ids() -> None:
         source_name="policy.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
-        allowed_roles={"employee"},
     )
 
     prompt = render_answer_prompt("Chính sách là gì?", [chunk])

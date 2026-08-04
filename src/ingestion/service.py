@@ -39,13 +39,10 @@ class IngestionService:
         self,
         filename: str,
         content: bytes,
-        allowed_roles: set[str] | None = None,
         metadata: dict[str, str] | None = None,
         *,
         force: bool = False,
-        actor_roles: set[str] | None = None,
     ) -> Document:
-        roles = allowed_roles if allowed_roles is not None else {"*"}
         with self._ingest_lock:
             with self.tracer.span(
                 "ingestion",
@@ -54,10 +51,8 @@ class IngestionService:
                 return self._ingest_bytes(
                     filename,
                     content,
-                    roles,
                     metadata,
                     force=force,
-                    actor_roles=actor_roles or roles,
                     ingestion_observation=ingestion_observation,
                 )
 
@@ -65,11 +60,9 @@ class IngestionService:
         self,
         filename: str,
         content: bytes,
-        allowed_roles: set[str],
         metadata: dict[str, str] | None,
         *,
         force: bool,
-        actor_roles: set[str],
         ingestion_observation: Any,
     ) -> Document:
         digest = sha256(content).hexdigest()
@@ -124,7 +117,6 @@ class IngestionService:
             source_name=filename,
             mime_type=mime_type,
             status=status,
-            allowed_roles=allowed_roles,
             metadata=metadata or {},
         )
 

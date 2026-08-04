@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus, Principal
+from domain.schemas import Chunk, DocumentStatus
 from generation.service import ABSTENTION, ChatService, GroundedAnswer
 from observability.tracing import Tracer
 from prompts.answer_v2 import PROMPT_VERSION
@@ -90,7 +90,6 @@ def test_generation_abstains_when_model_returns_no_valid_citation() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                allowed_roles={"employee"},
             )
         ],
     )
@@ -101,10 +100,7 @@ def test_generation_abstains_when_model_returns_no_valid_citation() -> None:
         retrieval_limit=5,
     )
 
-    response = service.answer(
-        "Nghỉ phép?",
-        Principal(subject="employee-1", roles={"employee"}),
-    )
+    response = service.answer("Nghỉ phép?")
 
     assert response.answer == ABSTENTION
     assert response.citations == []
@@ -144,13 +140,12 @@ def test_trace_metadata_is_updated_before_span_closes() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                allowed_roles={"employee"},
             )
         ],
     )
     service = ChatService(store, CitedProvider(), StrictTracer(), retrieval_limit=5)  # type: ignore[arg-type]
 
-    response = service.answer("Nghỉ phép?", Principal(subject="user", roles={"employee"}))
+    response = service.answer("Nghỉ phép?")
 
     assert response.citations[0].source_name == "leave.md"
 
@@ -169,7 +164,6 @@ def test_generation_rejects_zero_citation_index() -> None:
                 source_name="policy.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                allowed_roles={"employee"},
             )
         ],
     )
@@ -180,7 +174,7 @@ def test_generation_rejects_zero_citation_index() -> None:
         5,
     )
 
-    response = service.answer("Policy?", Principal(subject="user", roles={"employee"}))
+    response = service.answer("Policy?")
 
     assert response.answer == ABSTENTION
     assert response.citations == []
@@ -200,7 +194,6 @@ def test_traces_ranked_retrieval_hits_and_citation_gated_final_answer() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                allowed_roles={"employee"},
                 section="Annual leave",
                 position=4,
             )
@@ -218,7 +211,6 @@ def test_traces_ranked_retrieval_hits_and_citation_gated_final_answer() -> None:
                 source_name="requests.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                allowed_roles={"employee"},
                 section="Requests",
                 position=9,
             )
@@ -234,7 +226,7 @@ def test_traces_ranked_retrieval_hits_and_citation_gated_final_answer() -> None:
     )
     service = ChatService(store, CitedProvider(), tracer, retrieval_limit=5)  # type: ignore[arg-type]
 
-    response = service.answer("Leave policy?", Principal(subject="user", roles={"employee"}))
+    response = service.answer("Leave policy?")
 
     retrieval = tracer.observation("retrieval")
     retrieval_update = retrieval.updates[0]
@@ -301,7 +293,6 @@ def test_metadata_only_traces_redact_retrieval_text_and_final_answer() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                allowed_roles={"employee"},
             )
         ],
     )
@@ -314,7 +305,7 @@ def test_metadata_only_traces_redact_retrieval_text_and_final_answer() -> None:
     )
     service = ChatService(store, CitedProvider(), tracer, retrieval_limit=5)  # type: ignore[arg-type]
 
-    response = service.answer("Leave policy?", Principal(subject="user", roles={"employee"}))
+    response = service.answer("Leave policy?")
 
     retrieval = tracer.observation("retrieval")
     assert "text" not in retrieval.updates[0]["top_k"][0]

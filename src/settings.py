@@ -9,7 +9,6 @@ from pathlib import Path
 from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from domain.schemas import Principal
 from providers.gemini_key_pool import GeminiKeyPool
 from providers.structured import STRUCTURED_MAX_RETRIES
 
@@ -26,23 +25,10 @@ class MainProvider(StrEnum):
     OPENAI = "openai"
 
 
-def _parse_api_key_mapping(raw: str) -> dict[str, list[str]]:
-    if not raw or raw == "{}":
-        return {"user": ["*"]}
-    try:
-        mapping = json.loads(raw)
-        if isinstance(mapping, dict):
-            return {k: v if isinstance(v, list) else [str(v)] for k, v in mapping.items()}
-    except json.JSONDecodeError:
-        pass
-    return {"user": ["*"]}
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = "development"
-    api_keys: str = '{"change-me": ["*"]}'
     main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
@@ -96,15 +82,4 @@ class Settings(BaseSettings):
         return GeminiKeyPool.from_environment(
             env, cooldown_seconds=self.gemini_key_cooldown_seconds
         )
-
-    def principal_for_key(self, api_key: str) -> Principal:
-        mapping = _parse_api_key_mapping(self.api_keys)
-        roles = mapping.get(api_key, ["*"])
-        key_fingerprint = sha256(api_key.encode("utf-8")).hexdigest()[:12]
-        return Principal(subject=f"api-key:{key_fingerprint}", roles=set(roles))
-
-    def swagger_default_api_key(self) -> str | None:
-        if self.environment != "development":
-            return None
-        return next(iter(_parse_api_key_mapping(self.api_keys)))
 

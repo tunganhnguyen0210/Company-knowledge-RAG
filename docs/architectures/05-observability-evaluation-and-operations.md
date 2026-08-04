@@ -22,6 +22,28 @@ Configured via `TRACE_MODE` in `settings.py`:
 - **`metadata-only`** *(Default)*: Sends request IDs, timestamps, latency, token usage, and hit counts to Langfuse, but redacts raw query text and document content to protect data privacy.
 - **`full`**: Captures complete prompt text, context chunks, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
 
+### Active Traced Pipelines & Payload Schema
+
+The system actively traces two primary workflows: the **Query & Generation Pipeline** (`ChatService`) and the **Document Ingestion Pipeline** (`IngestionService`).
+
+#### 1. Query & Generation Pipeline (`src/generation/service.py`)
+
+| Span Name | Type | Input Payload / Initial Metadata | Output / Execution Updates |
+| --- | --- | --- | --- |
+| **`rag-request`** | Parent Trace | `request_id`, `question` | Total end-to-end request latency and final `ChatResponse` |
+| **`retrieval`** | Child Span | `request_id`, `question` | `result_count`, `latency_ms`, and `top_k` chunk hits (`rank`, `score`, `chunk_id`, `document_id`, `version`, `source_name`, `section`, `position`, `content_hash`, `text`) |
+| **`generation`** | Child Span | `request_id`, `question`, `context` (retrieved chunks), `prompt_version`, `system_instruction`, `user_prompt` | `provider`, `model`, `token_usage` (input/output), `response` (structured model dump), `citation_ids` (`[C1]`, `[C2]`), `answer` |
+
+#### 2. Document Ingestion Pipeline (`src/ingestion/service.py`)
+
+| Span Name | Type | Input Payload / Initial Metadata | Output / Execution Updates |
+| --- | --- | --- | --- |
+| **`ingestion`** | Parent Trace | `source_name` (filename), `file_bytes` | Pipeline status & completion time |
+| **`parse`** | Child Span | `source_name`, `file_bytes` | Extracted text size and document parse latency |
+| **`chunking`** | Child Span | `source_name`, `file_bytes` | Total chunk count created & chunking stats |
+| **`registry`** | Child Span | `document_id`, `version` | Document metadata registration status |
+| **`indexing`** | Child Span | `document_id`, `version` | Vector embedding generation & Qdrant insertion latency |
+
 ## Automated Quality Evaluation Suite
 
 ### CLI Evaluator (`src/evaluation/runner.py`)

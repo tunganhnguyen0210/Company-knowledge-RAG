@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 from domain.schemas import (
     ChatResponse,
     Citation,
-    Principal,
     RetrievalInfo,
 )
 from observability.tracing import Tracer
@@ -41,26 +40,25 @@ class ChatService:
         self.tracer = tracer
         self.retrieval_limit = retrieval_limit
 
-    def answer(self, question: str, principal: Principal | None = None) -> ChatResponse:
-        active_principal = principal or Principal()
+    def answer(self, question: str) -> ChatResponse:
         request_id = str(uuid4())
         with self.tracer.span(
             "rag-request",
             self.tracer.safe_payload(
-                {"request_id": request_id, "question": question, "subject": active_principal.subject}
+                {"request_id": request_id, "question": question}
             ),
         ):
-            return self._answer(question, active_principal, request_id)
+            return self._answer(question, request_id)
 
-    def _answer(self, question: str, principal: Principal, request_id: str) -> ChatResponse:
+    def _answer(self, question: str, request_id: str) -> ChatResponse:
         started = time.perf_counter()
         with self.tracer.span(
             "retrieval",
             self.tracer.safe_payload(
-                {"request_id": request_id, "question": question, "roles": sorted(principal.roles)}
+                {"request_id": request_id, "question": question}
             ),
         ) as retrieval_observation:
-            hits = self.store.search(question, principal, self.retrieval_limit)
+            hits = self.store.search(question, limit=self.retrieval_limit)
             latency_ms = (time.perf_counter() - started) * 1000
             self.tracer.update(
                 retrieval_observation,
