@@ -37,8 +37,9 @@ def create_app(
     provider = provider or _build_provider(settings)
     registry = DocumentRegistry(settings.registry_path)
     enricher = LLMChunkEnricher(provider) if settings.enable_enrichment else None
-    ingestion = IngestionService(registry, store, settings.upload_dir, enricher)
-    chat = ChatService(store, provider, Tracer(settings), settings.retrieval_limit)
+    tracer = Tracer(settings)
+    ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
+    chat = ChatService(store, provider, tracer, settings.retrieval_limit)
 
     app = FastAPI(
         title="Company Knowledge RAG",
