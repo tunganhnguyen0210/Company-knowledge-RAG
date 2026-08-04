@@ -147,8 +147,9 @@ def _build_provider(settings: Settings) -> GenerationProvider:
 def _build_configured_provider(settings: Settings, provider: MainProvider) -> GenerationProvider:
     match provider:
         case MainProvider.GEMINI:
+            key_pool = settings.build_gemini_key_pool()
             return GeminiProvider(
-                settings.gemini_api_key,
+                key_pool,
                 settings.gemini_model,
                 settings.provider_timeout_seconds,
             )
@@ -182,7 +183,7 @@ def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
 
 def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
     embedder = GeminiEmbeddingProvider(
-        settings.gemini_api_key,
+        settings.build_gemini_key_pool(),
         settings.embedding_model,
         settings.vector_size,
     )

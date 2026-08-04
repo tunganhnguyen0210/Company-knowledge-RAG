@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4.1-mini"
     provider_timeout_seconds: float = 30.0
     provider_max_attempts: int = 2
+    gemini_key_cooldown_seconds: float = 60.0
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str = ""
     qdrant_collection: str = "company_knowledge"
@@ -76,6 +77,18 @@ class Settings(BaseSettings):
             raise ValueError("full tracing requires allow_sensitive_tracing=true")
         return self
 
+    def build_gemini_key_pool(self, environment: dict[str, str] | None = None) -> GeminiKeyPool:
+        import os
+        from providers.gemini_key_pool import GeminiKeyPool
+
+        env = dict(os.environ if environment is None else environment)
+        if self.gemini_api_key and "GEMINI_API_KEY" not in env:
+            env["GEMINI_API_KEY"] = self.gemini_api_key
+
+        return GeminiKeyPool.from_environment(
+            env, cooldown_seconds=self.gemini_key_cooldown_seconds
+        )
+
     def principal_for_key(self, api_key: str) -> Principal:
         mapping = _parse_api_key_mapping(self.api_keys)
         roles = mapping.get(api_key, ["*"])
@@ -86,3 +99,4 @@ class Settings(BaseSettings):
         if self.environment != "development":
             return None
         return next(iter(_parse_api_key_mapping(self.api_keys)))
+
