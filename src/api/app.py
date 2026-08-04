@@ -14,10 +14,12 @@ from ingestion.enrichment import LLMChunkEnricher
 from ingestion.parser import UnsupportedDocumentError
 from ingestion.service import IngestionService
 from observability.tracing import Tracer
-from providers.base import GenerationProvider, ProviderError
-from providers.gemini import GeminiEmbeddingProvider, GeminiProvider
+from providers.base import EmbeddingProvider, GenerationProvider, ProviderError
+from providers.gemini import GeminiProvider
+from providers.jina import JinaEmbeddingProvider
 from providers.openai import OpenAIProvider
 from providers.openrouter import OpenRouterProvider
+from providers.probe import probe_generation
 from providers.router import ProviderRouter
 from retrieval.base import ChunkStore
 from retrieval.memory_store import MemoryChunkStore
@@ -37,9 +39,8 @@ def create_app(
     provider = provider or _build_provider(settings)
     registry = DocumentRegistry(settings.registry_path)
     enricher = LLMChunkEnricher(provider) if settings.enable_enrichment else None
-    tracer = Tracer(settings)
-    ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
-    chat = ChatService(store, provider, tracer, settings.retrieval_limit)
+    ingestion = IngestionService(registry, store, settings.upload_dir, enricher)
+    chat = ChatService(store, provider, Tracer(settings), settings.retrieval_limit)
 
     app = FastAPI(
         title="Company Knowledge RAG",
@@ -56,6 +57,8 @@ def create_app(
 
     @app.get("/docs", include_in_schema=False)
     def swagger_docs() -> HTMLResponse:
+        if app.openapi_url is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="OpenAPI schema is disabled")
         return get_swagger_ui_html(
             openapi_url=app.openapi_url,
             title=f"{app.title} - Swagger UI",
@@ -75,7 +78,13 @@ def create_app(
         provider_ready = getattr(current_provider, "ready", lambda: current_provider is not None)()
         if not request.app.state.store.ready() or not provider_ready:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Dependencies unavailable")
-        return {"status": "ready"}
+        try:
+            probed_model = probe_generation(current_provider)
+        except ProviderError as exc:
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE, f"Provider probe failed: {exc}"
+            ) from exc
+        return {"status": "ready", "probed_model": probed_model}
 
     @app.post("/v1/documents", response_model=Document, status_code=status.HTTP_201_CREATED)
     async def upload_document(
@@ -152,6 +161,7 @@ def _build_configured_provider(settings: Settings, provider: MainProvider) -> Ge
                 settings.gemini_api_key,
                 settings.gemini_model,
                 settings.provider_timeout_seconds,
+                settings.structured_max_retries,
             )
         case MainProvider.OPENROUTER:
             return OpenRouterProvider(
@@ -159,12 +169,14 @@ def _build_configured_provider(settings: Settings, provider: MainProvider) -> Ge
                 settings.openrouter_model,
                 settings.openrouter_allowed_models,
                 settings.provider_timeout_seconds,
+                settings.structured_max_retries,
             )
         case MainProvider.OPENAI:
             return OpenAIProvider(
                 settings.openai_api_key,
                 settings.openai_model,
                 settings.provider_timeout_seconds,
+                settings.structured_max_retries,
             )
     raise AssertionError(f"Unsupported main provider: {provider}")
 
@@ -181,12 +193,17 @@ def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
     return None
 
 
-def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
-    embedder = GeminiEmbeddingProvider(
-        settings.gemini_api_key,
+def _build_embedder(settings: Settings) -> EmbeddingProvider:
+    return JinaEmbeddingProvider(
+        settings.jina_api_key,
         settings.embedding_model,
         settings.vector_size,
+        settings.provider_timeout_seconds,
     )
+
+
+def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
+    embedder = _build_embedder(settings)
     return QdrantChunkStore(
         settings.qdrant_url,
         settings.qdrant_api_key,

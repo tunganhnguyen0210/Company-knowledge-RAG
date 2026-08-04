@@ -1,6 +1,7 @@
-from settings import Settings, TraceMode
 import pytest
 from pydantic import ValidationError
+
+from settings import Settings, TraceMode
 
 
 def test_settings_principal_for_key_returns_single_user_fallback() -> None:

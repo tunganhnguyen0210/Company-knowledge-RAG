@@ -15,14 +15,14 @@
 | --- | --- | --- | --- |
 | **Document Registry** | `data/registry.json` | Tracks document versions, content hashes, and processing statuses. | [`src/storage/registry.py`](../../src/storage/registry.py) |
 | **Source File Retainer** | `data/uploads/` | Stores raw uploaded bytes (`<doc_id>.v<ver>.<ext>`) for reindexing. | [`src/ingestion/service.py`](../../src/ingestion/service.py) |
-| **Vector Database** | Qdrant (`http://localhost:6333`) | Stores 3072d dense embeddings and chunk payload metadata. | [`src/retrieval/qdrant_store.py`](../../src/retrieval/qdrant_store.py) |
+| **Vector Database** | Qdrant (`http://localhost:6333`) | Stores 1024d dense embeddings and chunk payload metadata. | [`src/retrieval/qdrant_store.py`](../../src/retrieval/qdrant_store.py) |
 | **In-Memory Store** | Python List (MemoryChunkStore) | Fast fallback vector/lexical store for unit tests and local dev. | [`src/retrieval/memory_store.py`](../../src/retrieval/memory_store.py) |
 
 ## Vector Indexing Strategy
 
 ### Collection Configuration (`QdrantChunkStore`)
 - **Collection Name**: Configurable via `QDRANT_COLLECTION` (defaults to `"company_knowledge"`).
-- **Vector Parameters**: 3072 dimensions, Cosine distance similarity.
+- **Vector Parameters**: 1024 dimensions, Cosine distance similarity.
 - **Payload Indexing**: Qdrant payload index created on `status` (`ready`, `processing`, `needs_ocr`, `failed`) to enable instant filtered retrieval.
 
 ### Status-Based Vector Filtering

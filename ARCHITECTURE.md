@@ -28,7 +28,7 @@ graph TB
     subgraph DataLayer["Storage & Vector Indexing"]
         Registry["JSON Document Registry (data/registry.json)"]
         SourceStorage["Source Upload Storage (data/uploads/)"]
-        Qdrant["Qdrant Vector DB (Cosine 3072d)"]
+        Qdrant["Qdrant Vector DB (Cosine 1024d)"]
         BM25["In-Process BM25 Lexical Index"]
     end
 
@@ -81,14 +81,15 @@ graph TB
 - **Key Responsibilities**:
   - **Source Store**: Stores raw upload bytes in `data/uploads/` to enable reindexing.
   - **Document Registry**: Tracks document IDs, versions, content hashes, and statuses in `data/registry.json`.
-  - **Vector Collection**: Stores 3072-dimensional embeddings in Qdrant using cosine similarity, filtering exclusively on `status == "ready"`.
+  - **Vector Collection**: Stores 1024-dimensional embeddings in Qdrant using cosine similarity, filtering exclusively on `status == "ready"`.
 
 ### 4. Retrieval & Generation Engine (`src/retrieval/` & `src/generation/`)
 - **Purpose**: Retrieves ingested document chunks, builds prompts, calls LLM providers, and validates citations.
-- **Key Modules**: [`hybrid.py`](src/retrieval/hybrid.py), [`service.py`](src/generation/service.py), [`router.py`](src/providers/router.py), [`answer_v1.py`](src/prompts/answer_v1.py)
+- **Key Modules**: [`hybrid.py`](src/retrieval/hybrid.py), [`service.py`](src/generation/service.py), [`router.py`](src/providers/router.py), [`structured.py`](src/providers/structured.py), [`answer_v2.py`](src/prompts/answer_v2.py)
 - **Key Responsibilities**:
   - **Hybrid Search**: Combines Qdrant Dense Vector search with in-process BM25 Lexical search via Reciprocal Rank Fusion (RRF, `k=60`).
-  - **Citation Gate & Abstention**: Validates that LLM output contains valid `[C<n>]` citation markers mapping to retrieved context; converts uncited outputs to standard abstention answers.
+  - **Structured Output**: Every LLM call goes through [instructor](https://github.com/567-labs/instructor), so providers return validated Pydantic models (`GroundedAnswer`, `ChunkEnrichment`) instead of free-form text.
+  - **Citation Gate & Abstention**: Validates that the returned citation indexes map to retrieved context; converts uncited outputs to standard abstention answers.
 
 ### 5. Observability & Quality Evaluation (`src/observability/` & `src/evaluation/`)
 - **Purpose**: Provides operational tracing and automated quality evaluation.

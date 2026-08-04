@@ -5,7 +5,7 @@ from enum import StrEnum
 from hashlib import sha256
 from pathlib import Path
 
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from domain.schemas import Principal
@@ -43,7 +43,8 @@ class Settings(BaseSettings):
     main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lites"
-    embedding_model: str = "gemini-embedding-001"
+    embedding_model: str = "jina-embeddings-v3"
+    jina_api_key: str = ""
     openrouter_api_key: str = ""
     openrouter_model: str = "google/gemini-3.6-flash"
     openrouter_allowed_models: set[str] = Field(
@@ -53,10 +54,14 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4.1-mini"
     provider_timeout_seconds: float = 30.0
     provider_max_attempts: int = 2
+    structured_max_retries: int = 2
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str = ""
     qdrant_collection: str = "company_knowledge"
-    vector_size: int = 3072
+    vector_size: int = Field(
+        default=1024,
+        validation_alias=AliasChoices("vector_size", "embedding_dimensions"),
+    )
     upload_dir: Path = Path("data/uploads")
     registry_path: Path = Path("data/registry.json")
     max_upload_bytes: int = 20 * 1024 * 1024

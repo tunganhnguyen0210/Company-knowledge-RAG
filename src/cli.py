@@ -36,7 +36,7 @@ def ingest() -> None:
     roles = {role.strip() for role in args.roles.split(",") if role.strip()}
     paths = sorted(args.path.iterdir()) if args.path.is_dir() else [args.path]
     for path in paths:
-        if path.suffix.lower() not in {".md", ".txt", ".pdf"}:
+        if path.suffix.lower() not in {".md", ".txt", ".pdf", ".docx"}:
             continue
         document = app.state.ingestion.ingest_bytes(path.name, path.read_bytes(), roles)
         print(f"{document.source_name}: {document.status} v{document.version} ({document.id})")

@@ -5,9 +5,9 @@ Dịch vụ RAG cho tài liệu nội bộ công ty, ưu tiên kiểm soát truy
 ## Kiến trúc
 
 ```text
-Upload/CLI → Parse → Versioned chunks → Gemini embeddings → Qdrant
+Upload/CLI → Parse → Versioned chunks → Jina embeddings → Qdrant
                                                      ↓ ACL filter
-Client → FastAPI/API key → Dense + BM25 + RRF → Prompt answer_v1 → MAIN_PROVIDER
+Client → FastAPI/API key → Dense + BM25 + RRF → Prompt answer_v2 → MAIN_PROVIDER
                             └──────── Langfuse trace ────────┘
 ```
 
@@ -19,13 +19,13 @@ Yêu cầu: Python 3.11+, [uv](https://docs.astral.sh/uv/) và Qdrant.
 
 ```powershell
 Copy-Item .env.example .env
-# Đặt MAIN_PROVIDER, điền GEMINI_API_KEY (luôn cần cho embeddings), API key của LLM đã chọn và thay API key mẫu trong .env
+# Đặt MAIN_PROVIDER, điền JINA_API_KEY (cần cho embeddings), API key của LLM đã chọn và thay API key mẫu trong .env
 uv sync --locked --group dev --no-group eval
 docker compose up -d qdrant
 uv run company-rag-serve --reload
 ```
 
-Swagger: `http://localhost:8000/docs`. Health chỉ kiểm tra process; readiness kiểm tra provider đã được cấu hình và kết nối Qdrant. Readiness không gọi model trả phí nên không xác thực credential Gemini bằng network request.
+Swagger: `http://localhost:8000/docs`. Health chỉ kiểm tra process; readiness kiểm tra kết nối Qdrant rồi gọi model thật bằng một prompt ngắn, nên nó bắt được cả lỗi credential và lỗi routing model — đổi lại mỗi lần gọi `/ready` tốn một request LLM.
 
 ## Nạp tài liệu
 
@@ -47,7 +47,11 @@ curl -X POST http://localhost:8000/v1/documents \
 
 Hỗ trợ UTF-8 Markdown, text và PDF. PDF scan không có text được ghi nhận với trạng thái `needs_ocr`; OCR chưa thuộc phạm vi v1. Upload cùng nội dung là idempotent; nội dung mới của cùng tên nguồn tạo version mới và thay chunks active.
 
-Đặt `ENABLE_ENRICHMENT=true` để tạo summary, câu hỏi giả định, contextual prefix và metadata bằng một structured JSON call cho mỗi chunk. Mặc định tắt để tránh chi phí ingest ngoài ý muốn; nội dung gốc luôn được giữ riêng để citation.
+Đặt `ENABLE_ENRICHMENT=true` để tạo summary, câu hỏi giả định, contextual prefix và metadata bằng một structured call cho mỗi chunk. Mặc định tắt để tránh chi phí ingest ngoài ý muốn; nội dung gốc luôn được giữ riêng để citation.
+
+## Structured output
+
+Mọi lời gọi LLM đi qua [instructor](https://github.com/567-labs/instructor): provider trả về Pydantic model đã validate (`GroundedAnswer`, `ChunkEnrichment`) thay vì text tự do, không còn parse JSON bằng regex. instructor chọn cơ chế mạnh nhất cho từng provider — `responseSchema` native của Gemini, tool calling của OpenAI, JSON schema trong prompt cho các backend hỗn hợp của OpenRouter — và reask kèm lỗi validation khi payload sai. `STRUCTURED_MAX_RETRIES` (mặc định `2`) giới hạn số lần reask; hết lượt sẽ raise `ProviderError` không transient nên router không phí lượt fallback.
 
 ## Hỏi đáp
 
@@ -58,7 +62,7 @@ curl -X POST http://localhost:8000/v1/chat \
   -d '{"question":"Nhân viên được nghỉ phép bao nhiêu ngày?"}'
 ```
 
-Response gồm `answer`, `citations`, thống kê retrieval và `request_id`. ACL được áp dụng trong Qdrant trước khi trả candidates. Prompt `answer_v1` coi context là dữ liệu không tin cậy, yêu cầu citation và từ chối khi không đủ bằng chứng.
+Response gồm `answer`, `citations`, thống kê retrieval và `request_id`. ACL được áp dụng trong Qdrant trước khi trả candidates. Prompt `answer_v2` coi context là dữ liệu không tin cậy, yêu cầu citation và từ chối khi không đủ bằng chứng.
 
 ## Langfuse và quyền riêng tư
 
@@ -96,7 +100,7 @@ Không expose Qdrant ra mạng công cộng ở production. API key v1 là bư�
 
 ## Sự cố thường gặp
 
-- `/ready` trả 503: kiểm tra `GEMINI_API_KEY`, API key của `MAIN_PROVIDER`, kết nối Qdrant và dimension của embedding model.
+- `/ready` trả 503: đọc `detail` trong response — nó chứa nguyên văn lỗi từ provider. Kiểm tra `JINA_API_KEY`, API key của `MAIN_PROVIDER`, kết nối Qdrant và `EMBEDDING_DIMENSIONS` khớp với collection.
 - Chat trả 401: thiếu hoặc sai `X-API-Key`; key phải tồn tại trong JSON `API_KEYS`.
 - Upload PDF trả `needs_ocr`: tài liệu là bản scan, cần OCR trước khi reindex.
 - OpenRouter không chạy: model phải có trong `OPENROUTER_ALLOWED_MODELS`. Nếu lỗi tạm thời, hệ thống thử provider khác đã được cấu hình.
