@@ -33,11 +33,14 @@ def ingest() -> None:
     settings = Settings()
     app = create_app(settings)
     paths = sorted(args.path.iterdir()) if args.path.is_dir() else [args.path]
-    for path in paths:
-        if path.suffix.lower() not in {".md", ".txt", ".pdf", ".docx"}:
-            continue
-        document = app.state.ingestion.ingest_bytes(path.name, path.read_bytes())
-        print(f"{document.source_name}: {document.status} v{document.version} ({document.id})")
+    try:
+        for path in paths:
+            if path.suffix.lower() not in {".md", ".txt", ".pdf", ".docx"}:
+                continue
+            document = app.state.ingestion.ingest_bytes(path.name, path.read_bytes())
+            print(f"{document.source_name}: {document.status} v{document.version} ({document.id})")
+    finally:
+        app.state.tracer.flush()
 
 
 def evaluate() -> None:
