@@ -28,15 +28,39 @@ class Tracer:
             return nullcontext()
         return cast(
             AbstractContextManager[Any],
-            self._client.start_as_current_observation(name=name, metadata=metadata),
+            self._client.start_as_current_observation(
+                name=name, metadata=self.safe_payload(metadata)
+            ),
         )
 
     def safe_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         if self.mode is TraceMode.FULL:
             return payload
-        return {key: value for key, value in payload.items() if key not in {"question", "context", "answer"}}
+        sensitive_keys = {
+            "answer",
+            "context",
+            "parsed_text",
+            "prompt",
+            "question",
+            "response",
+            "system_instruction",
+            "text",
+            "user_prompt",
+        }
 
-    @staticmethod
-    def update(observation: Any, metadata: dict[str, Any]) -> None:
+        def sanitize(value: Any) -> Any:
+            if isinstance(value, dict):
+                return {
+                    key: sanitize(nested_value)
+                    for key, nested_value in value.items()
+                    if key not in sensitive_keys
+                }
+            if isinstance(value, list):
+                return [sanitize(item) for item in value]
+            return value
+
+        return cast(dict[str, Any], sanitize(payload))
+
+    def update(self, observation: Any, metadata: dict[str, Any]) -> None:
         if observation is not None and hasattr(observation, "update"):
-            observation.update(metadata=metadata)
+            observation.update(metadata=self.safe_payload(metadata))
