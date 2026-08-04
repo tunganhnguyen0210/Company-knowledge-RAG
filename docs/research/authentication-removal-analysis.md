@@ -74,7 +74,7 @@ Transitioning to a **single-user / open workspace model** requires eliminating A
 
 ### Phase 4: Test Suite & Architecture Documentation Update
 1. Update test files (`test_retrieval.py`, `test_generation.py`, `test_api.py`) for unauthenticated operation.
-2. Update `ARCHITECTURE.md` and `docs/architectures/` to document the single-user / open workspace architecture model.
+2. Update `RAG-ARCHITECTURE.md` and `docs/architectures/` to document the single-user / open workspace architecture model.
 
 ---
 
