@@ -25,7 +25,7 @@ class RecordingClient:
 
 
 def test_metadata_only_removes_sensitive_values_recursively() -> None:
-    tracer = Tracer(Settings(trace_mode="metadata-only"))
+    tracer = Tracer(Settings(trace_mode="metadata-only", _env_file=None))
     payload = tracer.safe_payload(
         {
             "question": "secret question",
@@ -38,13 +38,13 @@ def test_metadata_only_removes_sensitive_values_recursively() -> None:
 
 
 def test_full_mode_preserves_sensitive_payload() -> None:
-    tracer = Tracer(Settings(trace_mode="full", allow_sensitive_tracing=True))
+    tracer = Tracer(Settings(trace_mode="full", allow_sensitive_tracing=True, _env_file=None))
     payload = {"question": "q", "context": ["c"], "answer": "a"}
     assert tracer.safe_payload(payload) == payload
 
 
 def test_update_sends_only_safe_metadata_to_active_observation() -> None:
-    tracer = Tracer(Settings(trace_mode="metadata-only"))
+    tracer = Tracer(Settings(trace_mode="metadata-only", _env_file=None))
     observation = RecordingObservation()
 
     tracer.update(observation, {"answer": "private", "result_count": 1})
@@ -53,7 +53,7 @@ def test_update_sends_only_safe_metadata_to_active_observation() -> None:
 
 
 def test_span_sends_only_safe_metadata_to_langfuse_client() -> None:
-    tracer = Tracer(Settings(trace_mode="metadata-only"))
+    tracer = Tracer(Settings(trace_mode="metadata-only", _env_file=None))
     client = RecordingClient()
     tracer._client = client
 

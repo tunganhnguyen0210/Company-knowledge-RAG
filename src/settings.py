@@ -37,13 +37,15 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (dotenv_settings, init_settings, env_settings, file_secret_settings)
+        return (init_settings, dotenv_settings, env_settings, file_secret_settings)
 
     environment: str = "development"
     main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
-    embedding_model: str = "gemini-embedding-001"
+    jina_api_key: str = ""
+    embedding_model: str = "jina-embeddings-v5-omni-small"
+    reranker_model: str = ""
     openrouter_api_key: str = ""
     openrouter_model: str = "deepseek/deepseek-v4-flash-0731"
     openrouter_allowed_models: set[str] = Field(

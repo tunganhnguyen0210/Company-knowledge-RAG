@@ -203,18 +203,7 @@ class GeminiEmbeddingProvider:
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         vectors: list[list[float]] = []
         for batch in batched(texts, self.batch_size):
-            batch_vectors = self._embed(batch, DOCUMENT_TASK)
-            if len(batch_vectors) != len(batch):
-                # Fall back to single-item embedding if batch API truncates
-                batch_vectors = []
-                for single_text in batch:
-                    batch_vectors.extend(self._embed([single_text], DOCUMENT_TASK))
-            vectors.extend(batch_vectors)
-        if len(vectors) != len(texts):
-            raise ProviderError(
-                f"Gemini returned {len(vectors)} embeddings for {len(texts)} chunks",
-                transient=False,
-            )
+            vectors.extend(self._embed(batch, DOCUMENT_TASK))
         return vectors
 
     def embed_query(self, text: str) -> list[float]:
@@ -235,10 +224,16 @@ class GeminiEmbeddingProvider:
                     output_dimensionality=self.output_dimension,
                 ),
             )
+            embeddings = response.embeddings or []
+            if len(embeddings) != len(texts):
+                raise ProviderError(
+                    f"Gemini returned {len(embeddings)} embeddings for {len(texts)} chunks",
+                    transient=False,
+                )
             return [
                 # Truncated Matryoshka vectors need renormalizing before cosine search.
                 normalize_embedding([float(value) for value in embedding.values or []])
-                for embedding in response.embeddings or []
+                for embedding in embeddings
             ]
 
         return self._embed_with_retry(_operation)
