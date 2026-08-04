@@ -1,85 +1,39 @@
-# Indexing, Storage, and Access Control
+# Indexing & Storage Layer
 
 ## Fresher AI Engineer Key Concepts
 
 > [!NOTE]
-> **Core Concepts in Storage & Access Control:**
-> 1. **Multi-Tiered Storage**: Enterprise RAG systems store different data types in specialized tiers: raw binary files on disk for preservation, structured metadata in a registry for fast status lookup, and high-dimensional vectors in a Vector Database for similarity search.
-> 2. **Pre-Filtering vs Post-Filtering ACL**: 
->    - *Post-filtering*: Running vector search to get top 10 matches, then dropping matches the user isn't allowed to see. **Dangerous!** If top matches are all restricted, the user gets 0 results or leaked metadata count.
->    - *Pre-filtering*: Injecting boolean security conditions directly into the Vector DB query *before* calculating similarity scores. **Secure & Accurate!** Only authorized vectors are scored.
+> **What is Multi-Tiered Storage in RAG?**  
+> RAG applications rely on multiple storage mechanisms tailored to different speeds and query types:
+> 1. **Raw File Store**: Retains exact uploaded source bytes on disk so documents can be re-parsed or reindexed when algorithms improve.
+> 2. **Document Registry**: A lightweight JSON database managing document metadata, version history, and status flags.
+> 3. **Vector Database**: High-performance nearest-neighbor search index (Qdrant) filtering on `status == "ready"`.
 
-## Stored Data Representations
+## Storage Components Matrix
 
-| Data Category | Storage Location | Format / Structure | Purpose |
+| Storage Subsystem | Location / Engine | Purpose | Key Module |
 | --- | --- | --- | --- |
-| **Source Bytes** | `data/uploads/{document_id}/v{version}` | Raw binary (`.pdf`, `.md`, `.txt`) | Enables future re-indexing without requiring client re-uploads. |
-| **Document Registry** | `data/registry.json` | JSON key-value store | Tracks document metadata, version history, SHA-256 hashes, status, and ACL. |
-| **Chunk Vectors & Payloads** | Qdrant Collection (`company_knowledge`) | 3072d Cosine Vector + JSON Payload | Powers ACL-filtered dense similarity search and lexical retrieval. |
+| **Document Registry** | `data/registry.json` | Tracks document versions, content hashes, and processing statuses. | [`src/storage/registry.py`](../../src/storage/registry.py) |
+| **Source File Retainer** | `data/uploads/` | Stores raw uploaded bytes (`<doc_id>.v<ver>.<ext>`) for reindexing. | [`src/ingestion/service.py`](../../src/ingestion/service.py) |
+| **Vector Database** | Qdrant (`http://localhost:6333`) | Stores 3072d dense embeddings and chunk payload metadata. | [`src/retrieval/qdrant_store.py`](../../src/retrieval/qdrant_store.py) |
+| **In-Memory Store** | Python List (MemoryChunkStore) | Fast fallback vector/lexical store for unit tests and local dev. | [`src/retrieval/memory_store.py`](../../src/retrieval/memory_store.py) |
 
-> [!WARNING]
-> **Registry Process Coordination**: The default JSON document registry is synchronized in-memory within a single API process. Before scaling the API out to multiple replicas, move the registry store to a shared transactional database (e.g., PostgreSQL).
+## Vector Indexing Strategy
 
-## Vector Indexing & Embedding Setup
+### Collection Configuration (`QdrantChunkStore`)
+- **Collection Name**: Configurable via `QDRANT_COLLECTION` (defaults to `"company_knowledge"`).
+- **Vector Parameters**: 3072 dimensions, Cosine distance similarity.
+- **Payload Indexing**: Qdrant payload index created on `status` (`ready`, `processing`, `needs_ocr`, `failed`) to enable instant filtered retrieval.
 
-```text
-  +-----------------------+      Gemini Embeddings      +-----------------------+
-  |  chunk.retrieval_text | --------------------------> | 3072-Dimensional Vector|
-  +-----------------------+      (3072 Dimensions)      +-----------------------+
-                                                                    |
-                                                                    v
-                                                        +-----------------------+
-                                                        |  Qdrant Vector Store  |
-                                                        |  (Cosine Distance)    |
-                                                        +-----------------------+
+### Status-Based Vector Filtering
+In the single-user open workspace model, vector queries search across all processed documents by enforcing a simple, robust status filter:
+
+```json
+{
+  "must": [
+    { "key": "status", "match": { "value": "ready" } }
+  ]
+}
 ```
 
-1. **Embedding Generation**: Uses `GeminiEmbeddingProvider` with `EMBEDDING_MODEL` producing **3,072-dimensional vectors**. If enrichment is active, `chunk.retrieval_text` is embedded; otherwise, `chunk.text` is used.
-2. **Collection Configuration**: On initial startup, Qdrant creates the `company_knowledge` collection configured with **Cosine distance**.
-3. **Payload Indexing**: To optimize search speeds, keyword indexes are explicitly created on key payload fields:
-   - `allowed_roles` (used for ACL pre-filtering)
-   - `status` (ensures only `ready` documents are searchable)
-   - `document_id` & `version` (used for version cleanup and re-indexing)
-
-**Source Modules**: [`api/app.py`](../../src/company_knowledge_rag/api/app.py), [`retrieval/qdrant_store.py`](../../src/company_knowledge_rag/retrieval/qdrant_store.py), and [`settings.py`](../../src/company_knowledge_rag/settings.py).
-
-## Access Control List (ACL) Model
-
-Security is built on **Principal-Based Pre-Filtering**:
-
-```mermaid
-flowchart TD
-    UserQuery["Incoming User Question + X-API-Key"] --> Auth["Auth Module: Map Key to Principal Roles"]
-    Auth --> Roles["Principal Roles: ['engineering', 'public']"]
-    
-    Roles --> QdrantFilter["Qdrant Vector Search Engine"]
-    
-    subgraph PreFilteringGuard["Pre-Filter Condition (Evaluated FIRST)"]
-        Condition["(allowed_roles INTERSECT principal_roles != EMPTY)<br/>AND (status == 'ready')"]
-    end
-    
-    QdrantFilter --- PreFilteringGuard
-    PreFilteringGuard -->|Eligible Chunks Only| Scoring["Cosine Vector Scoring & BM25 Ranking"]
-    Scoring --> Results["Top Authorized Context Chunks"]
-```
-
-### Logical Pre-Filter Rule
-Qdrant enforces the following filter condition before vector ranking or lexical scrolling begins:
-
-$$\text{allowed\_roles} \cap \text{principal\_roles} \neq \emptyset \quad \land \quad \text{status} == \text{"ready"}$$
-
-### Security Guarantees
-- An API caller without required roles will receive zero search candidates.
-- Unauthorized document chunks are physically excluded from search candidate sets, preventing unauthorized data from entering the LLM prompt or trace logs.
-
-## Versioning & Atomic Vector Replacement
-
-When an existing source file is uploaded with updated content:
-
-1. The service increments the document version (e.g., `v1` -> `v2`).
-2. New chunks for `v2` are parsed, embedded, and upserted into Qdrant.
-3. Once `v2` vector insertion completes successfully, vectors associated with previous versions (`v1`) for that `document_id` are deleted from Qdrant.
-
-This guarantees zero downtime during re-indexing and ensures search queries always target the single active ready version of a document.
-
-**Source Interfaces**: [`retrieval/base.py`](../../src/company_knowledge_rag/retrieval/base.py) and [`domain/schemas.py`](../../src/company_knowledge_rag/domain/schemas.py).
+This ensures that partially uploaded, processing, or failed documents are never retrieved, while all valid documents remain globally searchable.

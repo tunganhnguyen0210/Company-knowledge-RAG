@@ -1,114 +1,60 @@
-# Document Loading and Ingestion
+# Document Loading and Ingestion Pipeline
 
 ## Fresher AI Engineer Key Concepts
 
 > [!NOTE]
-> **Core Concepts in Document Ingestion:**
-> 1. **Document Ingestion**: The process of transforming raw unstructured files (PDFs, Markdown, text) into structured, search-ready embeddings.
-> 2. **Document Status Machine**: A document transitions between states (`ready` if text extracted successfully, `needs_ocr` if image-only PDF, or `failed` if corrupt). Only `ready` documents produce indexable chunks.
-> 3. **Content Hashing & Idempotency**: By hashing raw file bytes with SHA-256, re-uploading the exact same document avoids unnecessary re-indexing. Modifying content automatically increments the document version (`v1` -> `v2`).
-> 4. **LLM Contextual Enrichment**: Large documents often lose context when chunked. Enrichment uses an LLM to generate summaries and hypothetical questions per chunk, prepending them to the vector search field (`retrieval_text`) while leaving the raw text (`text`) intact for exact user citations.
+> **Why is Ingestion the Foundation of RAG?**  
+> An LLM is only as good as the context provided to it. The ingestion pipeline transforms raw unstructured documents (PDF, Markdown, Text) into clean, versioned, section-aware chunks stored in a vector database.
 
-## Inputs and Authorization
+## Overview
 
-Documents can enter the system via the HTTP REST endpoint (`POST /v1/documents`) or the CLI (`company-rag-ingest`).
+The ingestion pipeline handles raw file upload, content hashing, document parsing, deterministic chunking, optional LLM contextual enrichment, vector embedding, and persistence to both Qdrant and the local document registry.
 
-### Input Constraints & Validation
-- **Supported Formats**: UTF-8 `.md`, `.txt`, and text-extractable `.pdf`.
-- **Size Limits**: Enforced by `MAX_UPLOAD_BYTES` (default: 20 MiB).
-- **Access Control Guard**: Uploads require a non-empty list of `allowed_roles`.
-  - **Role Invariant**: Proposed roles must be a subset of the authenticated caller's roles. Callers cannot grant permissions they do not hold.
-  - **Re-ingestion Guard**: If the document name already exists, the caller must own the existing document and keep its ACL unchanged.
-
-**Source Modules**: [`api/app.py`](../../src/company_knowledge_rag/api/app.py) and [`ingestion/service.py`](../../src/company_knowledge_rag/ingestion/service.py).
-
-## Loading & Publication Sequence
+## Pipeline Architecture
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as Entry Point (API / CLI)
-    participant Service as IngestionService
-    participant Parser as Document Parser
-    participant Chunker as Chunker & Enricher
-    participant Storage as File Storage & Qdrant
-    participant Registry as Document Registry
-
-    Client->>Service: ingest_document(bytes, filename, roles)
-    Service->>Service: Hash file bytes (SHA-256) & check existing ACL
+flowchart LR
+    File[Raw Upload Bytes] --> Hash[Compute SHA-256 Digest]
+    Hash --> RegistryCheck{Check Registry}
+    RegistryCheck -->|New File| Parse[Parse Text & Format]
+    RegistryCheck -->|Same Hash & No Force| Skip[Return Existing Document]
+    RegistryCheck -->|Updated Hash / Force| Parse
     
-    alt Unchanged Bytes (Idempotent)
-        Service-->>Client: Return existing Document(id, version, status)
-    else New or Updated Content
-        Service->>Parser: parse_document(filename, bytes)
-        Parser-->>Service: Extracted text + MIME type
-        
-        alt Status == "needs_ocr" or "failed"
-            Service->>Registry: Record document status without chunks
-            Service-->>Client: Return Document(status="needs_ocr" | "failed")
-        else Status == "ready"
-            Service->>Chunker: chunk_document(parsed_text)
-            Chunker-->>Service: Raw Chunks (1200 chars limit)
-            
-            opt ENABLE_ENRICHMENT = true
-                Service->>Chunker: enrich_chunks(chunks)
-                Chunker-->>Service: Enriched Chunks (retrieval_text populated)
-            end
-            
-            Service->>Storage: Persist source bytes to data/uploads/
-            Service->>Storage: Upsert chunks to Qdrant & delete old version vectors
-            Service->>Registry: Upsert document metadata & set status="ready"
-            Registry-->>Client: Return Document(id, version, status="ready")
-        end
-    end
+    Parse --> StatusCheck{Text Extracted?}
+    StatusCheck -->|Yes| Chunk[Section-Aware Chunker]
+    StatusCheck -->|PDF No Text| OCR[Status: needs_ocr]
+    StatusCheck -->|Failed| Fail[Status: failed]
+    
+    Chunk --> Enrich{Enable Enrichment?}
+    Enrich -->|Yes| LLMEnrich[Generate Summary & Qs]
+    Enrich -->|No| Store
+    LLMEnrich --> Store[Embed Vectors & Save to Qdrant]
+    
+    Store --> WriteDisk[Write Source Bytes to Disk]
+    WriteDisk --> SaveReg[Upsert Document Registry]
 ```
 
-### Parsing Behavior
-- **Text & Markdown**: Read directly as UTF-8.
-- **PDF Files**: Parsed using `pypdf`. If valid text is extracted, status becomes `ready`. If no text is found (e.g., scanned images), status becomes `needs_ocr`. Corrupted files become `failed`.
-- **Source Preservation**: Original file bytes are stored under `data/uploads/{document_id}/v{version}` to allow future re-indexing without requiring re-upload.
+## Key Ingestion Steps
 
-## Chunking Strategy
+### 1. Versioning & SHA-256 De-duplication (`src/ingestion/service.py`)
+- Every uploaded document undergoes SHA-256 hashing.
+- If a document with the same source filename and hash exists, ingestion returns the existing document without reprocessing unless `force=True`.
+- If the content hash changes, the document version increments (e.g. `v1` -> `v2`), and prior chunk versions are safely pruned from Qdrant.
 
-Documents are split into smaller pieces before vector embedding using `chunk_document`:
+### 2. Document Parsing (`src/ingestion/parser.py`)
+- Supports `.md`, `.txt`, and `.pdf` formats.
+- Extracted text is normalized to UTF-8. PDF files without extractable text are tagged with `status = DocumentStatus.NEEDS_OCR`.
 
-- **Split Strategy**: Respects Markdown section headers (`#`, `##`, `###`) first, then splits long paragraphs into chunks up to **1,200 characters**.
-- **Metadata Provenance**: Every chunk carries metadata required for search filtering and citation display:
-  - `chunk_id`: Deterministic ID derived from `document_id` + `position`.
-  - `document_id` & `version`: Version tracking.
-  - `allowed_roles`: Copied directly from document ACL.
-  - `section_header`: Nearby section title for context.
-  - `sha256_hash`: Chunk content hash.
+### 3. Section-Aware Chunking (`src/ingestion/chunker.py`)
+- Documents are split into logical chunks based on headings and paragraph boundaries (target size ~1,200 characters).
+- Each chunk preserves section metadata and position indices to maintain logical context during retrieval.
 
-**Source Modules**: [`ingestion/chunker.py`](../../src/company_knowledge_rag/ingestion/chunker.py) and [`domain/schemas.py`](../../src/company_knowledge_rag/domain/schemas.py).
+### 4. Optional Contextual LLM Enrichment (`src/ingestion/enrichment.py`)
+- When `ENABLE_ENRICHMENT=true` in `settings.py`, an LLM pass generates:
+  1. A concise chunk summary.
+  2. Hypothetical user questions answered by the chunk.
+- These synthetic additions are prepended to `retrieval_text`, dramatically improving dense vector retrieval hit rates for abstract questions.
 
-## LLM Contextual Enrichment Pipeline
-
-When `ENABLE_ENRICHMENT=true` in configuration:
-
-```text
-               +-------------------------------------------+
-               |               Raw Chunk                   |
-               | "The server requires port 8080 open..."   |
-               +-------------------------------------------+
-                                     |
-                                     v  (LLM Enrichment Call)
-               +-------------------------------------------+
-               | Generated Summary & Hypo Questions        |
-               | "Summary: Server port configuration..."  |
-               +-------------------------------------------+
-                                     |
-                                     v
-   +-----------------------------------+-----------------------------------+
-   |          retrieval_text           |               text                |
-   | (Used for Qdrant Vector Embedding)|  (Used for Exact Citation Output) |
-   | "[Summary] + [Questions] + Raw"   |  "The server requires port..."    |
-   +-----------------------------------+-----------------------------------+
-```
-
-1. **Dual Text Representation**:
-   - `retrieval_text`: Enriched context (Summary + Questions + Chunk Text) embedded into vector space for maximum retrieval recall.
-   - `text`: Original untouched chunk text returned to the end user in citations to guarantee fidelity.
-2. **Schema Validation**: Enrichment outputs are parsed into strict Pydantic schemas. If the provider returns malformed output, ingestion fails safely rather than storing dirty data.
-
-**Source Module**: [`ingestion/enrichment.py`](../../src/company_knowledge_rag/ingestion/enrichment.py).
+### 5. Vector Store Upsert (`src/retrieval/qdrant_store.py`)
+- Chunks are embedded using Gemini (`gemini-embedding-001`) into 3072-dimensional vectors.
+- Payload objects containing chunk text, source name, status (`ready`), document ID, and version are written to Qdrant.
