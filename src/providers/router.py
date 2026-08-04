@@ -1,12 +1,18 @@
 import time
+from collections.abc import Callable
 from dataclasses import replace
+from typing import Any, TypeVar
 
 from providers.base import (
     GenerationProvider,
     GenerationRequest,
     GenerationResult,
     ProviderError,
+    StructuredResult,
+    StructuredT,
 )
+
+RoutedResultT = TypeVar("RoutedResultT", GenerationResult, StructuredResult[Any])
 
 
 class ProviderRouter:
@@ -24,10 +30,22 @@ class ProviderRouter:
         self.max_attempts = max(1, max_attempts)
 
     def generate(self, request: GenerationRequest) -> GenerationResult:
+        return self._route(lambda provider: provider.generate(request))
+
+    def generate_structured(
+        self,
+        request: GenerationRequest,
+        response_model: type[StructuredT],
+    ) -> StructuredResult[StructuredT]:
+        return self._route(lambda provider: provider.generate_structured(request, response_model))
+
+    def _route(
+        self, call: Callable[[GenerationProvider], RoutedResultT]
+    ) -> RoutedResultT:
         last_error: ProviderError | None = None
         for attempt in range(self.max_attempts):
             try:
-                result = self.primary.generate(request)
+                result = call(self.primary)
                 return replace(
                     result,
                     usage={
@@ -43,7 +61,7 @@ class ProviderRouter:
                 if attempt + 1 < self.max_attempts:
                     time.sleep(0.1 * (2**attempt))
         if self.fallback is not None:
-            result = self.fallback.generate(request)
+            result = call(self.fallback)
             return replace(
                 result,
                 usage={

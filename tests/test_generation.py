@@ -1,7 +1,7 @@
 from domain.schemas import Chunk, DocumentStatus, Principal
-from generation.service import ABSTENTION, ChatService
+from generation.service import ABSTENTION, ChatService, GroundedAnswer
 from observability.tracing import Tracer
-from providers.base import GenerationRequest, GenerationResult
+from providers.base import GenerationRequest, StructuredResult
 from retrieval.memory_store import MemoryChunkStore
 from settings import Settings
 
@@ -9,22 +9,31 @@ from settings import Settings
 class UncitedProvider:
     name = "stub"
 
-    def generate(self, request: GenerationRequest) -> GenerationResult:
-        return GenerationResult("Câu trả lời không có nguồn.", "stub", "stub")
+    def generate_structured(
+        self, request: GenerationRequest, response_model: type[GroundedAnswer]
+    ) -> StructuredResult[GroundedAnswer]:
+        answer = GroundedAnswer(answer="Câu trả lời không có nguồn.", citations=[])
+        return StructuredResult(answer, "stub", "stub")
 
 
 class CitedProvider:
     name = "stub"
 
-    def generate(self, request: GenerationRequest) -> GenerationResult:
-        return GenerationResult("Được nghỉ 15 ngày [C1].", "stub", "stub", {"input_tokens": 10})
+    def generate_structured(
+        self, request: GenerationRequest, response_model: type[GroundedAnswer]
+    ) -> StructuredResult[GroundedAnswer]:
+        answer = GroundedAnswer(answer="Được nghỉ 15 ngày [C1].", citations=[1])
+        return StructuredResult(answer, "stub", "stub", {"input_tokens": 10})
 
 
 class ZeroCitationProvider:
     name = "stub"
 
-    def generate(self, request: GenerationRequest) -> GenerationResult:
-        return GenerationResult("Nguồn không hợp lệ [C0].", "stub", "stub")
+    def generate_structured(
+        self, request: GenerationRequest, response_model: type[GroundedAnswer]
+    ) -> StructuredResult[GroundedAnswer]:
+        answer = GroundedAnswer(answer="Nguồn không hợp lệ [C0].", citations=[0])
+        return StructuredResult(answer, "stub", "stub")
 
 
 def test_generation_abstains_when_model_returns_no_valid_citation() -> None:
@@ -45,7 +54,12 @@ def test_generation_abstains_when_model_returns_no_valid_citation() -> None:
             )
         ],
     )
-    service = ChatService(store, UncitedProvider(), Tracer(Settings()), retrieval_limit=5)
+    service = ChatService(
+        store,
+        UncitedProvider(),
+        Tracer(Settings(langfuse_public_key="", langfuse_secret_key="")),
+        retrieval_limit=5,
+    )
 
     response = service.answer(
         "Nghỉ phép?",
@@ -119,7 +133,12 @@ def test_generation_rejects_zero_citation_index() -> None:
             )
         ],
     )
-    service = ChatService(store, ZeroCitationProvider(), Tracer(Settings()), 5)
+    service = ChatService(
+        store,
+        ZeroCitationProvider(),
+        Tracer(Settings(langfuse_public_key="", langfuse_secret_key="")),
+        5,
+    )
 
     response = service.answer("Policy?", Principal(subject="user", roles={"employee"}))
 

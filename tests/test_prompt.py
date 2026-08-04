@@ -1,8 +1,8 @@
 import importlib
 
 from domain.schemas import Chunk, DocumentStatus
-from prompts import answer_v1
-from prompts.answer_v1 import PROMPT_VERSION, render_answer_prompt
+from prompts import answer_v2
+from prompts.answer_v2 import PROMPT_VERSION, render_answer_prompt
 from prompts.loader import PromptDefinition
 
 
@@ -21,7 +21,7 @@ def test_prompt_marks_context_as_untrusted_and_assigns_citation_ids() -> None:
 
     prompt = render_answer_prompt("Chính sách là gì?", [chunk])
 
-    assert PROMPT_VERSION == "answer_v1"
+    assert PROMPT_VERSION == "answer_v2"
     assert "untrusted" in prompt.system_instruction.lower()
     assert "[C1]" in prompt.user_prompt
     assert chunk.text in prompt.user_prompt
@@ -37,10 +37,10 @@ def test_answer_prompt_uses_loaded_yaml_definition(monkeypatch) -> None:
     monkeypatch.setattr("prompts.loader.load_prompt", lambda _: definition)
 
     try:
-        module = importlib.reload(answer_v1)
+        module = importlib.reload(answer_v2)
         prompt = module.render_answer_prompt("Câu hỏi", [])
 
         assert prompt.system_instruction == "YAML system instruction"
         assert prompt.user_prompt == "CONTEXT=\nQUESTION=Câu hỏi"
     finally:
-        importlib.reload(answer_v1)
+        importlib.reload(answer_v2)

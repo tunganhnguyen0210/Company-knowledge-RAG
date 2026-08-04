@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import re
 import time
 from uuid import uuid4
+
+from pydantic import BaseModel, Field
 
 from domain.schemas import (
     ChatResponse,
@@ -11,11 +12,20 @@ from domain.schemas import (
     RetrievalInfo,
 )
 from observability.tracing import Tracer
-from prompts.answer_v1 import PROMPT_VERSION, render_answer_prompt
+from prompts.answer_v2 import PROMPT_VERSION, render_answer_prompt
 from providers.base import GenerationProvider, GenerationRequest
 from retrieval.base import ChunkStore
 
 ABSTENTION = "Không tìm thấy thông tin phù hợp trong tài liệu được phép truy cập."
+
+
+class GroundedAnswer(BaseModel):
+    """Output contract every provider must satisfy, enforced by instructor."""
+
+    answer: str = Field(description="Câu trả lời tiếng Việt, mỗi nhận định kèm marker [C1], [C2].")
+    citations: list[int] = Field(
+        description="Số thứ tự các đoạn CONTEXT đã dùng, ví dụ [1, 3]. Rỗng nếu không đủ bằng chứng."
+    )
 
 
 class ChatService:
@@ -77,19 +87,17 @@ class ChatService:
                 }
             ),
         ) as generation_observation:
-            result = self.provider.generate(
-                GenerationRequest(prompt.system_instruction, prompt.user_prompt)
+            result = self.provider.generate_structured(
+                GenerationRequest(prompt.system_instruction, prompt.user_prompt),
+                GroundedAnswer,
             )
             self.tracer.update(
                 generation_observation,
                 {"provider": result.provider, "model": result.model, **result.usage},
             )
+        # The model may still cite a chunk it was never shown; the range check is authoritative.
         cited_indexes = sorted(
-            {
-                int(value)
-                for value in re.findall(r"\[C(\d+)\]", result.text)
-                if 1 <= int(value) <= len(chunks)
-            }
+            {index for index in result.value.citations if 1 <= index <= len(chunks)}
         )
         citations = [
             Citation(
@@ -102,7 +110,7 @@ class ChatService:
             )
             for index in cited_indexes
         ]
-        answer = result.text if citations else ABSTENTION
+        answer = result.value.answer if citations else ABSTENTION
         return ChatResponse(
             answer=answer,
             citations=citations,

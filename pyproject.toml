@@ -61,3 +61,6 @@ python_version = "3.11"
 plugins = ["pydantic.mypy"]
 strict = true
 packages = ["src"]
+  "instructor>=1.12,<2",
+  # instructor needs jsonref to flatten $defs for the Gemini response schema.
+  "jsonref>=1.1,<2",
