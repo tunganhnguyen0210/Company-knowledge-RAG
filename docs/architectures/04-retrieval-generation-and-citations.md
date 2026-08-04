@@ -33,7 +33,7 @@ flowchart TD
 ## Detailed Workflow Steps
 
 ### 1. Hybrid Search (`src/retrieval/qdrant_store.py` & `src/retrieval/hybrid.py`)
-- **Dense Vector Search**: Embeds the user query via Jina (`jina-embeddings-v3`, task `retrieval.query` — deliberately a different task head from indexing) and queries Qdrant with a filter on `status == "ready"`.
+- **Dense Vector Search**: Embeds the user query via Gemini (`gemini-embedding-001`, task `RETRIEVAL_QUERY`) and queries Qdrant with a filter on `status == "ready"`.
 - **Lexical Search (BM25)**: Tokenizes ready chunk payloads using regex word boundaries and ranks them using `BM25Okapi`.
 - **Reciprocal Rank Fusion**: Combines dense and lexical ranks using RRF scoring:
   $$\text{Score}(d) = \sum_{m \in \{\text{dense}, \text{lexical}\}} \frac{1}{60 + \text{rank}_m(d)}$$

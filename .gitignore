@@ -16,3 +16,4 @@ qdrant_storage/
 .codex
 docs/references
 docs/research
+.pytest_tmp/

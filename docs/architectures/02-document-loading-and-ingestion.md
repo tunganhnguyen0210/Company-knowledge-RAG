@@ -58,5 +58,5 @@ flowchart LR
 - These synthetic additions are prepended to `retrieval_text`, dramatically improving dense vector retrieval hit rates for abstract questions.
 
 ### 5. Vector Store Upsert (`src/retrieval/qdrant_store.py`)
-- Chunks are embedded using Jina (`jina-embeddings-v3`, task `retrieval.passage`) into 1024-dimensional vectors.
+- Chunks are embedded using Gemini (`gemini-embedding-001`, task `RETRIEVAL_DOCUMENT`) into 1024-dimensional vectors.
 - Payload objects containing chunk text, source name, status (`ready`), document ID, and version are written to Qdrant.

@@ -73,13 +73,15 @@ flowchart TB
 
 ### REST Endpoints
 - **`POST /v1/documents`**: Accepts multipart file uploads. Ingests the document and returns its status.
+- **`GET /v1/documents/{document_id}`**: Retrieves document metadata, SHA-256 hash, chunk count, and processing status by ID.
 - **`POST /v1/documents/{document_id}/reindex`**: Re-reads retained source bytes from disk and re-runs ingestion.
 - **`POST /v1/chat`**: Accepts a question payload, performs hybrid retrieval across ready chunks, calls the LLM provider, and enforces citation gating.
 - **`GET /health`**: Process liveness check returning service and primary LLM model identity.
 - **`GET /ready`**: Operational readiness check verifying connection health for both Qdrant and LLM providers.
 
 ### Command-Line Interface (CLI) Tools
-- **`company-rag-ingest`**: Batch loads local Markdown/Text/PDF files or directories through the core `IngestionService`.
+- **`company-rag-serve`**: Launches the FastAPI application via Uvicorn server (`src/cli.py`).
+- **`company-rag-ingest`**: Batch loads local Markdown/Text/PDF/DOCX files or directories through the core `IngestionService`.
 - **`company-rag-evaluate`**: Runs the regression suite against [`evaluation/golden_set.json`](../../evaluation/golden_set.json) and outputs a detailed benchmark report.
 
 ## Deployment Architecture

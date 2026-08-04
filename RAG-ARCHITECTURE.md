@@ -15,7 +15,7 @@ The table below outlines the core technical decisions, underlying engineering ra
 
 ### Phase 1: Ingestion & Indexing (Offline)
 - **1.1 Document Loading & Cleaning**:
-  - *Key Decision*: **Standardize multi-format parsing** (PDF, Markdown, Text) with Unicode NFC normalization and status tracking (`ready`, `needs_ocr`, `failed`).
+  - *Key Decision*: **Standardize multi-format parsing** (PDF, Markdown, Text, DOCX) with Unicode NFC normalization and status tracking (`ready`, `needs_ocr`, `failed`).
   - *Rationale*: Eliminates text noise to prevent downstream retrieval degradation.
   - *Primary File*: [`src/ingestion/parser.py`](src/ingestion/parser.py)
 - **1.2 Chunking Strategy**:
@@ -43,9 +43,9 @@ The table below outlines the core technical decisions, underlying engineering ra
 
 ### Phase 3: Generation & LLM Routing (Runtime)
 - **3.1 Prompt Context Isolation**:
-  - *Key Decision*: Untrusted context blocks (`<context>` tags) in system prompt (`answer_v1.py`).
-  - *Rationale*: Protects against prompt injection from ingested document text.
-  - *Primary File*: [`src/prompts/answer_v1.py`](src/prompts/answer_v1.py)
+  - *Key Decision*: Context formatting with citation tags in system prompt (`answer_v2.py`).
+  - *Rationale*: Protects against prompt injection and enforces explicit document grounding.
+  - *Primary File*: [`src/prompts/answer_v2.py`](src/prompts/answer_v2.py)
 - **3.2 Provider Failover Router**:
   - *Key Decision*: Multi-provider LLM Router (Gemini, OpenRouter, OpenAI) with automatic retry fallback.
   - *Rationale*: Prevents service downtime caused by third-party provider outages or rate limits.
@@ -53,7 +53,7 @@ The table below outlines the core technical decisions, underlying engineering ra
 
 ### Phase 4: Safety & Citation Guardrails (Runtime)
 - **4.1 Citation Verification & Abstention Guard**:
-  - *Key Decision*: Deterministic regex validation of `[C1]`, `[C2]` citation markers; forces automatic abstention (*"Không tìm thấy thông tin phù hợp..."*) if citations are missing or invalid.
+  - *Key Decision*: Deterministic Instructor structured output validation (`GroundedAnswer` schema) of citation indexes; forces automatic abstention (*"Không tìm thấy thông tin phù hợp..."*) if citations are missing or invalid.
   - *Rationale*: Guarantees zero ungrounded hallucinations.
   - *Primary File*: [`src/generation/service.py`](src/generation/service.py)
 
@@ -73,8 +73,9 @@ The table below outlines the core technical decisions, underlying engineering ra
 graph TB
     subgraph Client["Client & Entry Points"]
         HTTP["HTTP API Client / Desktop UI"]
-        CLI_Ingest["CLI Ingestion Tool"]
-        CLI_Eval["CLI Golden-Set Evaluator"]
+        CLI_Serve["CLI Server Launcher (company-rag-serve)"]
+        CLI_Ingest["CLI Ingestion Tool (company-rag-ingest)"]
+        CLI_Eval["CLI Golden-Set Evaluator (company-rag-evaluate)"]
     end
 
     subgraph Backend["FastAPI Core & Services"]
@@ -98,6 +99,7 @@ graph TB
     end
 
     HTTP -->|Multipart Upload / Chat| API
+    CLI_Serve --> API
     CLI_Ingest --> IngestService
     CLI_Eval --> ChatService
 
@@ -122,10 +124,10 @@ graph TB
 
 | Subsystem / Component | Responsibility | Implementation File | Key Interfaces / Schema |
 | --- | --- | --- | --- |
-| **API Layer** | Exposes open REST endpoints for uploads, chat, document management, health, and OpenAPI docs. | [`src/api/app.py`](src/api/app.py) | `create_app()`, `/v1/documents`, `/v1/chat` |
+| **API Layer** | Exposes open REST endpoints for uploads, chat, document management, health, and OpenAPI docs. | [`src/api/app.py`](src/api/app.py) | `create_app()`, `/v1/documents`, `GET /v1/documents/{id}`, `/v1/chat` |
 | **Ingestion Pipeline** | Parses raw documents, manages content hashing, chunks text, and enriches metadata. | [`src/ingestion/service.py`](src/ingestion/service.py) | `IngestionService.ingest_bytes()` |
 | **Document Registry** | Stores document metadata, versions, SHA-256 hashes, and processing statuses. | [`src/storage/registry.py`](src/storage/registry.py) | `DocumentRegistry`, `data/registry.json` |
 | **Vector & Lexical Store** | Handles vector embedding, Qdrant indexing, status filtering, and BM25 scoring. | [`src/retrieval/qdrant_store.py`](src/retrieval/qdrant_store.py) | `QdrantChunkStore`, `MemoryChunkStore` |
 | **Generation Engine** | Constructs prompts, handles provider failovers, calls LLMs, and verifies citations. | [`src/generation/service.py`](src/generation/service.py) | `ChatService.answer()` |
 | **Observability** | Emits structured telemetry spans (request, retrieval, generation) to Langfuse. | [`src/observability/tracing.py`](src/observability/tracing.py) | `Tracer`, `TraceMode` |
-| **Quality Evaluation** | Automated golden-set runner for testing retrieval, citations, abstention, and latency. | [`src/evaluation/runner.py`](src/evaluation/runner.py) | `company-rag-evaluate` |
+| **Quality Evaluation & CLI** | CLI utilities and automated golden-set runner for serving, ingestion, and benchmark testing. | [`src/cli.py`](src/cli.py), [`src/evaluation/runner.py`](src/evaluation/runner.py) | `company-rag-serve`, `company-rag-ingest`, `company-rag-evaluate` |
