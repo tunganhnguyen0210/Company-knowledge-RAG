@@ -64,3 +64,8 @@ class Tracer:
     def update(self, observation: Any, metadata: dict[str, Any]) -> None:
         if observation is not None and hasattr(observation, "update"):
             observation.update(metadata=self.safe_payload(metadata))
+
+    def flush(self) -> None:
+        if self._client is not None and hasattr(self._client, "flush"):
+            self._client.flush()
+

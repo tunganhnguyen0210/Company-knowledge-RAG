@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
+
 
 from domain.schemas import ChatRequest, ChatResponse, Document
 from generation.service import ChatService
@@ -42,11 +44,17 @@ def create_app(
     ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
     chat = ChatService(store, provider, tracer, settings.retrieval_limit)
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        yield
+        tracer.flush()
+
     app = FastAPI(
         title="Company Knowledge RAG",
         version="0.1.0",
         description="Single-user open workspace RAG API for internal company documents",
         docs_url=None,
+        lifespan=lifespan,
     )
     app.state.settings = settings
     app.state.store = store

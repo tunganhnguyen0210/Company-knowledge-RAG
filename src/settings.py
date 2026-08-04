@@ -76,7 +76,11 @@ class Settings(BaseSettings):
     allow_sensitive_tracing: bool = False
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
-    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_host: str = Field(
+        default="https://cloud.langfuse.com",
+        validation_alias=AliasChoices("langfuse_host", "langfuse_base_url", "rag_langfuse_host"),
+    )
+
 
     @model_validator(mode="after")
     def validate_sensitive_tracing(self) -> Settings:
