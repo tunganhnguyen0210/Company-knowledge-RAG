@@ -5,7 +5,7 @@
 Company Knowledge RAG is an enterprise-grade, source-grounded Retrieval-Augmented Generation (RAG) system built with **FastAPI**, **Qdrant**, and **Langfuse**. Operating as a **single-user / open workspace RAG assistant**, it enables users to ingest and query internal documents seamlessly, combining **Dense & Lexical (BM25) Hybrid Search** via Reciprocal Rank Fusion (RRF) and strictly validating LLM responses using **Citation-Gated Abstention**.
 
 > [!NOTE]
-> **Fresher AI Engineer Key Takeaway**: In open workspace local RAG systems, user experience and source-grounded accuracy are paramount. By removing multi-tenant authentication barriers, the system provides instant document access while maintaining strict post-generation citation verification to eliminate hallucinations.
+> **Fresher AI Engineer Key Takeaway**: In open workspace local RAG systems, user experience and source-grounded accuracy are paramount. The system provides instant document access while maintaining strict post-generation citation verification to eliminate hallucinations.
 
 ---
 
@@ -15,7 +15,7 @@ The table below outlines the core technical decisions, underlying engineering ra
 
 ### Phase 1: Ingestion & Indexing (Offline)
 - **1.1 Document Loading & Cleaning**:
-  - *Key Decision*: Standardize multi-format parsing (PDF, Markdown, Text) with Unicode NFC normalization and status tracking (`ready`, `needs_ocr`, `failed`).
+  - *Key Decision*: **Standardize multi-format parsing** (PDF, Markdown, Text) with Unicode NFC normalization and status tracking (`ready`, `needs_ocr`, `failed`).
   - *Rationale*: Eliminates text noise to prevent downstream retrieval degradation.
   - *Primary File*: [`src/ingestion/parser.py`](src/ingestion/parser.py)
 - **1.2 Chunking Strategy**:

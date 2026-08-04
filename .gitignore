@@ -14,3 +14,5 @@ qdrant_storage/
 .wgm
 .tokensave
 .codex
+docs/references
+docs/research

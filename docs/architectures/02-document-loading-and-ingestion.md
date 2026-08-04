@@ -19,17 +19,17 @@ flowchart LR
     RegistryCheck -->|New File| Parse[Parse Text & Format]
     RegistryCheck -->|Same Hash & No Force| Skip[Return Existing Document]
     RegistryCheck -->|Updated Hash / Force| Parse
-    
+
     Parse --> StatusCheck{Text Extracted?}
     StatusCheck -->|Yes| Chunk[Section-Aware Chunker]
     StatusCheck -->|PDF No Text| OCR[Status: needs_ocr]
     StatusCheck -->|Failed| Fail[Status: failed]
-    
+
     Chunk --> Enrich{Enable Enrichment?}
     Enrich -->|Yes| LLMEnrich[Generate Summary & Qs]
     Enrich -->|No| Store
     LLMEnrich --> Store[Embed Vectors & Save to Qdrant]
-    
+
     Store --> WriteDisk[Write Source Bytes to Disk]
     WriteDisk --> SaveReg[Upsert Document Registry]
 ```

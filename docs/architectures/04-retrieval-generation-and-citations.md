@@ -14,18 +14,18 @@
 flowchart TD
     Query[User Question Payload] --> Dense[Qdrant Dense Vector Search]
     Query --> Lexical[In-Process BM25 Lexical Search]
-    
+
     Dense --> RRF[Reciprocal Rank Fusion RRF k=60]
     Lexical --> RRF
-    
+
     RRF --> MinScore{Filter Score >= min_dense_score}
     MinScore -->|Hits Found| Prompt[Render System Prompt with Context Chunks]
     MinScore -->|No Hits| Abstain[Return Abstention Response]
-    
+
     Prompt --> LLM[Call Provider Router Gemini / OpenRouter / OpenAI]
     LLM --> Structured[Instructor Validates GroundedAnswer Schema + Reask on Failure]
     Structured --> CitationCheck{Citation Indexes Within Context Range}
-    
+
     CitationCheck -->|Valid Citations| Output[Return ChatResponse + Citations]
     CitationCheck -->|Missing / Invalid Citations| Abstain
 ```

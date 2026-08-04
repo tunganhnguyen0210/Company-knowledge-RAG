@@ -55,7 +55,6 @@ To prevent diagram rendering failures in IDEs and browsers:
 
 When authoring a new document (e.g., `07-topic-name.md`), copy and populate the template below:
 
-```markdown
 # [Subsystem Name] Architecture
 
 ## Fresher AI Engineer Key Concepts
@@ -81,5 +80,4 @@ flowchart TD
     subgraph Phase1["Phase 1: Processing"]
         NodeA["Input Step"] --> NodeB["Transform Step"]
     end
-```
 ```
