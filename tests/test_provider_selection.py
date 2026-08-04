@@ -1,5 +1,5 @@
-from company_knowledge_rag.api.app import _build_provider
-from company_knowledge_rag.settings import Settings
+from api.app import _build_provider
+from settings import Settings
 
 
 def test_selected_provider_is_primary_with_configured_fallback() -> None:

@@ -1,6 +1,6 @@
-from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus
-from company_knowledge_rag.ingestion.enrichment import LLMChunkEnricher
-from company_knowledge_rag.providers.base import GenerationRequest, GenerationResult
+from domain.schemas import Chunk, DocumentStatus
+from ingestion.enrichment import LLMChunkEnricher
+from providers.base import GenerationRequest, GenerationResult
 
 
 class StructuredProvider:

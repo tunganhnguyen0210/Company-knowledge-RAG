@@ -1,9 +1,9 @@
 import httpx
 import pytest
 
-from company_knowledge_rag.providers.gemini import is_transient_provider_error, normalize_embedding
-from company_knowledge_rag.providers.openai import is_transient_openai_error
-from company_knowledge_rag.providers.openrouter import is_transient_openrouter_error
+from providers.gemini import is_transient_provider_error, normalize_embedding
+from providers.openai import is_transient_openai_error
+from providers.openrouter import is_transient_openrouter_error
 
 
 @pytest.mark.parametrize("code", [408, 429, 500, 502, 503, 504])

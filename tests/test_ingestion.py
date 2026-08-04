@@ -4,11 +4,11 @@ from pathlib import Path
 import pytest
 from pypdf import PdfWriter
 
-from company_knowledge_rag.domain.schemas import DocumentStatus
-from company_knowledge_rag.ingestion.parser import UnsupportedDocumentError, parse_document
-from company_knowledge_rag.ingestion.service import IngestionService
-from company_knowledge_rag.retrieval.memory_store import MemoryChunkStore
-from company_knowledge_rag.storage.registry import DocumentRegistry
+from domain.schemas import DocumentStatus
+from ingestion.parser import UnsupportedDocumentError, parse_document
+from ingestion.service import IngestionService
+from retrieval.memory_store import MemoryChunkStore
+from storage.registry import DocumentRegistry
 
 
 def test_reingesting_same_content_is_idempotent(tmp_path: Path) -> None:
@@ -86,7 +86,7 @@ def test_unprocessable_new_version_keeps_last_ready_chunks(
     service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
     responses = iter([("Active policy", "application/pdf"), ("", "application/pdf")])
     monkeypatch.setattr(
-        "company_knowledge_rag.ingestion.service.parse_document",
+        "ingestion.service.parse_document",
         lambda filename, content: next(responses),
     )
 
@@ -117,15 +117,13 @@ def test_upload_storage_failure_does_not_publish_document(
     assert store.all_chunks == []
 
 
-def test_ingestion_service_rejects_acl_change_for_existing_source(tmp_path: Path) -> None:
+def test_ingestion_service_allows_reingestion_of_same_source(tmp_path: Path) -> None:
+    """In single-user mode, re-ingesting the same source always succeeds."""
     store = MemoryChunkStore()
     service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
-    service.ingest_bytes("policy.md", b"HR policy", {"hr"}, actor_roles={"hr"})
+    first = service.ingest_bytes("policy.md", b"HR policy")
 
-    with pytest.raises(PermissionError, match="Existing document ACL"):
-        service.ingest_bytes(
-            "policy.md",
-            b"Attacker policy",
-            {"employee"},
-            actor_roles={"employee"},
-        )
+    second = service.ingest_bytes("policy.md", b"Updated policy content")
+
+    assert first.id == second.id
+    assert second.version == first.version + 1

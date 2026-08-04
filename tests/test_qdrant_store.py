@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus
-from company_knowledge_rag.retrieval.qdrant_store import QdrantChunkStore, _point_id
+from domain.schemas import Chunk, DocumentStatus
+from retrieval.qdrant_store import QdrantChunkStore, _point_id
 
 
 def test_point_ids_are_stable_and_unique_for_chunks_in_same_document() -> None:

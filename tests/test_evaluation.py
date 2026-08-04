@@ -1,4 +1,4 @@
-from company_knowledge_rag.evaluation.runner import GoldenCase, score_response
+from evaluation.runner import GoldenCase, score_response
 
 
 def test_score_response_tracks_retrieval_citations_and_abstention() -> None:

@@ -1,8 +1,8 @@
-from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus, Principal
-from company_knowledge_rag.retrieval.memory_store import MemoryChunkStore
+from domain.schemas import Chunk, DocumentStatus
+from retrieval.memory_store import MemoryChunkStore
 
 
-def _chunk(chunk_id: str, text: str, roles: set[str]) -> Chunk:
+def _chunk(chunk_id: str, text: str) -> Chunk:
     return Chunk(
         id=chunk_id,
         document_id=f"doc-{chunk_id}",
@@ -12,19 +12,41 @@ def _chunk(chunk_id: str, text: str, roles: set[str]) -> Chunk:
         source_name=f"{chunk_id}.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
-        allowed_roles=roles,
     )
 
 
-def test_search_filters_unauthorized_documents_before_ranking() -> None:
+def test_search_returns_all_ready_chunks_regardless_of_roles() -> None:
+    """In single-user mode all ready chunks are searchable without role filtering."""
     store = MemoryChunkStore()
-    store.replace_document("doc-public", [_chunk("public", "nghi phep 15 ngay", {"employee"})])
-    store.replace_document("doc-secret", [_chunk("secret", "luong giam doc", {"executive"})])
+    store.replace_document("doc-a", [_chunk("a", "nghi phep 15 ngay")])
+    store.replace_document("doc-b", [_chunk("b", "luong giam doc")])
 
-    results = store.search(
-        "luong nghi phep",
-        Principal(subject="demo", roles={"employee"}),
-        limit=10,
+    results = store.search("luong nghi phep", limit=10)
+
+    chunk_ids = {result.chunk.id for result in results}
+    assert "a" in chunk_ids
+    assert "b" in chunk_ids
+
+
+def test_search_excludes_non_ready_chunks() -> None:
+    """Chunks not in READY status are never returned."""
+    store = MemoryChunkStore()
+    store.replace_document(
+        "doc-processing",
+        [
+            Chunk(
+                id="proc",
+                document_id="doc-processing",
+                version=1,
+                text="nghi phep processing",
+                content_hash="proc",
+                source_name="proc.md",
+                mime_type="text/markdown",
+                status=DocumentStatus.PROCESSING,
+            )
+        ],
     )
 
-    assert [result.chunk.id for result in results] == ["public"]
+    results = store.search("nghi phep", limit=10)
+
+    assert results == []

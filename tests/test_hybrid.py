@@ -1,5 +1,5 @@
-from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus, SearchHit
-from company_knowledge_rag.retrieval.hybrid import filter_by_min_score, reciprocal_rank_fusion
+from domain.schemas import Chunk, DocumentStatus, SearchHit
+from retrieval.hybrid import filter_by_min_score, reciprocal_rank_fusion
 
 
 def _hit(chunk_id: str, score: float) -> SearchHit:

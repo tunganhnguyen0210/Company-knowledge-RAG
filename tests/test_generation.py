@@ -1,9 +1,9 @@
-from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus, Principal
-from company_knowledge_rag.generation.service import ABSTENTION, ChatService
-from company_knowledge_rag.observability.tracing import Tracer
-from company_knowledge_rag.providers.base import GenerationRequest, GenerationResult
-from company_knowledge_rag.retrieval.memory_store import MemoryChunkStore
-from company_knowledge_rag.settings import Settings
+from domain.schemas import Chunk, DocumentStatus, Principal
+from generation.service import ABSTENTION, ChatService
+from observability.tracing import Tracer
+from providers.base import GenerationRequest, GenerationResult
+from retrieval.memory_store import MemoryChunkStore
+from settings import Settings
 
 
 class UncitedProvider:

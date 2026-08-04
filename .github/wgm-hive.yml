@@ -1,0 +1,3 @@
+# wgm Hive Growth Loop Configuration
+version: 1
+hive_growth_loop: true

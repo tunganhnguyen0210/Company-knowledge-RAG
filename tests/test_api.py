@@ -2,9 +2,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from company_knowledge_rag.api.app import create_app
-from company_knowledge_rag.providers.base import GenerationRequest, GenerationResult
-from company_knowledge_rag.settings import Settings
+from api.app import create_app
+from providers.base import GenerationRequest, GenerationResult
+from settings import Settings
 
 
 class AnswerProvider:
@@ -25,10 +25,10 @@ def _client(tmp_path: Path) -> TestClient:
     return TestClient(create_app(settings=settings, provider=AnswerProvider()))
 
 
-def test_chat_requires_api_key(tmp_path: Path) -> None:
+def test_chat_without_api_key_succeeds(tmp_path: Path) -> None:
     response = _client(tmp_path).post("/v1/chat", json={"question": "Nghỉ phép?"})
 
-    assert response.status_code == 401
+    assert response.status_code == 200
 
 
 def test_health_reports_active_model(tmp_path: Path) -> None:
@@ -38,24 +38,20 @@ def test_health_reports_active_model(tmp_path: Path) -> None:
     assert response.json() == {"status": "ok", "active_model": "stub-model"}
 
 
-def test_development_docs_pre_authorize_default_api_key(tmp_path: Path) -> None:
+def test_development_docs_endpoint_returns_swagger_ui(tmp_path: Path) -> None:
     response = _client(tmp_path).get("/docs")
 
     assert response.status_code == 200
-    assert 'preauthorizeApiKey("ApiKeyAuth", "secret")' in response.text
 
 
 def test_upload_then_chat_returns_source_citation(tmp_path: Path) -> None:
     client = _client(tmp_path)
-    headers = {"X-API-Key": "secret"}
     upload = client.post(
         "/v1/documents",
-        headers=headers,
         files={"file": ("policy.md", b"Nhan vien duoc nghi phep 15 ngay.", "text/markdown")},
-        data={"allowed_roles": "employee"},
     )
 
-    response = client.post("/v1/chat", headers=headers, json={"question": "Nghỉ phép?"})
+    response = client.post("/v1/chat", json={"question": "Nghỉ phép?"})
 
     assert upload.status_code == 201
     assert response.status_code == 200
@@ -69,20 +65,18 @@ def test_ready_reports_provider_and_store_state(tmp_path: Path) -> None:
     assert response.json()["status"] == "ready"
 
 
-def test_upload_cannot_assign_roles_not_owned_by_caller(tmp_path: Path) -> None:
+def test_upload_with_optional_roles(tmp_path: Path) -> None:
     response = _client(tmp_path).post(
         "/v1/documents",
-        headers={"X-API-Key": "secret"},
         files={"file": ("secret.md", b"Executive content", "text/markdown")},
         data={"allowed_roles": "executive"},
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 201
 
 
-def test_upload_cannot_replace_same_source_owned_by_another_role(tmp_path: Path) -> None:
+def test_upload_replaces_same_source_file(tmp_path: Path) -> None:
     settings = Settings(
-        api_keys='{"hr-secret": ["hr"], "employee-secret": ["employee"]}',
         gemini_api_key="unused",
         registry_path=tmp_path / "registry.json",
         upload_dir=tmp_path / "uploads",
@@ -90,20 +84,16 @@ def test_upload_cannot_replace_same_source_owned_by_another_role(tmp_path: Path)
     client = TestClient(create_app(settings=settings, provider=AnswerProvider()))
     first = client.post(
         "/v1/documents",
-        headers={"X-API-Key": "hr-secret"},
         files={"file": ("policy.md", b"HR-only policy", "text/markdown")},
-        data={"allowed_roles": "hr"},
     )
 
     replacement = client.post(
         "/v1/documents",
-        headers={"X-API-Key": "employee-secret"},
         files={"file": ("policy.md", b"Attacker replacement", "text/markdown")},
-        data={"allowed_roles": "employee"},
     )
 
     assert first.status_code == 201
-    assert replacement.status_code == 403
+    assert replacement.status_code == 201
 
 
 def test_ready_fails_when_provider_reports_not_ready(tmp_path: Path) -> None:

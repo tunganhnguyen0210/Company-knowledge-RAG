@@ -1,6 +1,6 @@
 import pytest
 
-from company_knowledge_rag.prompts.loader import load_prompt, render_user_template
+from prompts.loader import load_prompt, render_user_template
 
 
 def test_load_prompt_reads_packaged_yaml_definition() -> None:

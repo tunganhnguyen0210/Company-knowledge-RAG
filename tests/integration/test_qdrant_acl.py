@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from company_knowledge_rag.domain.schemas import Chunk, DocumentStatus, Principal
-from company_knowledge_rag.retrieval.qdrant_store import QdrantChunkStore
+from domain.schemas import Chunk, DocumentStatus, Principal
+from retrieval.qdrant_store import QdrantChunkStore
 
 pytestmark = pytest.mark.skipif(
     os.getenv("RUN_QDRANT_INTEGRATION") != "1",
