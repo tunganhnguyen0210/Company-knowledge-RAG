@@ -13,3 +13,4 @@ data/registry.json
 qdrant_storage/
 .wgm
 .tokensave
+.codex
