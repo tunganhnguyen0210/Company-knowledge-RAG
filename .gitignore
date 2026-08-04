@@ -17,3 +17,5 @@ qdrant_storage/
 docs/references
 docs/research
 .pytest_tmp/
+.codebase-memory
+specs/

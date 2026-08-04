@@ -1,4 +1,6 @@
+import sys
 from contextlib import nullcontext
+from types import SimpleNamespace
 from typing import Any
 
 from observability.tracing import Tracer
@@ -22,6 +24,27 @@ class RecordingClient:
     ) -> Any:
         self.metadata = metadata
         return nullcontext()
+
+
+def test_tracer_passes_settings_environment_to_langfuse(monkeypatch) -> None:
+    received: dict[str, Any] = {}
+
+    class FakeLangfuse:
+        def __init__(self, **kwargs: Any) -> None:
+            received.update(kwargs)
+
+    monkeypatch.setitem(sys.modules, "langfuse", SimpleNamespace(Langfuse=FakeLangfuse))
+
+    Tracer(
+        Settings(
+            environment="development",
+            langfuse_public_key="public",
+            langfuse_secret_key="secret",
+            _env_file=None,
+        )
+    )
+
+    assert received["environment"] == "development"
 
 
 def test_metadata_only_removes_sensitive_values_recursively() -> None:

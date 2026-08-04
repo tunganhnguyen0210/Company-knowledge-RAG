@@ -87,7 +87,7 @@ def test_create_app_shares_tracer_between_ingestion_and_chat(tmp_path: Path) -> 
         store=MemoryChunkStore(),
     )
 
-    assert app.state.ingestion.tracer is app.state.chat.tracer
+    assert app.state.tracer is app.state.ingestion.tracer is app.state.chat.tracer
 
 
 def test_reingesting_same_content_is_idempotent(tmp_path: Path) -> None:
