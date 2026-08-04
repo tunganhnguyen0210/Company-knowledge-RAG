@@ -61,6 +61,7 @@ def create_app(
     app.state.store = store
     app.state.provider = provider
     app.state.registry = registry
+    app.state.tracer = tracer
     app.state.ingestion = ingestion
     app.state.chat = chat
 

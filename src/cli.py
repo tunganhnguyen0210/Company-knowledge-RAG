@@ -32,14 +32,20 @@ def ingest() -> None:
     args = parser.parse_args()
     settings = Settings()
     app = create_app(settings)
-    paths = sorted(args.path.iterdir()) if args.path.is_dir() else [args.path]
     try:
+        paths = sorted(args.path.iterdir()) if args.path.is_dir() else [args.path]
         for path in paths:
             if path.suffix.lower() not in {".md", ".txt", ".pdf", ".docx"}:
                 continue
             document = app.state.ingestion.ingest_bytes(path.name, path.read_bytes())
             print(f"{document.source_name}: {document.status} v{document.version} ({document.id})")
-    finally:
+    except BaseException:
+        try:
+            app.state.tracer.flush()
+        except BaseException:
+            pass
+        raise
+    else:
         app.state.tracer.flush()
 
 
