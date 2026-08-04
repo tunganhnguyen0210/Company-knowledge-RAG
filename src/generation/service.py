@@ -64,7 +64,25 @@ class ChatService:
             latency_ms = (time.perf_counter() - started) * 1000
             self.tracer.update(
                 retrieval_observation,
-                {"result_count": len(hits), "latency_ms": latency_ms},
+                {
+                    "result_count": len(hits),
+                    "latency_ms": latency_ms,
+                    "top_k": [
+                        {
+                            "rank": rank,
+                            "score": hit.score,
+                            "chunk_id": hit.chunk.id,
+                            "document_id": hit.chunk.document_id,
+                            "version": hit.chunk.version,
+                            "source_name": hit.chunk.source_name,
+                            "section": hit.chunk.section,
+                            "position": hit.chunk.position,
+                            "content_hash": hit.chunk.content_hash,
+                            "text": hit.chunk.text,
+                        }
+                        for rank, hit in enumerate(hits, start=1)
+                    ],
+                },
             )
         if not hits:
             return ChatResponse(
@@ -84,6 +102,8 @@ class ChatService:
                     "question": question,
                     "context": [chunk.text for chunk in chunks],
                     "prompt_version": PROMPT_VERSION,
+                    "system_instruction": prompt.system_instruction,
+                    "user_prompt": prompt.user_prompt,
                 }
             ),
         ) as generation_observation:
@@ -91,26 +111,33 @@ class ChatService:
                 GenerationRequest(prompt.system_instruction, prompt.user_prompt),
                 GroundedAnswer,
             )
+            # The model may still cite a chunk it was never shown; the range check is authoritative.
+            cited_indexes = sorted(
+                {index for index in result.value.citations if 1 <= index <= len(chunks)}
+            )
+            citations = [
+                Citation(
+                    id=f"C{index}",
+                    document_id=chunks[index - 1].document_id,
+                    chunk_id=chunks[index - 1].id,
+                    source_name=chunks[index - 1].source_name,
+                    version=chunks[index - 1].version,
+                    excerpt=chunks[index - 1].text[:300],
+                )
+                for index in cited_indexes
+            ]
+            answer = result.value.answer if citations else ABSTENTION
             self.tracer.update(
                 generation_observation,
-                {"provider": result.provider, "model": result.model, **result.usage},
+                {
+                    "provider": result.provider,
+                    "model": result.model,
+                    **result.usage,
+                    "response": result.value.model_dump(),
+                    "citation_ids": [citation.id for citation in citations],
+                    "answer": answer,
+                },
             )
-        # The model may still cite a chunk it was never shown; the range check is authoritative.
-        cited_indexes = sorted(
-            {index for index in result.value.citations if 1 <= index <= len(chunks)}
-        )
-        citations = [
-            Citation(
-                id=f"C{index}",
-                document_id=chunks[index - 1].document_id,
-                chunk_id=chunks[index - 1].id,
-                source_name=chunks[index - 1].source_name,
-                version=chunks[index - 1].version,
-                excerpt=chunks[index - 1].text[:300],
-            )
-            for index in cited_indexes
-        ]
-        answer = result.value.answer if citations else ABSTENTION
         return ChatResponse(
             answer=answer,
             citations=citations,
