@@ -5,16 +5,33 @@ import re
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 from generation.service import ABSTENTION, ChatService
 
 
 class GoldenCase(BaseModel):
     question: str
-    expected_sources: set[str] = Field(default_factory=set)
+    expected_sources: set[str] = Field(
+        default_factory=set,
+        validation_alias=AliasChoices("expected_sources", "source", "sources"),
+    )
+    expected_answer: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("expected_answer", "answer"),
+    )
     should_abstain: bool = False
     category: str = "lookup"
+
+    @field_validator("expected_sources", mode="before")
+    @classmethod
+    def _convert_sources_to_set(cls, v: Any) -> set[str]:
+        if isinstance(v, str):
+            v_str = v.strip()
+            return {v_str} if v_str else set()
+        if isinstance(v, (list, tuple, set)):
+            return {item.strip() for item in v if isinstance(item, str) and item.strip()}
+        return set()
 
 
 class CaseScores(BaseModel):
@@ -68,6 +85,7 @@ def run_golden_set(chat: ChatService, path: Path) -> dict[str, object]:
             {
                 "question": case.question,
                 "category": case.category,
+                "expected_answer": case.expected_answer,
                 "answer": response.answer,
                 "scores": scores.model_dump(),
             }

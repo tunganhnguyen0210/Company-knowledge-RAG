@@ -18,6 +18,7 @@ from ingestion.service import IngestionService
 from observability.tracing import Tracer
 from providers.base import GenerationProvider, ProviderError
 from providers.gemini import GeminiEmbeddingProvider, GeminiProvider
+from providers.jina import JinaEmbeddingProvider, JinaReranker
 from providers.openai import OpenAIProvider
 from providers.openrouter import OpenRouterProvider
 from providers.probe import probe_generation
@@ -199,13 +200,29 @@ def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
 
 
 def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
-    # Embeddings always run on Gemini, regardless of MAIN_PROVIDER.
-    embedder = GeminiEmbeddingProvider(
-        settings.build_gemini_key_pool(),
-        settings.embedding_model,
-        settings.vector_size,
-        settings.provider_timeout_seconds,
-    )
+    if settings.jina_api_key and settings.embedding_model.startswith("jina-"):
+        embedder: Any = JinaEmbeddingProvider(
+            api_key=settings.jina_api_key,
+            model=settings.embedding_model,
+            output_dimension=settings.vector_size,
+            timeout_seconds=settings.provider_timeout_seconds,
+        )
+    else:
+        embedder = GeminiEmbeddingProvider(
+            settings.build_gemini_key_pool(),
+            settings.embedding_model,
+            settings.vector_size,
+            settings.provider_timeout_seconds,
+        )
+
+    reranker = None
+    if settings.jina_api_key and settings.reranker_model:
+        reranker = JinaReranker(
+            api_key=settings.jina_api_key,
+            model=settings.reranker_model,
+            timeout_seconds=settings.provider_timeout_seconds,
+        )
+
     return QdrantChunkStore(
         settings.qdrant_url,
         settings.qdrant_api_key,
@@ -214,6 +231,7 @@ def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
         embedder,
         settings.lexical_candidate_limit,
         settings.min_dense_score,
+        reranker=reranker,
     )
 
 

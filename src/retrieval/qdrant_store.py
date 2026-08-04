@@ -24,6 +24,7 @@ class QdrantChunkStore:
         embedder: EmbeddingProvider,
         lexical_candidate_limit: int = 500,
         min_dense_score: float = 0.35,
+        reranker: Any | None = None,
     ) -> None:
         self.client = QdrantClient(url=url, api_key=api_key or None, timeout=10)
         self.collection = collection
@@ -31,6 +32,7 @@ class QdrantChunkStore:
         self.embedder = embedder
         self.lexical_candidate_limit = lexical_candidate_limit
         self.min_dense_score = min_dense_score
+        self.reranker = reranker
         self._init_lock = Lock()
         self._initialized = False
 
@@ -147,7 +149,11 @@ class QdrantChunkStore:
         )
         lexical_chunks = [Chunk.model_validate(record.payload) for record in records]
         lexical = lexical_rank(query, lexical_chunks, max(limit * 4, limit))
-        return reciprocal_rank_fusion(dense, lexical, limit)
+        rrf_limit = max(limit * 4, 20) if self.reranker else limit
+        fused = reciprocal_rank_fusion(dense, lexical, rrf_limit)
+        if self.reranker and fused:
+            return self.reranker.rerank(query, fused, top_n=limit)
+        return fused[:limit]
 
     def ready(self) -> bool:
         try:

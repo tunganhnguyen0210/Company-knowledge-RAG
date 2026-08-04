@@ -7,7 +7,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from pydantic import AliasChoices, Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from providers.gemini_key_pool import GeminiKeyPool
 from providers.structured import STRUCTURED_MAX_RETRIES
@@ -28,11 +28,24 @@ class MainProvider(StrEnum):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (init_settings, dotenv_settings, env_settings, file_secret_settings)
+
     environment: str = "development"
     main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
-    embedding_model: str = "gemini-embedding-001"
+    jina_api_key: str = ""
+    embedding_model: str = "jina-embeddings-v5-omni-small"
+    reranker_model: str = ""
     openrouter_api_key: str = ""
     openrouter_model: str = "deepseek/deepseek-v4-flash-0731"
     openrouter_allowed_models: set[str] = Field(
@@ -58,8 +71,8 @@ class Settings(BaseSettings):
     lexical_candidate_limit: int = 500
     min_dense_score: float = 0.35
     enable_enrichment: bool = False
-    trace_mode: TraceMode = TraceMode.METADATA_ONLY
-    allow_sensitive_tracing: bool = False
+    trace_mode: TraceMode = TraceMode.FULL
+    allow_sensitive_tracing: bool = True
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_host: str = Field(

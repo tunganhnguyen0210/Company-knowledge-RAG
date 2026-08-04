@@ -31,11 +31,11 @@ DOCUMENT_TASK = "RETRIEVAL_DOCUMENT"
 QUERY_TASK = "RETRIEVAL_QUERY"
 
 # The embeddings endpoint caps how many texts one request may carry.
-EMBED_BATCH_SIZE = 100
+EMBED_BATCH_SIZE = 10
 
 # Bulk ingest walks straight into per-minute rate limits, and unlike generation
 # there is no router to fail over to, so retrying here is the only recovery.
-EMBED_MAX_ATTEMPTS = 5
+EMBED_MAX_ATTEMPTS = 30
 BASE_RETRY_DELAY_SECONDS = 1.0
 MAX_RETRY_DELAY_SECONDS = 30.0
 
@@ -204,11 +204,6 @@ class GeminiEmbeddingProvider:
         vectors: list[list[float]] = []
         for batch in batched(texts, self.batch_size):
             vectors.extend(self._embed(batch, DOCUMENT_TASK))
-        if len(vectors) != len(texts):
-            raise ProviderError(
-                f"Gemini returned {len(vectors)} embeddings for {len(texts)} chunks",
-                transient=False,
-            )
         return vectors
 
     def embed_query(self, text: str) -> list[float]:
@@ -229,10 +224,16 @@ class GeminiEmbeddingProvider:
                     output_dimensionality=self.output_dimension,
                 ),
             )
+            embeddings = response.embeddings or []
+            if len(embeddings) != len(texts):
+                raise ProviderError(
+                    f"Gemini returned {len(embeddings)} embeddings for {len(texts)} chunks",
+                    transient=False,
+                )
             return [
                 # Truncated Matryoshka vectors need renormalizing before cosine search.
                 normalize_embedding([float(value) for value in embedding.values or []])
-                for embedding in response.embeddings or []
+                for embedding in embeddings
             ]
 
         return self._embed_with_retry(_operation)
