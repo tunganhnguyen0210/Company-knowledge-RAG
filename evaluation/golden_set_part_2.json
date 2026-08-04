@@ -1,0 +1,325 @@
+[
+  {
+    "id": 1,
+    "type": "adversarial",
+    "question": "Hồ sơ đăng ký thành lập công ty TNHH hai thành viên trở lên nghe nói không cần soạn thảo Điều lệ công ty có đúng không?",
+    "expected_answer": "Thông tin này không chính xác. Hồ sơ đăng ký thành lập công ty TNHH hai thành viên trở lên bắt buộc phải có Điều lệ công ty.",
+    "ground_truth_context": "Điều 25. Hồ sơ đăng ký doanh nghiệp đối với các công ty được thành lập trên cơ sở chia, tách, hợp nhất công ty\n\n1. Trường hợp chia công ty trách nhiệm hữu hạn, công ty cổ phần theo quy định tại Điều 198 Luật Doanh nghiệp, ngoài giấy tờ quy định tại Điều 23, Điều 24 Nghị định này, hồ sơ đăng ký doanh nghiệp đối với công ty mới phải có các giấy tờ sau đây:\na) Nghị quyết, quyết định về việc chia công ty theo quy định tại Điều 198 Luật Doanh nghiệp;\nb) Bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, của Đại hội đồng cổ đông đối với công ty cổ phần về việc chia công ty.\n2. Trường hợp tách công ty trách nhiệm hữu hạn, công ty cổ phần theo quy định tại Điều 199 Luật Doanh nghiệp, ngoài giấy tờ quy định tại Điều 23, Điều 24 Nghị định này, hồ sơ đăng ký doanh nghiệp đối với công ty được tách phải có các giấy tờ sau đây:\na) Nghị quyết, quyết định về việc tách công ty theo quy định tại Điều 199 Luật Doanh nghiệp;\nb) Bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, của Đại hội đồng cổ đông đối với công ty cổ phần về việc tách công ty.\n3. Trường hợp hợp nhất một số công ty thành một công ty mới, ngoài giấy tờ quy định tại các Điều 22, 23 và 24 Nghị định này, hồ sơ đăng ký doanh nghiệp đối với công ty hợp nhất phải có các giấy tờ sau đây:\na) Hợp đồng hợp nhất theo quy định tại Điều 200 Luật Doanh nghiệp;\nb) Nghị quyết, quyết định về việc thông qua hợp đồng hợp nhất công ty của các công ty bị hợp nhất và bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty hợp danh, của Đại hội đồng cổ đông đối với công ty cổ phần về việc thông qua hợp đồng hợp nhất để thành lập công ty mới.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 25",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 2,
+    "type": "direct_lookup",
+    "question": "Thành lập công ty hợp danh cần nộp kèm danh sách nào trong hồ sơ đăng ký doanh nghiệp?",
+    "expected_answer": "Hồ sơ đăng ký thành lập công ty hợp danh bắt buộc phải nộp kèm Danh sách thành viên công ty hợp danh.",
+    "ground_truth_context": "Điều 26. Hồ sơ đăng ký doanh nghiệp đối với các trường hợp chuyển đổi loại hình doanh nghiệp\n\n1. Trường hợp chuyển đổi doanh nghiệp tư nhân thành công ty hợp danh, công ty trách nhiệm hữu hạn, công ty cổ phần, hồ sơ đăng ký chuyển đổi bao gồm các giấy tờ quy định tại các Điều 22, 23 và 24 Nghị định này, trong đó không bao gồm Giấy chứng nhận đăng ký đầu tư quy định tại điểm b khoản 4 Điều 22, điểm c khoản 4 Điều 23 và điểm c khoản 3 Điều 24 Nghị định này. Kèm theo hồ sơ phải có các giấy tờ sau đây:\na) Cam kết bằng văn bản của chủ doanh nghiệp tư nhân về việc chịu trách nhiệm cá nhân bằng toàn bộ tài sản của mình đối với tất cả khoản nợ chưa thanh toán và cam kết thanh toán đủ số nợ khi đến hạn;\nb) Thỏa thuận bằng văn bản của chủ doanh nghiệp tư nhân với các bên của hợp đồng chưa thanh lý về việc công ty được chuyển đổi tiếp nhận và tiếp tục thực hiện các hợp đồng đó;\nc) Cam kết bằng văn bản hoặc thỏa thuận bằng văn bản của chủ doanh nghiệp tư nhân với các thành viên góp vốn khác về việc tiếp nhận và sử dụng lao động hiện có của doanh nghiệp tư nhân;\nd) Hợp đồng chuyển nhượng hoặc các giấy tờ chứng minh hoàn tất việc chuyển nhượng trong trường hợp chuyển nhượng vốn của doanh nghiệp tư nhân; Hợp đồng tặng cho trong trường hợp tặng cho vốn của doanh nghiệp tư nhân; Bản sao văn bản xác nhận quyền thừa kế hợp pháp của người thừa kế trong trường hợp thừa kế theo quy định của pháp luật;\nđ) Văn bản của Cơ quan đăng ký đầu tư chấp thuận về việc góp vốn, mua cổ phần, mua phần vốn góp của nhà đầu tư nước ngoài, tổ chức kinh tế có vốn đầu tư nước ngoài đối với trường hợp phải thực hiện thủ tục đăng ký góp vốn, mua cổ phần, mua phần vốn góp theo quy định của Luật Đầu tư.\n2. Trường hợp chuyển đổi công ty trách nhiệm hữu hạn một thành viên thành công ty trách nhiệm hữu hạn hai thành viên trở lên, hồ sơ đăng ký chuyển đổi bao gồm các giấy tờ quy định tại Điều 23 Nghị định này, trong đó không bao gồm Giấy chứng nhận đăng ký đầu tư quy định tại điểm c khoản 4 Điều 23 Nghị định này. Kèm theo hồ sơ phải có các giấy tờ sau đây:\na) Hợp đồng chuyển nhượng hoặc giấy tờ chứng minh hoàn tất việc chuyển nhượng trong trường hợp chuyển nhượng phần vốn góp; Hợp đồng tặng cho trong trường hợp tặng cho phần vốn góp; Bản sao văn bản xác nhận quyền thừa kế hợp pháp của người thừa kế trong trường hợp thừa kế theo quy định của pháp luật;\nb) Nghị quyết, quyết định của chủ sở hữu công ty về việc huy động thêm vốn góp của cá nhân, tổ chức khác và giấy tờ xác nhận việc góp vốn của thành viên mới trong trường hợp huy động vốn góp của thành viên mới;\nc) Văn bản của Cơ quan đăng ký đầu tư chấp thuận về việc góp vốn, mua cổ phần, mua phần vốn góp của nhà đầu tư nước ngoài, tổ chức kinh tế có vốn đầu tư nước ngoài đối với trường hợp phải thực hiện thủ tục đăng ký góp vốn, mua cổ phần, mua phần vốn góp theo quy định của Luật Đầu tư.\n3. Trường hợp chuyển đổi công ty trách nhiệm hữu hạn hai thành viên trở lên thành công ty trách nhiệm hữu hạn một thành viên, hồ sơ đăng ký chuyển đổi bao gồm các giấy tờ quy định tại Điều 24 Nghị định này, trong đó không bao gồm Giấy chứng nhận đăng ký đầu tư quy định tại điểm c khoản 3 Điều 24 Nghị định này. Kèm theo hồ sơ phải có các giấy tờ sau đây:\na) Hợp đồng chuyển nhượng hoặc các giấy tờ chứng minh hoàn tất việc chuyển nhượng trong trường hợp chuyển nhượng phần vốn góp; Hợp đồng tặng cho trong trường hợp tặng cho phần vốn góp; Bản sao văn bản xác nhận quyền thừa kế hợp pháp của người thừa kế trong trường hợp thừa kế theo quy định của pháp luật; Hợp đồng sáp nhập, hợp đồng hợp nhất trong trường hợp sáp nhập, hợp nhất công ty;\nb) Nghị quyết, quyết định và bản sao biên bản họp Hội đồng thành viên công ty trách nhiệm hữu hạn hai thành viên trở lên về việc chuyển đổi hoạt động theo mô hình công ty trách nhiệm hữu hạn một thành viên;\nc) Văn bản của Cơ quan đăng ký đầu tư chấp thuận về việc góp vốn, mua cổ phần, mua phần vốn góp của nhà đầu tư nước ngoài, tổ chức kinh tế có vốn đầu tư nước ngoài đối với trường hợp phải thực hiện thủ tục đăng ký góp vốn, mua cổ phần, mua phần vốn góp theo quy định của Luật Đầu tư.\n4. Trường hợp chuyển đổi công ty trách nhiệm hữu hạn thành công ty cổ phần và ngược lại, hồ sơ đăng ký chuyển đổi bao gồm các giấy tờ quy định tại Điều 23 và Điều 24 Nghị định này, trong đó không bao gồm Giấy chứng nhận đăng ký đầu tư quy định tại điểm c khoản 4 Điều 23 và điểm c khoản 3 Điều 24 Nghị định này. Kèm theo hồ sơ phải có các giấy tờ sau đây:\na) Nghị quyết, quyết định của chủ sở hữu công ty đối với công ty trách nhiệm hữu hạn một thành viên hoặc nghị quyết, quyết định và bản sao biên bản họp của Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên hoặc nghị quyết và bản sao biên bản họp của Đại hội đồng cổ đông đối với công ty cổ phần về việc chuyển đổi công ty;\nb) Hợp đồng chuyển nhượng hoặc các giấy tờ chứng minh hoàn tất việc chuyển nhượng trong trường hợp chuyển nhượng cổ phần, phần vốn góp; Hợp đồng tặng cho trong trường hợp tặng cho cổ phần, phần vốn góp; Bản sao văn bản xác nhận quyền thừa kế hợp pháp của người thừa kế trong trường hợp thừa kế theo quy định của pháp luật;\nc) Giấy tờ xác nhận việc góp vốn của thành viên, cổ đông mới;\nd) Văn bản của Cơ quan đăng ký đầu tư chấp thuận về việc góp vốn, mua cổ phần, mua phần vốn góp của nhà đầu tư nước ngoài, tổ chức kinh tế có vốn đầu tư nước ngoài đối với trường hợp phải thực hiện thủ tục đăng ký góp vốn, mua cổ phần, mua phần vốn góp theo quy định của Luật Đầu tư.\n5. Doanh nghiệp có thể đăng ký chuyển đổi loại hình doanh nghiệp đồng thời đăng ký thay đổi nội dung đăng ký doanh nghiệp, thông báo thay đổi nội dung đăng ký doanh nghiệp. Trong trường hợp này, hồ sơ đăng ký doanh nghiệp thực hiện tương ứng theo quy định tại các khoản 1, 2, 3 và 4 Điều này.\nTrường hợp doanh nghiệp đăng ký chuyển đổi loại hình doanh nghiệp đồng thời đăng ký thay đổi người đại diện theo pháp luật thì người ký hồ sơ là Chủ tịch Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty hợp danh; Chủ tịch công ty hoặc Chủ tịch Hội đồng thành viên đối với công ty trách nhiệm hữu hạn một thành viên; Chủ tịch Hội đồng quản trị đối với công ty cổ phần của công ty sau chuyển đổi.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 26",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 3,
+    "type": "unanswerable",
+    "question": "Công ty sáp nhập có được miễn hoàn toàn thuế thu nhập doanh nghiệp trong 2 năm đầu không?",
+    "expected_answer": "Thông tin về các chính sách ưu đãi miễn giảm thuế thu nhập doanh nghiệp không có trong tài liệu quy định về đăng ký doanh nghiệp.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 28",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 4,
+    "type": "ambiguous",
+    "question": "Mở ngân hàng nộp giấy gì?",
+    "expected_answer": "Dựa trên quy định đăng ký tổ chức tín dụng, ngoài hồ sơ đăng ký doanh nghiệp tương ứng với loại hình, bạn bắt buộc phải nộp kèm bản sao Giấy phép thành lập và hoạt động hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.",
+    "ground_truth_context": "Điều 29. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với tổ chức tín dụng, chi nhánh ngân hàng nước ngoài, văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng\n\n1. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với tổ chức tín dụng, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của tổ chức tín dụng thực hiện theo quy định tại Nghị định này tương ứng với từng loại hình doanh nghiệp, kèm theo hồ sơ phải có bản sao giấy phép hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.\n2. Hồ sơ đăng ký hoạt động, đăng ký thay đổi nội dung đăng ký hoạt động đối với chi nhánh ngân hàng nước ngoài, văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng thực hiện tương ứng theo quy định tại điểm a và điểm c khoản 1 Điều 31 và khoản 2 Điều 62 Nghị định này, kèm theo hồ sơ phải có bản sao giấy phép hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.\n3. Trong thời hạn 07 ngày làm việc kể từ ngày quyết định thu hồi giấy phép có hiệu lực, tổ chức tín dụng, chi nhánh ngân hàng nước ngoài, văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng gửi thông báo về việc giải thể doanh nghiệp, chấm dứt hoạt động chi nhánh, văn phòng đại diện đến Phòng Đăng ký kinh doanh nơi đặt trụ sở của tổ chức tín dụng, chi nhánh, văn phòng đại diện. Kèm theo thông báo phải có bản sao quyết định chấm dứt thanh lý và quyết định thu hồi giấy phép của Ngân hàng Nhà nước Việt Nam trong trường hợp giải thể tổ chức tín dụng, chi nhánh ngân hàng nước ngoài; bản sao quyết định thu hồi giấy phép trong trường hợp chấm dứt hoạt động văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng.\nPhòng Đăng ký kinh doanh tiếp nhận và xử lý hồ sơ đăng ký giải thể tổ chức tín dụng, chấm dứt hoạt động chi nhánh ngân hàng nước ngoài, văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng theo quy định tại khoản 5 Điều 70 và khoản 3 Điều 72 Nghị định này.\n4. Trường hợp Ngân hàng Nhà nước Việt Nam chỉ định người đại diện tổ chức tín dụng được kiểm soát đặc biệt, hồ sơ đăng ký thay đổi người đại diện theo pháp luật thực hiện theo quy định tại Điều 50 Nghị định này. Trong đó, nghị quyết, quyết định của chủ sở hữu công ty đối với công ty trách nhiệm hữu hạn một thành viên; nghị quyết, quyết định và bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên; nghị quyết và bản sao biên bản họp Đại hội đồng cổ đông hoặc nghị quyết, quyết định và bản sao biên bản họp Hội đồng quản trị đối với công ty cổ phần được thay thế bằng bản sao quyết định của Ngân hàng Nhà nước Việt Nam về việc chỉ định người thay thế Chủ tịch Hội đồng quản trị hoặc Chủ tịch Hội đồng thành viên hoặc Tổng giám đốc (Giám đốc) của tổ chức tín dụng.\n5. Trường hợp Ngân hàng Nhà nước Việt Nam trực tiếp thực hiện hoặc chỉ định tổ chức tín dụng khác thực hiện việc tham gia góp vốn, mua cổ phần của tổ chức tín dụng được kiểm soát đặc biệt theo quyết định của Thủ tướng Chính phủ hoặc Ngân hàng Nhà nước Việt Nam, hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp thực hiện theo quy định tương ứng tại Nghị định này, trong đó, nghị quyết, quyết định của chủ sở hữu công ty đối với công ty trách nhiệm hữu hạn một thành viên; nghị quyết, quyết định và bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên; nghị quyết và bản sao biên bản họp Đại hội đồng cổ đông hoặc nghị quyết, quyết định và bản sao biên bản họp Hội đồng quản trị đối với công ty cổ phần và hợp đồng chuyển nhượng hoặc giấy tờ chứng minh hoàn tất việc chuyển nhượng được thay thế bằng bản sao quyết định của Thủ tướng Chính phủ hoặc Ngân hàng Nhà nước Việt Nam.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 29",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 5,
+    "type": "adversarial",
+    "question": "Thành lập doanh nghiệp xã hội thì không cần nộp Cam kết thực hiện mục tiêu xã hội, môi trường đúng không?",
+    "expected_answer": "Không đúng. Khi đăng ký thành lập doanh nghiệp xã hội, hồ sơ bắt buộc phải có Cam kết thực hiện mục tiêu xã hội, môi trường do người đại diện ký.",
+    "ground_truth_context": "Điều 30. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với công ty chứng khoán, công ty quản lý quỹ đầu tư chứng khoán, công ty đầu tư chứng khoán, chi nhánh công ty chứng khoán nước ngoài và chi nhánh công ty quản lý quỹ nước ngoài tại Việt Nam\n\n1. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với công ty chứng khoán, công ty quản lý quỹ đầu tư chứng khoán, công ty đầu tư chứng khoán, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của công ty chứng khoán, công ty quản lý quỹ đầu tư chứng khoán thực hiện theo quy định tại Nghị định này tương ứng với từng loại hình doanh nghiệp, kèm theo hồ sơ phải có bản sao giấy phép thành lập và hoạt động hoặc bản sao văn bản chấp thuận của Ủy ban Chứng khoán Nhà nước.\n2. Hồ sơ đăng ký hoạt động, đăng ký thay đổi nội dung đăng ký hoạt động đối với chi nhánh công ty chứng khoán nước ngoài và chi nhánh công ty quản lý quỹ nước ngoài tại Việt Nam thực hiện tương ứng theo quy định tại điểm a và điểm c khoản 1 Điều 31 và khoản 2 Điều 62 Nghị định này, kèm theo hồ sơ phải có bản sao giấy phép thành lập và hoạt động hoặc bản sao văn bản chấp thuận của Ủy ban Chứng khoán Nhà nước.\n3. Trường hợp công ty chứng khoán, công ty quản lý quỹ đầu tư chứng khoán, chi nhánh công ty chứng khoán nước ngoài và chi nhánh công ty quản lý quỹ nước ngoài tại Việt Nam bị thu hồi giấy phép thành lập và hoạt động, Ủy ban Chứng khoán Nhà nước gửi thông báo đến Phòng Đăng ký kinh doanh nơi công ty chứng khoán, công ty quản lý quỹ đầu tư chứng khoán, chi nhánh công ty chứng khoán nước ngoài và chi nhánh công ty quản lý quỹ nước ngoài đặt trụ sở, chi nhánh để thu hồi Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh theo quy định tại khoản 4 Điều 95 Luật Chứng khoán. Phòng Đăng ký kinh doanh thực hiện thu hồi Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh theo quy định tại khoản 6 Điều 75 và khoản 5 Điều 77 Nghị định này.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 30",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 6,
+    "type": "direct_lookup",
+    "question": "Khi thay đổi cổ đông sáng lập của công ty cổ phần chưa niêm yết thì doanh nghiệp nộp hồ sơ gồm những giấy tờ gì?",
+    "expected_answer": "Doanh nghiệp nộp Thông báo thay đổi nội dung đăng ký doanh nghiệp kèm theo Danh sách cổ đông sáng lập sau khi thay đổi và hợp đồng chuyển nhượng cổ phần.",
+    "ground_truth_context": "Điều 31. Hồ sơ, trình tự, thủ tục đăng ký hoạt động chi nhánh, văn phòng đại diện, thông báo lập địa điểm kinh doanh\n\n1. Hồ sơ đăng ký hoạt động chi nhánh, văn phòng đại diện\nDoanh nghiệp nộp hồ sơ đăng ký hoạt động chi nhánh, văn phòng đại diện tại Phòng Đăng ký kinh doanh nơi đặt chi nhánh, văn phòng đại diện. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thành lập chi nhánh, văn phòng đại diện do người đại diện theo pháp luật của doanh nghiệp ký;\nb) Bản sao nghị quyết, quyết định và bản sao biên bản họp của Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty hợp danh, của Hội đồng quản trị đối với công ty cổ phần; nghị quyết, quyết định của chủ sở hữu công ty đối với công ty trách nhiệm hữu hạn một thành viên về việc thành lập chi nhánh, văn phòng đại diện;\nc) Bản sao giấy tờ pháp lý của cá nhân đối với người đứng đầu chi nhánh, văn phòng đại diện.\n2. Thông báo lập địa điểm kinh doanh\na) Doanh nghiệp có thể lập địa điểm kinh doanh tại địa chỉ khác nơi doanh nghiệp đặt trụ sở chính hoặc đặt chi nhánh;\nb) Trong thời hạn 10 ngày kể từ ngày quyết định lập địa điểm kinh doanh, doanh nghiệp gửi thông báo lập địa điểm kinh doanh đến Phòng Đăng ký kinh doanh nơi đặt địa điểm kinh doanh;\nc) Thông báo lập địa điểm kinh doanh do người đại diện theo pháp luật của doanh nghiệp ký trong trường hợp địa điểm kinh doanh trực thuộc doanh nghiệp hoặc do người đứng đầu chi nhánh ký trong trường hợp địa điểm kinh doanh trực thuộc chi nhánh.\n3. Trong thời hạn 03 ngày làm việc kể từ ngày nhận được hồ sơ hợp lệ, Phòng Đăng ký kinh doanh cấp Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, cập nhật thông tin về địa điểm kinh doanh trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp cho doanh nghiệp. Trường hợp doanh nghiệp có nhu cầu, Phòng Đăng ký kinh doanh cấp Giấy chứng nhận đăng ký địa điểm kinh doanh cho doanh nghiệp. Trường hợp hồ sơ chưa hợp lệ, Phòng Đăng ký kinh doanh thông báo bằng văn bản nội dung cần sửa đổi, bổ sung cho doanh nghiệp.\n4. Việc lập chi nhánh, văn phòng đại diện của doanh nghiệp ở nước ngoài thực hiện theo quy định của pháp luật nước đó. Trong thời hạn 30 ngày kể từ ngày chính thức lập chi nhánh, văn phòng đại diện ở nước ngoài, doanh nghiệp phải thông báo bằng văn bản đến Phòng Đăng ký kinh doanh nơi doanh nghiệp đặt trụ sở chính. Kèm theo thông báo phải có bản sao Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện hoặc giấy tờ tương đương. Phòng Đăng ký kinh doanh cập nhật thông tin về chi nhánh, văn phòng đại diện của doanh nghiệp trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp trong thời hạn 03 ngày làm việc kể từ ngày nhận được thông báo.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 31",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 7,
+    "type": "unanswerable",
+    "question": "Doanh nghiệp có phải xin Giấy phép lao động cho người lao động nước ngoài tại Cơ quan đăng ký kinh doanh không?",
+    "expected_answer": "Thủ tục cấp Giấy phép lao động cho người nước ngoài thuộc thẩm quyền của cơ quan quản lý lao động, không thuộc phạm vi của Cơ quan đăng ký kinh doanh.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 33",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 8,
+    "type": "ambiguous",
+    "question": "Điều kiện được cấp giấy đăng ký là gì?",
+    "expected_answer": "Dựa trên quy định điều kiện cấp Giấy chứng nhận đăng ký doanh nghiệp, hồ sơ của bạn phải đáp ứng đủ 4 điều kiện: 1. Ngành nghề kinh doanh không thuộc ngành cấm; 2. Tên doanh nghiệp đặt đúng quy định; 3. Nộp đủ phí, lệ phí đăng ký; 4. Hồ sơ hợp lệ theo quy định.",
+    "ground_truth_context": "Điều 34. Cấp Giấy chứng nhận đăng ký doanh nghiệp\n\n1. Doanh nghiệp được cấp Giấy chứng nhận đăng ký doanh nghiệp khi có đủ các điều kiện theo quy định tại khoản 1 Điều 27 Luật Doanh nghiệp.\n2. Các thông tin trên Giấy chứng nhận đăng ký doanh nghiệp có giá trị pháp lý kể từ ngày Phòng Đăng ký kinh doanh cấp Giấy chứng nhận đăng ký doanh nghiệp. Doanh nghiệp có quyền hoạt động kinh doanh kể từ ngày được cấp Giấy chứng nhận đăng ký doanh nghiệp, trừ trường hợp kinh doanh ngành, nghề đầu tư kinh doanh có điều kiện. Trường hợp doanh nghiệp đăng ký ngày bắt đầu hoạt động kinh doanh sau ngày được cấp Giấy chứng nhận đăng ký doanh nghiệp thì doanh nghiệp được quyền hoạt động kinh doanh kể từ ngày doanh nghiệp đăng ký, trừ trường hợp kinh doanh ngành, nghề đầu tư kinh doanh có điều kiện.\n3. Doanh nghiệp có quyền yêu cầu Phòng Đăng ký kinh doanh cấp bản sao Giấy chứng nhận đăng ký doanh nghiệp và phải nộp phí theo quy định.\n4. Trường hợp doanh nghiệp đã được cấp Giấy chứng nhận đăng ký doanh nghiệp mới thì Giấy chứng nhận đăng ký doanh nghiệp của các lần trước đó không còn hiệu lực.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 34",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 9,
+    "type": "adversarial",
+    "question": "Doanh nghiệp đăng ký các ngành nghề thuộc danh mục cấm đầu tư kinh doanh thì vẫn được cấp giấy chứng nhận đúng không?",
+    "expected_answer": "Không chính xác. Giấy chứng nhận đăng ký doanh nghiệp chỉ được cấp khi ngành, nghề đăng ký kinh doanh không thuộc danh mục cấm đầu tư kinh doanh.",
+    "ground_truth_context": "Điều 35. Công bố nội dung đăng ký doanh nghiệp\n\n1. Các nội dung công bố quy định tại khoản 1 và khoản 2 Điều 32 Luật Doanh nghiệp.\n2. Thông tin công bố nội dung đăng ký doanh nghiệp được đăng tải trên Cổng thông tin quốc gia về đăng ký doanh nghiệp.\n3. Việc đề nghị công bố nội dung đăng ký doanh nghiệp và nộp phí công bố nội dung đăng ký doanh nghiệp được thực hiện tại thời điểm doanh nghiệp nộp hồ sơ đăng ký doanh nghiệp. Trường hợp doanh nghiệp không được cấp đăng ký doanh nghiệp, doanh nghiệp sẽ được hoàn trả phí công bố nội dung đăng ký doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 35",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 10,
+    "type": "direct_lookup",
+    "question": "Doanh nghiệp tạm ngừng kinh doanh phải gửi thông báo bằng văn bản đến cơ quan đăng ký trước bao nhiêu ngày làm việc?",
+    "expected_answer": "Doanh nghiệp có trách nhiệm gửi thông báo bằng văn bản đến Cơ quan đăng ký kinh doanh chậm nhất 03 ngày làm việc trước ngày tạm ngừng kinh doanh.",
+    "ground_truth_context": "Điều 36. Cung cấp thông tin đăng ký doanh nghiệp\n\n1. Thông tin được cung cấp công khai, miễn phí trên Cổng thông tin quốc gia về đăng ký doanh nghiệp tại địa chỉ https://dangkykinhdoanh.gov.vn, bao gồm: tên doanh nghiệp; mã số doanh nghiệp; địa chỉ trụ sở chính; ngành, nghề kinh doanh; họ và tên người đại diện theo pháp luật; tình trạng pháp lý của doanh nghiệp.\n2. Tổ chức, cá nhân có nhu cầu cung cấp thông tin đăng ký doanh nghiệp theo quy định tại khoản 1 Điều 33 Luật Doanh nghiệp gửi đề nghị cung cấp thông tin đến Cổng thông tin quốc gia về đăng ký doanh nghiệp hoặc Cơ quan quản lý nhà nước về đăng ký kinh doanh hoặc Cơ quan đăng ký kinh doanh cấp tỉnh để được cung cấp thông tin.\nCơ quan quản lý nhà nước về đăng ký kinh doanh cung cấp thông tin về doanh nghiệp lưu giữ trên Hệ thống thông tin quốc gia về đăng ký doanh nghiệp. Cơ quan đăng ký kinh doanh cấp tỉnh cung cấp thông tin về doanh nghiệp lưu giữ tại Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp trong phạm vi địa phương quản lý.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 36",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 11,
+    "type": "unanswerable",
+    "question": "Phòng Đăng ký kinh doanh có tiếp nhận thanh toán lệ phí đăng ký doanh nghiệp bằng tiền điện tử Bitcoin không?",
+    "expected_answer": "Tài liệu chỉ quy định thanh toán lệ phí bằng tiền mặt, chuyển khoản hoặc trực tuyến, không có quy định về thanh toán bằng tiền điện tử.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 38",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 12,
+    "type": "ambiguous",
+    "question": "Thay đổi thông tin ai ký tên?",
+    "expected_answer": "Dựa trên quy định đăng ký thay đổi, bạn thay đổi nội dung thông thường hay thay đổi người đại diện theo pháp luật? - Nếu thông thường: Thông báo do Người đại diện theo pháp luật hiện tại ký. - Nếu thay đổi người đại diện pháp luật: Người đại diện theo pháp luật mới hoặc Chủ tịch HĐTV/Chủ tịch HĐQT công ty ký tên.",
+    "ground_truth_context": "Điều 39. Hiệu đính thông tin trên Giấy chứng nhận đăng ký doanh nghiệp, Giấy xác nhận thay đổi nội dung đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh\n\n1. Trường hợp doanh nghiệp phát hiện nội dung trên Giấy chứng nhận đăng ký doanh nghiệp chưa chính xác so với nội dung hồ sơ đăng ký doanh nghiệp, doanh nghiệp gửi văn bản đề nghị hiệu đính thông tin đến Phòng Đăng ký kinh doanh nơi doanh nghiệp đặt trụ sở chính. Phòng Đăng ký kinh doanh cấp lại Giấy chứng nhận đăng ký doanh nghiệp trong thời hạn 03 ngày làm việc kể từ ngày nhận được văn bản đề nghị của doanh nghiệp nếu thông tin nêu tại văn bản đề nghị của doanh nghiệp là chính xác.\n2. Trường hợp Phòng Đăng ký kinh doanh phát hiện nội dung trên Giấy chứng nhận đăng ký doanh nghiệp chưa chính xác so với nội dung hồ sơ đăng ký doanh nghiệp, Phòng Đăng ký kinh doanh gửi thông báo về việc hiệu đính nội dung trên Giấy chứng nhận đăng ký doanh nghiệp đến doanh nghiệp và thực hiện việc cấp Giấy chứng nhận đăng ký doanh nghiệp cho doanh nghiệp trong thời hạn 03 ngày làm việc kể từ ngày gửi thông báo.\n3. Việc hiệu đính thông tin trên Giấy xác nhận về việc thay đổi nội dung đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh và các thông tin về đăng ký doanh nghiệp lưu giữ tại Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp thực hiện theo quy định tại các khoản 1, 2 Điều này.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 39",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 13,
+    "type": "adversarial",
+    "question": "Công ty chuyển trụ sở sang địa chỉ mới thì chỉ cần tự đổi biển hiệu chứ không phải làm thủ tục thông báo với cơ quan đăng ký phải không?",
+    "expected_answer": "Không đúng. Khi thay đổi địa chỉ trụ sở chính, doanh nghiệp bắt buộc phải gửi Thông báo thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi đặt trụ sở mới.",
+    "ground_truth_context": "Điều 40. Hiệu đính thông tin đăng ký doanh nghiệp do chuyển đổi dữ liệu vào Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp\n\n1. Trường hợp doanh nghiệp phát hiện nội dung thông tin đăng ký doanh nghiệp trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp bị thiếu hoặc chưa chính xác so với bản giấy của Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký kinh doanh, Giấy chứng nhận đăng ký kinh doanh và đăng ký thuế, Giấy chứng nhận đầu tư (đồng thời là Giấy chứng nhận đăng ký kinh doanh), Giấy phép đầu tư hoặc các giấy tờ có giá trị tương đương, Giấy phép thành lập và hoạt động kinh doanh chứng khoán do quá trình chuyển đổi dữ liệu vào Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp, doanh nghiệp gửi văn bản đề nghị hiệu đính đến Phòng Đăng ký kinh doanh nơi đặt trụ sở chính. Kèm theo văn bản đề nghị hiệu đính phải có bản sao Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký kinh doanh, Giấy chứng nhận đăng ký kinh doanh và đăng ký thuế, Giấy chứng nhận đầu tư (đồng thời là Giấy chứng nhận đăng ký kinh doanh), Giấy phép đầu tư hoặc các giấy tờ có giá trị tương đương, Giấy phép thành lập và hoạt động kinh doanh chứng khoán.\nTrong thời hạn 03 ngày làm việc kể từ ngày tiếp nhận văn bản đề nghị hiệu đính của doanh nghiệp, Phòng Đăng ký kinh doanh có trách nhiệm bổ sung, hiệu đính thông tin đăng ký doanh nghiệp trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp.\n2. Trường hợp Phòng Đăng ký kinh doanh phát hiện nội dung thông tin đăng ký doanh nghiệp trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp không có hoặc không chính xác so với bản giấy của Giấy chứng nhận do quá trình chuyển đổi dữ liệu vào Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp, trong thời hạn 03 ngày làm việc kể từ khi phát hiện, Phòng Đăng ký kinh doanh bổ sung, hiệu đính nội dung thông tin đăng ký doanh nghiệp trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương IV",
+      "section": null,
+      "article": "Điều 40",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 14,
+    "type": "direct_lookup",
+    "question": "Hồ sơ giải thể doanh nghiệp trong trường hợp tự giải thể bao gồm những chứng từ và báo cáo chính nào?",
+    "expected_answer": "Hồ sơ giải thể gồm: Thông báo về việc giải thể doanh nghiệp, Báo cáo thanh lý tài sản doanh nghiệp, danh sách chủ nợ và số nợ đã thanh toán.",
+    "ground_truth_context": "Điều 41. Tình trạng pháp lý của doanh nghiệp\n\nCác tình trạng pháp lý của doanh nghiệp trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp bao gồm:\n1. “Tạm ngừng kinh doanh” là tình trạng pháp lý của doanh nghiệp đang trong thời gian thực hiện tạm ngừng kinh doanh theo quy định tại khoản 1 Điều 206 Luật Doanh nghiệp. Ngày chuyển tình trạng pháp lý “Tạm ngừng kinh doanh” là ngày doanh nghiệp đăng ký bắt đầu tạm ngừng kinh doanh. Ngày kết thúc tình trạng pháp lý “Tạm ngừng kinh doanh” là ngày kết thúc thời hạn tạm ngừng kinh doanh mà doanh nghiệp đã thông báo hoặc ngày doanh nghiệp đăng ký tiếp tục kinh doanh trước thời hạn đã thông báo.\n2. “Không còn hoạt động kinh doanh tại địa chỉ đã đăng ký” là tình trạng pháp lý của doanh nghiệp mà qua công tác kiểm tra, xác minh của Cơ quan quản lý thuế và các đơn vị có liên quan không tìm thấy doanh nghiệp tại địa chỉ đã đăng ký. Thông tin về doanh nghiệp không còn hoạt động tại địa chỉ đã đăng ký do Cơ quan quản lý thuế cung cấp cho Cơ quan đăng ký kinh doanh. Việc thay đổi, cập nhật, thời điểm chuyển tình trạng pháp lý và kết thúc tình trạng pháp lý do Cơ quan quản lý thuế quyết định. Cơ quan quản lý thuế có trách nhiệm cung cấp, cập nhật tình trạng pháp lý “Không còn hoạt động kinh doanh tại địa chỉ đã đăng ký” của doanh nghiệp tới Cơ quan đăng ký kinh doanh qua Hệ thống thông tin đăng ký thuế kết nối với Hệ thống thông tin quốc gia về đăng ký doanh nghiệp. Cơ quan đăng ký kinh doanh thực hiện ghi nhận, cập nhật tình trạng pháp lý do Cơ quan quản lý thuế cung cấp vào Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp.\n3. “Bị thu hồi Giấy chứng nhận đăng ký doanh nghiệp do cưỡng chế về quản lý thuế” là tình trạng pháp lý của doanh nghiệp bị Phòng Đăng ký kinh doanh ra quyết định thu hồi Giấy chứng nhận đăng ký doanh nghiệp theo đề nghị của cơ quan quản lý thuế về thực hiện biện pháp cưỡng chế thi hành quyết định hành chính về quản lý thuế. Ngày chuyển tình trạng pháp lý “Bị thu hồi Giấy chứng nhận đăng ký doanh nghiệp do cưỡng chế về quản lý thuế” là ngày Phòng Đăng ký kinh doanh ra quyết định thu hồi Giấy chứng nhận đăng ký doanh nghiệp. Ngày kết thúc tình trạng pháp lý “Bị thu hồi do cưỡng chế về quản lý thuế” là ngày Phòng Đăng ký kinh doanh khôi phục lại tình trạng pháp lý của doanh nghiệp trên cơ sở văn bản đề nghị của Cơ quan quản lý thuế theo quy định của pháp luật về quản lý thuế.\n4. “Đang làm thủ tục giải thể, đã bị chia, bị hợp nhất, bị sáp nhập” là tình trạng pháp lý của doanh nghiệp đã có nghị quyết, quyết định giải thể theo khoản 3 Điều 208 Luật Doanh nghiệp; doanh nghiệp đã bị Phòng Đăng ký kinh doanh ra quyết định thu hồi Giấy chứng nhận đăng ký doanh nghiệp, trừ trường hợp doanh nghiệp bị thu hồi do cưỡng chế về quản lý thuế; doanh nghiệp bị giải thể theo quyết định của Tòa án theo khoản 1 Điều 209 Luật Doanh nghiệp; doanh nghiệp đã bị chia, bị hợp nhất, bị sáp nhập và đang làm thủ tục quyết toán và chuyển giao nghĩa vụ thuế với Cơ quan thuế do bị chia, bị hợp nhất, bị sáp nhập. Thời gian xác định chuyển tình trạng pháp lý “Đang làm thủ tục giải thể, đã bị chia, bị hợp nhất, bị sáp nhập” là thời điểm Phòng Đăng ký kinh doanh thông báo tình trạng doanh nghiệp đang làm thủ tục giải thể trên Cổng thông tin quốc gia về đăng ký doanh nghiệp; công ty được chia, công ty hợp nhất, công ty nhận sáp nhập được cấp đăng ký doanh nghiệp trên cơ sở chia, hợp nhất, sáp nhập công ty.\n5. “Đang làm thủ tục phá sản” là tình trạng pháp lý của doanh nghiệp đã có quyết định mở thủ tục phá sản của Tòa án theo quy định của pháp luật về phá sản. Thời gian xác định chuyển tình trạng pháp lý “Đang làm thủ tục phá sản” là thời điểm Phòng Đăng ký kinh doanh cập nhật tình trạng doanh nghiệp đang làm thủ tục phá sản trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp.\n6. “Đã giải thể, phá sản, chấm dứt tồn tại” là tình trạng pháp lý của doanh nghiệp đã hoàn thành thủ tục giải thể theo quy định và được Phòng Đăng ký kinh doanh cập nhật tình trạng pháp lý theo khoản 8 Điều 208, khoản 5 Điều 209 Luật Doanh nghiệp; doanh nghiệp có quyết định tuyên bố phá sản của Tòa án theo quy định của pháp luật về phá sản; doanh nghiệp bị chấm dứt tồn tại do bị chia, bị hợp nhất, bị sáp nhập theo khoản 5 Điều 198, khoản 5 Điều 200, khoản 4 Điều 201 Luật Doanh nghiệp. Thời gian xác định chuyển tình trạng pháp lý “Đã giải thể, phá sản, chấm dứt tồn tại” là thời điểm Phòng Đăng ký kinh doanh cập nhật tình trạng pháp lý trên Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp.\n7. “Đang hoạt động” là tình trạng pháp lý của doanh nghiệp đã được cấp Giấy chứng nhận đăng ký doanh nghiệp mà không thuộc tình trạng pháp lý quy định tại các khoản 1, 2, 3, 4, 5 và 6 Điều này.\n\n\nĐĂNG KÝ DOANH NGHIỆP QUA MẠNG THÔNG TIN ĐIỆN TỬ",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương V",
+      "section": null,
+      "article": "Điều 41",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 15,
+    "type": "unanswerable",
+    "question": "Doanh nghiệp nộp hồ sơ qua mạng có được cơ quan đăng ký cấp tài khoản ngân hàng miễn phí không?",
+    "expected_answer": "Thủ tục mở tài khoản ngân hàng không thuộc phạm vi cung cấp dịch vụ của Cơ quan đăng ký kinh doanh.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương V",
+      "section": null,
+      "article": "Điều 43",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 16,
+    "type": "ambiguous",
+    "question": "Nộp qua mạng được không?",
+    "expected_answer": "Dựa trên quy định đăng ký qua mạng, hồ sơ nộp bằng Chữ ký số công cộng có giá trị pháp lý tương đương hồ sơ bản giấy và được xử lý hoàn toàn trên Hệ thống thông tin quốc gia.",
+    "ground_truth_context": "Điều 44. Trình tự, thủ tục đăng ký doanh nghiệp qua mạng thông tin điện tử sử dụng chữ ký số\n\n1. Người nộp hồ sơ kê khai thông tin, tải văn bản điện tử, ký xác thực hồ sơ đăng ký doanh nghiệp qua mạng thông tin điện tử và thanh toán phí, lệ phí đăng ký doanh nghiệp theo quy trình trên Cổng thông tin quốc gia về đăng ký doanh nghiệp.\n2. Sau khi hoàn thành việc gửi hồ sơ đăng ký doanh nghiệp, người nộp hồ sơ sẽ nhận được Giấy biên nhận hồ sơ đăng ký doanh nghiệp qua mạng thông tin điện tử.\n3. Trường hợp hồ sơ đủ điều kiện cấp đăng ký doanh nghiệp, Phòng Đăng ký kinh doanh thực hiện cấp đăng ký doanh nghiệp và thông báo cho doanh nghiệp về việc cấp đăng ký doanh nghiệp. Trường hợp hồ sơ chưa đủ điều kiện cấp đăng ký doanh nghiệp, Phòng Đăng ký kinh doanh gửi thông báo qua mạng thông tin điện tử cho doanh nghiệp để yêu cầu sửa đổi, bổ sung hồ sơ.\n4. Việc đăng ký hoạt động chi nhánh, văn phòng đại diện, thông báo lập địa điểm kinh doanh của doanh nghiệp qua mạng thông tin điện tử thực hiện theo quy trình quy định tại Điều này.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương V",
+      "section": null,
+      "article": "Điều 44",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 17,
+    "type": "adversarial",
+    "question": "Nộp hồ sơ qua mạng bằng Tài khoản đăng ký kinh doanh thì doanh nghiệp không phải chịu trách nhiệm về thông tin kê khai đúng không?",
+    "expected_answer": "Thông tin này sai. Người sử dụng Tài khoản đăng ký kinh doanh phải chịu trách nhiệm trước pháp luật về tính chính xác, hợp pháp của thông tin kê khai khi nộp qua mạng.",
+    "ground_truth_context": "Điều 45. Trình tự, thủ tục đăng ký doanh nghiệp qua mạng thông tin điện tử sử dụng Tài khoản đăng ký kinh doanh\n\n1. Người nộp hồ sơ sử dụng Tài khoản đăng ký kinh doanh để kê khai thông tin, tải văn bản điện tử và ký xác thực hồ sơ đăng ký doanh nghiệp qua mạng thông tin điện tử và thanh toán phí, lệ phí đăng ký doanh nghiệp theo quy trình trên Cổng thông tin quốc gia về đăng ký doanh nghiệp. Trường hợp ủy quyền thực hiện thủ tục đăng ký doanh nghiệp qua mạng thông tin điện tử sử dụng Tài khoản đăng ký kinh doanh, văn bản ủy quyền phải có thông tin liên hệ của người ủy quyền để xác thực việc nộp hồ sơ đăng ký doanh nghiệp qua mạng thông tin điện tử.\n2. Sau khi hoàn thành việc gửi hồ sơ đăng ký, người nộp hồ sơ sẽ nhận được Giấy biên nhận hồ sơ đăng ký doanh nghiệp qua mạng thông tin điện tử.\n3. Phòng Đăng ký kinh doanh cấp đăng ký doanh nghiệp cho doanh nghiệp trong trường hợp hồ sơ đủ điều kiện và thông báo cho doanh nghiệp về việc cấp đăng ký doanh nghiệp. Trường hợp hồ sơ chưa đủ điều kiện, Phòng Đăng ký kinh doanh gửi thông báo qua mạng thông tin điện tử cho doanh nghiệp để yêu cầu sửa đổi, bổ sung hồ sơ.\n4. Quy trình đăng ký doanh nghiệp qua mạng thông tin điện tử quy định tại Điều này cũng áp dụng đối với việc đăng ký hoạt động chi nhánh, văn phòng đại diện, thông báo lập địa điểm kinh doanh của doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương V",
+      "section": null,
+      "article": "Điều 45",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 18,
+    "type": "direct_lookup",
+    "question": "Cá nhân hoặc đại diện hộ gia đình nộp hồ sơ đăng ký hộ kinh doanh tại cơ quan nào ở địa phương?",
+    "expected_answer": "Nộp tại Cơ quan đăng ký kinh doanh cấp huyện nơi đặt địa điểm kinh doanh.",
+    "ground_truth_context": "Điều 46. Xử lý vi phạm, khiếu nại và giải quyết tranh chấp liên quan đến chữ ký số, Tài khoản đăng ký kinh doanh\n\n1. Việc xác định và xử lý các tranh chấp, khiếu nại và hành vi vi phạm liên quan đến việc quản lý, sử dụng chữ ký số, Tài khoản đăng ký kinh doanh thực hiện theo quy định của pháp luật.\n2. Cơ quan đăng ký kinh doanh, Cơ quan quản lý nhà nước về đăng ký kinh doanh không chịu trách nhiệm về những vi phạm của doanh nghiệp, người thành lập doanh nghiệp, người nộp hồ sơ khi kê khai thông tin để được cấp Tài khoản đăng ký kinh doanh và việc sử dụng Tài khoản đăng ký kinh doanh.\n\n\nHỒ SƠ, TRÌNH TỰ, THỦ TỤC ĐĂNG KÝ THAY ĐỔI, THÔNG BÁO THAY ĐỔI NỘI DUNG ĐĂNG KÝ DOANH NGHIỆP",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương VI",
+      "section": null,
+      "article": "Điều 46",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 19,
+    "type": "unanswerable",
+    "question": "Khi thay đổi vốn điều lệ thì công ty phải nộp thêm tiền thuế môn bài là bao nhiêu?",
+    "expected_answer": "Biểu mức thuế môn bài phải nộp theo vốn điều lệ không thuộc phạm vi quy định của tài liệu đăng ký doanh nghiệp này.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "part": null,
+      "chapter": "Chương VI",
+      "section": null,
+      "article": "Điều 48",
+      "clause": null,
+      "point": null
+    },
+    "difficulty": "easy"
+  }
+]

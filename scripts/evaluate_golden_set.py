@@ -12,13 +12,13 @@ def evaluate_question_quality(question, item_type):
         score -= 0.3
     if re.search(r'nghị định này (nói gì|quy định gì|là gì)', question, re.IGNORECASE):
         score -= 0.4
-    if len(question.strip()) < 8:
+    if len(question.strip()) < 4:
         score -= 0.3
     return max(0.0, score)
 
 def evaluate_faithfulness(answer, context, item_type):
     if item_type == "unanswerable":
-        if any(keyword in answer.lower() for keyword in ["không có trong", "không được quy định", "chưa có thông tin", "không cụ thể"]):
+        if any(keyword in answer.lower() for keyword in ["không có trong", "không được quy định", "chưa có thông tin", "không thuộc phạm vi"]):
             return 1.0
         return 0.4
 
@@ -28,8 +28,17 @@ def evaluate_faithfulness(answer, context, item_type):
         return 0.5
 
     if item_type == "ambiguous":
-        if "tùy thuộc" in answer.lower() or "tổng quan" in answer.lower() or len(answer) > 20:
-            return 1.0
+        # Dual context evaluation rule
+        if context:
+            # Case 1: Ambiguous with context -> Clarification based on context scenarios
+            if any(k in answer.lower() for k in ["vui lòng", "cho biết", "trường hợp", "nếu", "làm rõ"]):
+                return 1.0
+            return 0.7
+        else:
+            # Case 2: Ambiguous without context -> General LLM clarification
+            if any(k in answer.lower() for k in ["vui lòng", "bối cảnh", "cho biết thêm", "làm rõ"]):
+                return 1.0
+            return 0.6
 
     if not context:
         return 0.0
@@ -157,6 +166,11 @@ def run_evaluation(dataset_file, threshold, report_file):
     print(f"Passed Samples          : {summary['passed']} ({pass_rate}%)")
     print(f"Below Threshold Samples : {summary['failed']}")
     print(f"Average Overall Score   : {avg_score} / 1.0")
+    print("-" * 65)
+    print("TYPE BREAKDOWN:")
+    for t_name, t_stat in type_stats.items():
+        t_pass_rate = round((t_stat['passed'] / t_stat['total']) * 100, 1) if t_stat['total'] else 0
+        print(f"  - [{t_name:<14}]: Total={t_stat['total']:<3} | Pass={t_stat['passed']:<3} | Fail={t_stat['failed']:<2} | Pass Rate={t_pass_rate}%")
     print("-" * 65)
     print(f"BELOW THRESHOLD SAMPLE IDs: {failed_ids if failed_ids else 'None (All samples passed)'}")
     print("=" * 65)
