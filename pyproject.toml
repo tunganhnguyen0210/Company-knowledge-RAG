@@ -50,6 +50,7 @@ include = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = "-q"
 markers = ["integration: requires external infrastructure"]
 

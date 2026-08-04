@@ -201,9 +201,10 @@ def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
 
 
 def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
-    if settings.jina_api_key and settings.embedding_model.startswith("jina-"):
+    jina_pool = settings.build_jina_key_pool()
+    if jina_pool.key_count > 0 and settings.embedding_model.startswith("jina-"):
         embedder: Any = JinaEmbeddingProvider(
-            api_key=settings.jina_api_key,
+            api_key=jina_pool,
             model=settings.embedding_model,
             output_dimension=settings.vector_size,
             timeout_seconds=settings.provider_timeout_seconds,
@@ -217,9 +218,9 @@ def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
         )
 
     reranker = None
-    if settings.jina_api_key and settings.reranker_model:
+    if jina_pool.key_count > 0 and settings.reranker_model:
         reranker = JinaReranker(
-            api_key=settings.jina_api_key,
+            api_key=jina_pool,
             model=settings.reranker_model,
             timeout_seconds=settings.provider_timeout_seconds,
         )
