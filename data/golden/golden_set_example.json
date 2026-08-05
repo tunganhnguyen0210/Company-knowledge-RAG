@@ -1,0 +1,262 @@
+[
+  {
+    "id": 1,
+    "type": "direct_lookup",
+    "question": "Khi đăng ký thành lập doanh nghiệp thì có thể thực hiện liên thông những thủ tục hành chính nào cùng lúc?",
+    "expected_answer": "Doanh nghiệp có thể thực hiện liên thông các thủ tục: khai trình việc sử dụng lao động, cấp mã số đơn vị tham gia bảo hiểm xã hội và đăng ký sử dụng hóa đơn.",
+    "ground_truth_context": "Điều 1. Phạm vi điều chỉnh\n\n1. Nghị định này quy định chi tiết về hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp; đăng ký hộ kinh doanh; quy định về Cơ quan đăng ký kinh doanh và quản lý nhà nước về đăng ký doanh nghiệp, đăng ký hộ kinh doanh.\n2. Việc liên thông thủ tục đăng ký thành lập doanh nghiệp, chi nhánh, văn phòng đại diện, khai trình việc sử dụng lao động, cấp mã số đơn vị tham gia bảo hiểm xã hội, đăng ký sử dụng hóa đơn của doanh nghiệp thực hiện theo quy định tại Nghị định của Chính phủ quy định về phối hợp, liên thông thủ tục đăng ký thành lập doanh nghiệp, chi nhánh, văn phòng đại diện, khai trình việc sử dụng lao động, cấp mã số đơn vị tham gia bảo hiểm xã hội, đăng ký sử dụng hóa đơn của doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 1"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 2,
+    "type": "direct_lookup",
+    "question": "Giấy chứng nhận đăng ký doanh nghiệp có thay thế được giấy phép kinh doanh của các ngành nghề có điều kiện không?",
+    "expected_answer": "Không. Giấy chứng nhận đăng ký doanh nghiệp không thay thế cho giấy phép kinh doanh đối với các ngành, nghề đầu tư kinh doanh có điều kiện.",
+    "ground_truth_context": "Điều 6. Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh\n\n1. Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh được cấp cho doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của doanh nghiệp. Nội dung Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh được ghi trên cơ sở thông tin trong hồ sơ đăng ký doanh nghiệp. Giấy chứng nhận đăng ký doanh nghiệp đồng thời là Giấy chứng nhận đăng ký thuế của doanh nghiệp. Giấy chứng nhận đăng ký doanh nghiệp không phải là giấy phép kinh doanh.\n2. Trường hợp Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh được lưu dưới dạng dữ liệu điện tử trong Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp tại cùng thời điểm có nội dung khác so với Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện, Giấy chứng nhận đăng ký địa điểm kinh doanh bằng bản giấy thì Giấy chứng nhận có nội dung được ghi đúng theo nội dung trong hồ sơ đăng ký của doanh nghiệp có giá trị pháp lý.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 6"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 3,
+    "type": "direct_lookup",
+    "question": "Công dân Việt Nam cần mang bản sao loại giấy tờ tùy thân nào khi làm hồ sơ đăng ký doanh nghiệp?",
+    "expected_answer": "Công dân Việt Nam cần nộp bản sao Thẻ căn cước công dân hoặc Chứng minh nhân dân hoặc Hộ chiếu Việt Nam còn hiệu lực.",
+    "ground_truth_context": "Điều 11. Giấy tờ pháp lý của cá nhân trong hồ sơ đăng ký doanh nghiệp\n\n1. Đối với công dân Việt Nam: Thẻ căn cước công dân hoặc Chứng minh nhân dân hoặc Hộ chiếu Việt Nam còn hiệu lực.\n2. Đối với người nước ngoài: Hộ chiếu nước ngoài hoặc giấy tờ có giá trị thay thế hộ chiếu nước ngoài còn hiệu lực.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 11"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 4,
+    "type": "direct_lookup",
+    "question": "Cơ quan đăng ký kinh doanh cấp huyện trực tiếp tiếp nhận và cấp giấy đăng ký cho đối tượng nào?",
+    "expected_answer": "Cơ quan đăng ký kinh doanh cấp huyện trực tiếp tiếp nhận hồ sơ và cấp Giấy chứng nhận đăng ký hộ kinh doanh cho hộ kinh doanh.",
+    "ground_truth_context": "Điều 16. Nhiệm vụ, quyền hạn của Cơ quan đăng ký kinh doanh cấp huyện\n\n1. Trực tiếp nhận hồ sơ đăng ký hộ kinh doanh; xem xét tính hợp lệ của hồ sơ và cấp hoặc từ chối cấp đăng ký hộ kinh doanh.\n2. Hướng dẫn hộ kinh doanh và người thành lập hộ kinh doanh về hồ sơ, trình tự, thủ tục đăng ký hộ kinh doanh.\n3. Phối hợp xây dựng, quản lý, vận hành hệ thống thông tin về hộ kinh doanh hoạt động trên phạm vi địa bàn; định kỳ báo cáo Ủy ban nhân dân cấp huyện, Phòng Đăng ký kinh doanh, Cơ quan thuế cấp huyện về tình hình đăng ký hộ kinh doanh trên địa bàn.\n4. Cung cấp thông tin về đăng ký hộ kinh doanh trên phạm vi địa bàn cho Ủy ban nhân dân cấp huyện, Cơ quan quản lý thuế tại địa phương, các cơ quan có liên quan và các tổ chức, cá nhân có yêu cầu theo quy định của pháp luật.\n5. Trực tiếp kiểm tra hoặc đề nghị cơ quan nhà nước có thẩm quyền kiểm tra hộ kinh doanh theo nội dung trong hồ sơ đăng ký hộ kinh doanh.\n6. Yêu cầu hộ kinh doanh báo cáo về việc tuân thủ các quy định tại Nghị định này khi cần thiết.\n7. Yêu cầu hộ kinh doanh tạm ngừng kinh doanh ngành, nghề đầu tư kinh doanh có điều kiện khi phát hiện hộ kinh doanh không đáp ứng đủ điều kiện kinh doanh.\n8. Thu hồi Giấy chứng nhận đăng ký hộ kinh doanh theo quy định của pháp luật.\n9. Đăng ký kinh doanh cho tổ chức, cá nhân khác theo quy định của pháp luật.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương II",
+      "article": "Điều 16"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 5,
+    "type": "direct_lookup",
+    "question": "Hồ sơ đăng ký thành lập doanh nghiệp tư nhân bắt buộc gồm những loại giấy tờ nào?",
+    "expected_answer": "Hồ sơ gồm Giấy đề nghị đăng ký doanh nghiệp và bản sao giấy tờ pháp lý của cá nhân đối với chủ doanh nghiệp tư nhân.",
+    "ground_truth_context": "Điều 21. Hồ sơ đăng ký doanh nghiệp đối với doanh nghiệp tư nhân\n\n1. Giấy đề nghị đăng ký doanh nghiệp.\n2. Bản sao giấy tờ pháp lý của cá nhân đối với chủ doanh nghiệp tư nhân.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 21"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 6,
+    "type": "unanswerable",
+    "question": "Mức thuế suất thuế giá trị gia tăng (GTGT) áp dụng cho doanh nghiệp mới thành lập là bao nhiêu %?",
+    "expected_answer": "Thông tin về mức thuế suất thuế giá trị gia tăng (GTGT) không thuộc phạm vi quy định của tài liệu đăng ký doanh nghiệp này.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 3"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 7,
+    "type": "unanswerable",
+    "question": "Doanh nghiệp có bị thu hồi mã số thuế nếu chậm nộp tờ khai thuế GTGT 3 tháng không?",
+    "expected_answer": "Tài liệu đăng ký doanh nghiệp không quy định về các chế tài xử phạt hoặc điều kiện thu hồi mã số thuế do chậm nộp tờ khai thuế.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 8"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 8,
+    "type": "unanswerable",
+    "question": "Nếu hệ thống đăng ký bị sự cố thì doanh nghiệp có được miễn tiền chậm nộp thuế không?",
+    "expected_answer": "Chính sách miễn tiền chậm nộp thuế khi gặp sự cố kỹ thuật không nằm trong phạm vi nội dung của tài liệu này.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương II",
+      "article": "Điều 13"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 9,
+    "type": "unanswerable",
+    "question": "Công ty không nộp phí lệ phí đăng ký doanh nghiệp thì bị phạt tiền từ bao nhiêu đến bao nhiêu?",
+    "expected_answer": "Quy định chi tiết về mức phạt tiền vi phạm hành chính do chậm nộp lệ phí không có trong tài liệu đăng ký doanh nghiệp này.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương III",
+      "article": "Điều 18"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 10,
+    "type": "unanswerable",
+    "question": "Hồ sơ đăng ký công ty cổ phần có yêu cầu phải nộp Giấy chứng nhận thẩm duyệt phòng cháy chữa cháy không?",
+    "expected_answer": "Thủ tục thẩm duyệt và Giấy chứng nhận phòng cháy chữa cháy không thuộc thành phần hồ sơ đăng ký doanh nghiệp được quy định trong tài liệu.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 23"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 11,
+    "type": "ambiguous",
+    "question": "Ai là người ký tên vào hồ sơ?",
+    "expected_answer": "Dựa trên quy định về nguyên tắc đăng ký, bạn vui lòng cho biết công ty bạn có 1 hay nhiều người đại diện theo pháp luật? - Nếu công ty có nhiều đại diện pháp luật: Người đại diện đứng ra ký nộp hồ sơ phải đảm bảo quyền hạn theo Điều 12 Luật Doanh nghiệp. - Nếu thông thường: Người thành lập hoặc người đại diện theo pháp luật tự kê khai và ký tên chịu trách nhiệm.",
+    "ground_truth_context": "Điều 4. Nguyên tắc áp dụng giải quyết thủ tục đăng ký doanh nghiệp\n\n1. Người thành lập doanh nghiệp hoặc doanh nghiệp tự kê khai hồ sơ đăng ký doanh nghiệp và chịu trách nhiệm trước pháp luật về tính hợp pháp, trung thực và chính xác của các thông tin kê khai trong hồ sơ đăng ký doanh nghiệp và các báo cáo.\n2. Trường hợp công ty trách nhiệm hữu hạn và công ty cổ phần có nhiều hơn một người đại diện theo pháp luật thì người đại diện theo pháp luật thực hiện thủ tục đăng ký doanh nghiệp phải đảm bảo và chịu trách nhiệm về việc thực hiện đúng quyền hạn, nghĩa vụ của mình theo quy định tại khoản 2 Điều 12 Luật Doanh nghiệp.\n3. Cơ quan đăng ký kinh doanh chịu trách nhiệm về tính hợp lệ của hồ sơ đăng ký doanh nghiệp, không chịu trách nhiệm về những vi phạm pháp luật của doanh nghiệp xảy ra trước và sau khi đăng ký doanh nghiệp.\n4. Cơ quan đăng ký kinh doanh không giải quyết tranh chấp giữa các thành viên, cổ đông của công ty với nhau hoặc với tổ chức, cá nhân khác hoặc giữa doanh nghiệp với tổ chức, cá nhân khác.\n5. Doanh nghiệp không bắt buộc phải đóng dấu trong giấy đề nghị đăng ký doanh nghiệp, thông báo thay đổi nội dung đăng ký doanh nghiệp, nghị quyết, quyết định, biên bản họp trong hồ sơ đăng ký doanh nghiệp. Việc đóng dấu đối với các tài liệu khác trong hồ sơ đăng ký doanh nghiệp thực hiện theo quy định của pháp luật có liên quan.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 4"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 12,
+    "type": "ambiguous",
+    "question": "Hồ sơ đi nộp mấy bản?",
+    "expected_answer": "Theo quy định về số lượng hồ sơ, người thành lập doanh nghiệp hoặc doanh nghiệp chỉ nộp đúng 01 bộ hồ sơ. Cơ quan đăng ký kinh doanh không được yêu cầu nộp thêm giấy tờ khác ngoài quy định.",
+    "ground_truth_context": "Điều 9. Số lượng hồ sơ đăng ký doanh nghiệp\n\n1. Người thành lập doanh nghiệp hoặc doanh nghiệp nộp 01 bộ hồ sơ khi thực hiện thủ tục đăng ký doanh nghiệp.\n2. Cơ quan đăng ký kinh doanh không được yêu cầu người thành lập doanh nghiệp hoặc doanh nghiệp nộp thêm hồ sơ hoặc giấy tờ khác ngoài các giấy tờ trong hồ sơ đăng ký doanh nghiệp theo quy định tại Luật Doanh nghiệp và Nghị định này.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 9"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 13,
+    "type": "ambiguous",
+    "question": "Nộp hồ sơ ở đâu?",
+    "expected_answer": "Dựa trên quy định cơ quan đăng ký kinh doanh, bạn muốn đăng ký Doanh nghiệp hay Hộ kinh doanh? - Nếu là Doanh nghiệp/Công ty: Nộp tại Phòng Đăng ký kinh doanh thuộc Sở Kế hoạch và Đầu tư tỉnh/thành phố. - Nếu là Hộ kinh doanh: Nộp tại Cơ quan đăng ký kinh doanh cấp huyện.",
+    "ground_truth_context": "Điều 14. Cơ quan đăng ký kinh doanh\n\n1. Cơ quan đăng ký kinh doanh được tổ chức ở tỉnh, thành phố trực thuộc Trung ương (sau đây gọi chung là cấp tỉnh) và ở quận, huyện, thị xã, thành phố thuộc tỉnh (sau đây gọi chung là cấp huyện), bao gồm:\na) Ở cấp tỉnh: Phòng Đăng ký kinh doanh thuộc Sở Kế hoạch và Đầu tư (sau đây gọi chung là Phòng Đăng ký kinh doanh).\nPhòng Đăng ký kinh doanh có thể tổ chức các điểm để tiếp nhận hồ sơ và trả kết quả thuộc Phòng Đăng ký kinh doanh tại các địa điểm khác nhau trên địa bàn cấp tỉnh;\nb) Ở cấp huyện: Phòng Tài chính - Kế hoạch thuộc Ủy ban nhân dân cấp huyện (sau đây gọi chung là Cơ quan đăng ký kinh doanh cấp huyện).\n2. Cơ quan đăng ký kinh doanh có tài khoản và con dấu riêng.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương II",
+      "article": "Điều 14"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 14,
+    "type": "ambiguous",
+    "question": "Công bố thông tin làm thế nào?",
+    "expected_answer": "Dựa trên quy định công bố thông tin, bạn thực hiện đăng tải nội dung trên Cổng thông tin quốc gia về đăng ký doanh nghiệp trong thời hạn 30 ngày kể từ ngày cấp Giấy chứng nhận và phải nộp phí công bố thông tin theo quy định.",
+    "ground_truth_context": "Điều 19. Xử lý đối với trường hợp tên doanh nghiệp xâm phạm quyền sở hữu công nghiệp\n\n1. Không được sử dụng tên thương mại, nhãn hiệu, chỉ dẫn địa lý của tổ chức, cá nhân đã được bảo hộ để cấu thành tên riêng của doanh nghiệp, trừ trường hợp được sự chấp thuận của chủ sở hữu tên thương mại, nhãn hiệu đó. Trước khi đăng ký đặt tên doanh nghiệp, người thành lập doanh nghiệp hoặc doanh nghiệp tham khảo các nhãn hiệu, chỉ dẫn địa lý đã đăng ký và được lưu giữ tại Cơ sở dữ liệu về nhãn hiệu và chỉ dẫn địa lý của cơ quan quản lý nhà nước về sở hữu công nghiệp.\n2. Căn cứ để xác định tên doanh nghiệp xâm phạm quyền sở hữu công nghiệp được thực hiện theo các quy định của pháp luật về sở hữu trí tuệ.\nDoanh nghiệp phải tự chịu trách nhiệm trước pháp luật nếu đặt tên doanh nghiệp xâm phạm quyền sở hữu công nghiệp. Trường hợp tên doanh nghiệp xâm phạm quyền sở hữu công nghiệp thì doanh nghiệp có tên vi phạm phải đăng ký thay đổi tên doanh nghiệp.\n3. Chủ thể quyền sở hữu công nghiệp có quyền gửi văn bản đề nghị đến Phòng Đăng ký kinh doanh để yêu cầu doanh nghiệp có tên xâm phạm quyền sở hữu công nghiệp phải thay đổi tên doanh nghiệp cho phù hợp. Kèm theo văn bản đề nghị của chủ thể quyền sở hữu công nghiệp phải có bản sao các giấy tờ sau đây:\na) Văn bản kết luận của cơ quan có thẩm quyền về việc sử dụng tên doanh nghiệp là xâm phạm quyền sở hữu công nghiệp;\nb) Giấy chứng nhận đăng ký nhãn hiệu, Giấy chứng nhận đăng ký chỉ dẫn địa lý; bản trích lục Sổ đăng ký quốc gia về nhãn hiệu, chỉ dẫn địa lý được bảo hộ do cơ quan quản lý nhà nước về sở hữu công nghiệp cấp; Giấy chứng nhận nhãn hiệu đăng ký quốc tế được bảo hộ tại Việt Nam do cơ quan quản lý nhà nước về sở hữu công nghiệp cấp; hợp đồng sử dụng đối tượng quyền sở hữu công nghiệp trong trường hợp người yêu cầu là người được chuyển quyền sử dụng đối tượng sở hữu công nghiệp đó.\n4. Trong thời hạn 10 ngày làm việc kể từ ngày nhận được đầy đủ giấy tờ theo quy định tại khoản 3 Điều này, Phòng Đăng ký kinh doanh ra thông báo yêu cầu doanh nghiệp có tên xâm phạm quyền sở hữu công nghiệp phải thay đổi tên doanh nghiệp và tiến hành thủ tục đăng ký thay đổi tên doanh nghiệp trong thời hạn 02 tháng kể từ ngày ra thông báo. Kèm theo thông báo phải có các giấy tờ quy định tại khoản 3 Điều này. Sau thời hạn trên, nếu doanh nghiệp không đăng ký thay đổi tên doanh nghiệp theo yêu cầu, Phòng Đăng ký kinh doanh thông báo cho cơ quan nhà nước có thẩm quyền để xử lý theo quy định của pháp luật về sở hữu trí tuệ.\n5. Trường hợp cơ quan có thẩm quyền xử lý vi phạm ra quyết định xử phạt vi phạm hành chính, theo đó áp dụng biện pháp khắc phục hậu quả là buộc thay đổi tên doanh nghiệp hoặc buộc loại bỏ yếu tố vi phạm trong tên doanh nghiệp nhưng tổ chức, cá nhân vi phạm không thực hiện trong thời hạn do pháp luật quy định thì cơ quan có thẩm quyền xử lý vi phạm thông báo cho Phòng Đăng ký kinh doanh để yêu cầu doanh nghiệp báo cáo theo quy định tại điểm c khoản 1 Điều 216 Luật Doanh nghiệp. Đối với doanh nghiệp không báo cáo, Phòng Đăng ký kinh doanh thực hiện thu hồi Giấy chứng nhận đăng ký doanh nghiệp theo quy định tại điểm d khoản 1 Điều 212 Luật Doanh nghiệp.\n6. Phòng Đăng ký kinh doanh thông báo kết quả xử lý đối với trường hợp tên doanh nghiệp xâm phạm quyền sở hữu công nghiệp cho chủ thể quyền sở hữu công nghiệp quy định tại khoản 3 Điều này.\n7. Bộ Kế hoạch và Đầu tư phối hợp với Bộ Khoa học và Công nghệ hướng dẫn chi tiết Điều này.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương III",
+      "article": "Điều 19"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 15,
+    "type": "ambiguous",
+    "question": "Mở công ty cần những gì?",
+    "expected_answer": "Dựa trên ngữ cảnh thành lập công ty TNHH 1 thành viên, bạn vui lòng cho biết chủ sở hữu là Cá nhân hay Tổ chức? - Nếu là Cá nhân: Hồ sơ gồm Giấy đề nghị đăng ký doanh nghiệp, Điều lệ công ty và bản sao CCCD/Hộ chiếu. - Nếu là Tổ chức: Cần nộp thêm Quyết định thành lập tổ chức, bản sao giấy tờ tùy thân của người đại diện ủy quyền và văn bản cử người đại diện.",
+    "ground_truth_context": "Điều 24. Hồ sơ đăng ký doanh nghiệp đối với công ty trách nhiệm hữu hạn một thành viên\n\n1. Giấy đề nghị đăng ký doanh nghiệp.\n2. Điều lệ công ty.\n3. Bản sao các giấy tờ sau đây:\na) Giấy tờ pháp lý của cá nhân đối với người đại diện theo pháp luật của doanh nghiệp;\nb) Giấy tờ pháp lý của cá nhân đối với chủ sở hữu công ty là cá nhân; Giấy tờ pháp lý của tổ chức đối với chủ sở hữu công ty là tổ chức (trừ trường hợp chủ sở hữu công ty là Nhà nước); Giấy tờ pháp lý của cá nhân đối với người đại diện theo ủy quyền và văn bản cử người đại diện theo ủy quyền.\nĐối với chủ sở hữu công ty là tổ chức nước ngoài thì bản sao giấy tờ pháp lý của tổ chức phải được hợp pháp hóa lãnh sự;\nc) Giấy chứng nhận đăng ký đầu tư đối với trường hợp doanh nghiệp được thành lập bởi nhà đầu tư nước ngoài hoặc tổ chức kinh tế có vốn đầu tư nước ngoài theo quy định tại Luật Đầu tư và các văn bản hướng dẫn thi hành.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 24"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 16,
+    "type": "adversarial",
+    "question": "Nghe nói hiện nay cá nhân Việt Nam khi mở công ty thì Nhà nước không còn bảo hộ quyền thành lập doanh nghiệp nữa đúng không?",
+    "expected_answer": "Thông tin này không chính xác. Thành lập doanh nghiệp theo quy định của pháp luật là quyền của cá nhân, tổ chức và được Nhà nước bảo hộ.",
+    "ground_truth_context": "Điều 5. Quyền thành lập doanh nghiệp và nghĩa vụ đăng ký doanh nghiệp\n\n1. Thành lập doanh nghiệp theo quy định của pháp luật là quyền của cá nhân, tổ chức và được Nhà nước bảo hộ.\n2. Người thành lập doanh nghiệp hoặc doanh nghiệp có nghĩa vụ thực hiện đầy đủ, kịp thời nghĩa vụ về đăng ký doanh nghiệp, công khai thông tin về thành lập và hoạt động của doanh nghiệp theo quy định của Nghị định này và các văn bản quy phạm pháp luật có liên quan.\n3. Nghiêm cấm Cơ quan đăng ký kinh doanh và các cơ quan khác gây phiền hà đối với tổ chức, cá nhân trong khi tiếp nhận hồ sơ và giải quyết thủ tục đăng ký doanh nghiệp.\n4. Các bộ, cơ quan ngang bộ, Hội đồng nhân dân và Ủy ban nhân dân các cấp không được ban hành các quy định, văn bản về đăng ký doanh nghiệp áp dụng riêng cho ngành hoặc địa phương mình. Những quy định về đăng ký doanh nghiệp do các bộ, cơ quan ngang bộ, Hội đồng nhân dân và Ủy ban nhân dân các cấp ban hành trái với quy định tại Nghị định này không có hiệu lực thi hành.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 5"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 17,
+    "type": "adversarial",
+    "question": "Khi đi làm thủ tục đăng ký doanh nghiệp thì Phòng Đăng ký kinh doanh có quyền thu giữ bản chính Giấy chứng minh nhân dân của tôi đúng không?",
+    "expected_answer": "Thông tin này hoàn toàn không đúng. Cơ quan đăng ký kinh doanh không được giữ bản chính giấy tờ pháp lý của cá nhân mà chỉ tiếp nhận bản sao theo quy định.",
+    "ground_truth_context": "Điều 10. Ngôn ngữ sử dụng trong hồ sơ đăng ký doanh nghiệp\n\n1. Các giấy tờ, tài liệu trong hồ sơ đăng ký doanh nghiệp được lập bằng tiếng Việt.\n2. Trường hợp hồ sơ đăng ký doanh nghiệp có tài liệu bằng tiếng nước ngoài thì hồ sơ phải có bản dịch tiếng Việt công chứng kèm theo tài liệu bằng tiếng nước ngoài.\n3. Trường hợp giấy tờ, tài liệu trong hồ sơ đăng ký doanh nghiệp được làm bằng tiếng Việt và tiếng nước ngoài thì bản tiếng Việt được sử dụng để thực hiện thủ tục đăng ký doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 10"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 18,
+    "type": "adversarial",
+    "question": "Có phải Phòng Đăng ký kinh doanh cấp tỉnh sẽ trực tiếp đứng ra kiểm tra và chịu trách nhiệm về hoạt động tài chính nội bộ của công ty không?",
+    "expected_answer": "Không đúng. Cơ quan đăng ký kinh doanh chịu trách nhiệm về tính hợp lệ của hồ sơ đăng ký doanh nghiệp, không chịu trách nhiệm về các vi phạm pháp luật của doanh nghiệp phát sinh sau đăng ký.",
+    "ground_truth_context": "Điều 15. Nhiệm vụ, quyền hạn của Phòng Đăng ký kinh doanh\n\n1. Phòng đăng ký kinh doanh trực tiếp nhận hồ sơ đăng ký doanh nghiệp; chịu trách nhiệm về tính hợp lệ của hồ sơ đăng ký doanh nghiệp; cấp hoặc từ chối cấp đăng ký doanh nghiệp.\n2. Hướng dẫn doanh nghiệp và người thành lập doanh nghiệp về hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp; hướng dẫn Cơ quan đăng ký kinh doanh cấp huyện về hồ sơ, trình tự, thủ tục đăng ký hộ kinh doanh.\n3. Phối hợp xây dựng, quản lý, vận hành Hệ thống thông tin quốc gia về đăng ký doanh nghiệp; thực hiện việc chuẩn hóa dữ liệu, cập nhật dữ liệu đăng ký doanh nghiệp tại địa phương vào Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp.\n4. Cung cấp thông tin về đăng ký doanh nghiệp lưu giữ tại Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp trong phạm vi địa phương quản lý cho Ủy ban nhân dân cấp tỉnh, Cơ quan quản lý thuế tại địa phương và theo yêu cầu của Cơ quan phòng, chống rửa tiền thuộc Ngân hàng Nhà nước Việt Nam, các cơ quan có liên quan và các tổ chức, cá nhân theo quy định của pháp luật.\n5. Yêu cầu doanh nghiệp báo cáo về việc tuân thủ các quy định của Luật Doanh nghiệp theo quy định tại điểm c khoản 1 Điều 216 Luật Doanh nghiệp.\n6. Trực tiếp hoặc đề nghị cơ quan nhà nước có thẩm quyền kiểm tra, giám sát doanh nghiệp theo nội dung trong hồ sơ đăng ký doanh nghiệp.\n7. Kiểm tra, giám sát Cơ quan đăng ký kinh doanh cấp huyện trong việc thực hiện nhiệm vụ, quyền hạn về đăng ký hộ kinh doanh.\n8. Yêu cầu doanh nghiệp tạm ngừng kinh doanh ngành, nghề đầu tư kinh doanh có điều kiện, ngành nghề tiếp cận thị trường có điều kiện đối với nhà đầu tư nước ngoài theo quy định tại khoản 1 Điều 67 Nghị định này.\n9. Thu hồi Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đăng ký hoạt động chi nhánh, văn phòng đại diện theo quy định pháp luật.\n10. Đăng ký kinh doanh cho tổ chức, cá nhân khác theo quy định của pháp luật.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương II",
+      "article": "Điều 15"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 19,
+    "type": "adversarial",
+    "question": "Công ty tôi muốn đặt tên trùng hoàn toàn với tên của một doanh nghiệp khác đã đăng ký trước đó có được không?",
+    "expected_answer": "Không được. Quy định cấm đăng ký tên doanh nghiệp trùng hoặc gây nhầm lẫn với tên của doanh nghiệp khác đã đăng ký trên phạm vi toàn quốc.",
+    "ground_truth_context": "Điều 20. Đăng ký tên chi nhánh, văn phòng đại diện, địa điểm kinh doanh\n\n1. Tên chi nhánh, văn phòng đại diện, địa điểm kinh doanh thực hiện theo quy định tại Điều 40 Luật Doanh nghiệp.\n2. Ngoài tên bằng tiếng Việt, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của doanh nghiệp có thể đăng ký tên bằng tiếng nước ngoài và tên viết tắt. Tên bằng tiếng nước ngoài là tên được dịch từ tên tiếng Việt sang một trong những tiếng nước ngoài hệ chữ La-tinh. Tên viết tắt được viết tắt từ tên tiếng Việt hoặc tên bằng tiếng nước ngoài.\n3. Phần tên riêng trong tên chi nhánh, văn phòng đại diện, địa điểm kinh doanh của doanh nghiệp không được sử dụng cụm từ “công ty”, “doanh nghiệp”.\n4. Đối với những doanh nghiệp 100% vốn nhà nước khi chuyển thành đơn vị hạch toán phụ thuộc do yêu cầu tổ chức lại thì được phép giữ nguyên tên doanh nghiệp nhà nước trước khi tổ chức lại.\n\n\nHỒ SƠ, TRÌNH TỰ, THỦ TỤC ĐĂNG KÝ DOANH NGHIỆP, ĐĂNG KÝ HOẠT ĐỘNG CHI NHÁNH, VĂN PHÒNG ĐẠI DIỆN, ĐỊA ĐIỂM KINH DOANH",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 20"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 20,
+    "type": "adversarial",
+    "question": "Hồ sơ đăng ký thành lập công ty TNHH hai thành viên trở lên nghe nói không cần soạn thảo Điều lệ công ty có đúng không?",
+    "expected_answer": "Thông tin này không chính xác. Hồ sơ đăng ký thành lập công ty TNHH hai thành viên trở lên bắt buộc phải có Điều lệ công ty.",
+    "ground_truth_context": "Điều 25. Hồ sơ đăng ký doanh nghiệp đối với các công ty được thành lập trên cơ sở chia, tách, hợp nhất công ty\n\n1. Trường hợp chia công ty trách nhiệm hữu hạn, công ty cổ phần theo quy định tại Điều 198 Luật Doanh nghiệp, ngoài giấy tờ quy định tại Điều 23, Điều 24 Nghị định này, hồ sơ đăng ký doanh nghiệp đối với công ty mới phải có các giấy tờ sau đây:\na) Nghị quyết, quyết định về việc chia công ty theo quy định tại Điều 198 Luật Doanh nghiệp;\nb) Bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, của Đại hội đồng cổ đông đối với công ty cổ phần về việc chia công ty.\n2. Trường hợp tách công ty trách nhiệm hữu hạn, công ty cổ phần theo quy định tại Điều 199 Luật Doanh nghiệp, ngoài giấy tờ quy định tại Điều 23, Điều 24 Nghị định này, hồ sơ đăng ký doanh nghiệp đối với công ty được tách phải có các giấy tờ sau đây:\na) Nghị quyết, quyết định về việc tách công ty theo quy định tại Điều 199 Luật Doanh nghiệp;\nb) Bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, của Đại hội đồng cổ đông đối với công ty cổ phần về việc tách công ty.\n3. Trường hợp hợp nhất một số công ty thành một công ty mới, ngoài giấy tờ quy định tại các Điều 22, 23 và 24 Nghị định này, hồ sơ đăng ký doanh nghiệp đối với công ty hợp nhất phải có các giấy tờ sau đây:\na) Hợp đồng hợp nhất theo quy định tại Điều 200 Luật Doanh nghiệp;\nb) Nghị quyết, quyết định về việc thông qua hợp đồng hợp nhất công ty của các công ty bị hợp nhất và bản sao biên bản họp Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty hợp danh, của Đại hội đồng cổ đông đối với công ty cổ phần về việc thông qua hợp đồng hợp nhất để thành lập công ty mới.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 25"
+    },
+    "difficulty": "easy"
+  }
+]
