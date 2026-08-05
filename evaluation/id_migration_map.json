@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "migration_commit": "f97292a",
+  "old_to_new": {
+    "1": "DL-001", "5": "DL-002", "7": "DL-003", "9": "DL-004",
+    "13": "DL-005", "17": "DL-006", "21": "DL-007", "25": "DL-008",
+    "29": "DL-009", "33": "DL-010", "37": "DL-011", "41": "DL-012",
+    "45": "DL-013", "49": "DL-014", "53": "DL-015", "57": "DL-016",
+    "61": "DL-017", "65": null, "69": "DL-018", "73": "DL-019", "77": "DL-020"
+  },
+  "retired": [
+    {
+      "old_id": "65",
+      "status": "retired",
+      "reason": "The question asks for a number of days while Article 35 defines the filing-time event, so it is not a sound direct lookup."
+    }
+  ]
+}

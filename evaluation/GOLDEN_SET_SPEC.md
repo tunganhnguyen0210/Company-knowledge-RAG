@@ -65,6 +65,17 @@ Mỗi file phải có đúng 20 samples; tổng cộng 100 samples.
 - Không dùng lại hệ thống số nguyên xen kẽ giữa các file.
 - `id_migration_map.json` lưu ánh xạ ID cũ sang ID mới cho lần chuyển đổi này.
 
+### 5.1. Schema `id_migration_map.json`
+
+| Trường | Kiểu | Ràng buộc |
+|---|---|---|
+| `schema_version` | integer | Phiên bản schema của artifact; hiện tại là `1` |
+| `migration_commit` | string | SHA (rút gọn) của commit chứa ID lịch sử trước khi chuyển đổi |
+| `old_to_new` | object | Ánh xạ ID số cũ (string key) sang ID mới đã phát hành, hoặc `null` nếu ID đó bị retire; mỗi giá trị không phải `null` phải là một ID `DL-*` duy nhất đã phát hành trong bộ dữ liệu |
+| `retired` | array | Danh sách các bản ghi retire; mỗi phần tử có `old_id` (string, khớp một key có giá trị `null` trong `old_to_new`), `status` (`"retired"`), và `reason` (string giải thích lý do loại bỏ) |
+
+Mỗi key trong `old_to_new` có giá trị `null` bắt buộc phải có đúng một bản ghi tương ứng trong `retired` với `old_id` khớp key đó.
+
 ## 6. Quy tắc grounding bắt buộc
 
 Nguồn chuẩn duy nhất cho bộ dữ liệu này là `01_2021_ND-CP_283247.md`.
@@ -92,6 +103,25 @@ Reviewer thực hiện hai lớp kiểm tra:
 - Không có dấu lược bỏ hoặc văn bản do LLM tự tạo trong context.
 - Kết quả review được lưu tại `golden_set_grounding_review.json`.
 
+#### Schema `golden_set_grounding_review.json`
+
+| Trường | Kiểu | Ràng buộc |
+|---|---|---|
+| `schema_version` | integer | Phiên bản schema của artifact; hiện tại là `1` |
+| `canonical_doc_id` | string | Tên file nguồn canonical, `01_2021_ND-CP_283247.md` |
+| `canonical_sha256` | string | SHA-256 hex digest của nội dung file canonical tại thời điểm review (đọc bằng `read_text(encoding="utf-8")`) |
+| `dataset_sha256` | string | SHA-256 hex digest của toàn bộ 100 case đã gộp, tuần tự hóa bằng `json.dumps(cases, ensure_ascii=False, sort_keys=True, separators=(",", ":"))` |
+| `validated_cases` | integer | Số case đã kiểm tra; phải bằng `100` khi review đạt |
+| `validated_contexts` | integer | Tổng số context đã kiểm tra trên toàn bộ case; phải bằng `130` khi review đạt |
+| `cases` | array | Danh sách bản ghi kết quả kiểm tra theo từng case |
+| `cases[].case_id` | string | ID case đã kiểm tra, ví dụ `AMB-014` |
+| `cases[].status` | string | `"passed"` nếu mọi context của case đều `exact_source=true` và `coordinate_match=true`; ngược lại `"failed"` |
+| `cases[].contexts` | array | Danh sách bản ghi kết quả kiểm tra theo từng context của case |
+| `cases[].contexts[].context_index` | integer | Vị trí (0-based) của context trong `golden_truth_contexts` |
+| `cases[].contexts[].context_sha256` | string | SHA-256 hex digest của `golden_truth_context` (UTF-8) |
+| `cases[].contexts[].exact_source` | boolean | `true` nếu context là substring nguyên văn của toàn bộ nội dung canonical |
+| `cases[].contexts[].coordinate_match` | boolean | `true` nếu context là substring nguyên văn của đúng slice Điều đã khai báo trong `golden_metadata` |
+
 ## 8. Ngưỡng chất lượng
 
 Các chỉ số đánh giá tự động gồm Faithfulness, Answer Relevancy và Question Quality. Ngưỡng tối thiểu là `0.85`. Công cụ không tự động xóa sample dưới ngưỡng; sample phải được sửa và review lại. Việc thay đổi quy mô hoặc loại sample cần có migration record và lý do rõ ràng.
@@ -102,3 +132,9 @@ Các chỉ số đánh giá tự động gồm Faithfulness, Answer Relevancy v�
 - ID đã chuyển sang namespace độc lập theo type.
 - 100/100 samples đã vượt qua kiểm tra grounding context và metadata bằng exact-source validation.
 - Legacy direct sample ID `65` đã được retire vì không khớp tốt với dạng `direct_lookup`: câu hỏi yêu cầu số ngày trong khi Điều 35 quy định sự kiện tại thời điểm nộp hồ sơ.
+
+## 10. Trạng thái sau lần tái phát hành ngày 2026-08-05
+
+- Đã tái phát hành bộ dữ liệu vàng 100 case đã hoàn thiện, kèm hai điểm trim được duyệt tại `AMB-014` context index `1` và `AMB-019` context index `1`.
+- Cả hai context nêu trên đã bị cắt đúng tại ranh giới Chương đã khai báo (Chương IX cho `AMB-014`, Chương IV cho `AMB-019`) vì phần văn bản sau ranh giới thuộc Chương khác với Chương được khai báo trong `golden_metadata`; không có ID hay metadata nào khác bị thay đổi.
+- Bản review grounding đã được tái tạo (`golden_set_grounding_review.json`) và chứng minh 100/100 case và 130/130 context đều đạt `exact_source=true` và `coordinate_match=true`.

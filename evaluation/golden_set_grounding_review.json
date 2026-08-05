@@ -1,0 +1,1370 @@
+{
+  "schema_version": 1,
+  "canonical_doc_id": "01_2021_ND-CP_283247.md",
+  "canonical_sha256": "edc31bb8c9a06bd45cf46cb658aa70fdcf2e099cdeb2e394e612dbb286c1e16a",
+  "dataset_sha256": "d3ed91dd047ab5f1f050fde2d1258960663bf864960b54e338b0231244acd05c",
+  "validated_cases": 100,
+  "validated_contexts": 130,
+  "cases": [
+    {
+      "case_id": "DL-001",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "7aa615e780034216132b3515e98fee2a2837670fa1fa6dc37f27b920da7476b3",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-002",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "2f3cc9132ca9a6dbc193ac85ea5de8402744e0def07abe18268842312a814b40",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-003",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "49aff9724cc42938d0b917ea344bd7d2acec6c7af9a603dde37db1453b4769b6",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-004",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "9acb9dbef1dcb33546fb94796db5b6ad85e760a8c6b8f1b75459b99084f0feff",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-005",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "c1dce2abcc6f25be4a144e09d11243891fadfa6eab60e21d1721c19e8f6ec801",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-006",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "99bc2b325060811c212f3a398da3ba8489104612163555b19a1c4b4d3c0b48ad",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-007",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "5d60a3062aead0de9da7cef44a08feef5797d3a30e30f216357a0c0c76eb0aac",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-008",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "04f3a251806caf76948f69485b752c6213a802b2793bc571f57ed242080356b8",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-009",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "6837f3404f01f8d0a160c9079ea9919fbc2a9260fdc7138999fa69f04335ef55",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-010",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "83176631589b9b8f91ce32c7abbff404f639793be0f9d6759f073c47ac7def3d",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-011",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "b62477fb6851c3cf8a036c9b43a140bece5b0f91a2d2ae73a34fbe9679817888",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "6f960a978f0c802917d619c3978316f4318496168c35a6fd0b2ba3097a24a218",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-012",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "f791bb58e7e8795e2a2dc96ba7f3015b8f2570a694e9f3e02d7cf5a378b39b55",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-013",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "07340492f12d81462029f2e6ef99b9e3c04e7c014e99e42894b27730a0a84baf",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-014",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "59e32d99233a79ce87651b7c1cfd6020cffad3e2dc1b944ee3e39f58f7c8a37b",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-015",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ae32c851fd4ff3f0ec7559426ff22dcbc6c1bcfe0f41b9454242485d9ebd56eb",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-016",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "93e75cbb44a32e942e5205dc7f12f6d851b89aa77e4d2677275ad4bcd79cf766",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-017",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "4de601e9b092bfba56fc707254e17b83dbfe31333e071a26dd8da1aef82d6a18",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-018",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "d914c6d4e755d6c5013577464e241c6e78d6ac010a08e1450c3d9072c2f9de55",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-019",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "77c2f6130ade6558a2e69fd12d8360d620ac76210f43b1a3b781de14e827cde5",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "DL-020",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "0bb61201d860f6716510ec058ef0a68cd6977d8289f63eecc0525db7371c1b8a",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-001",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ea9cb42404037dcd539bf0309850c4b890535ec03d56fac6da6cca3047e9d417",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "8d2c78246931b406bd84a92919e5df95b0fb23d0c8999b30b67a98d16a58d078",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-002",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "4eef6d8759c197ea5bfac8adb04eb1b7205ad0ba7dfac55dcab386d3f0bb2eb1",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "74ee6926c9586959ce4aed80d39887c04ec388cf4ec537c2aaec7e540789a6c1",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-003",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "a93086aba29ccca316f65734d3e0637b4893b26a951b83db4ac8bf2707429563",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "353e22f131cad001c88404fbf2d78b0f7d273d3079461b12e32bea4baa7a6f73",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "d38c58f1edf5d15c3796692cda618d8284a8fd892a44a68bee989494f09dea07",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-004",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "55cea3aec998cd151b3c7c170ec1599998537a5ef100558c9064799da9f779b9",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "8b7b68543345a4cb89a7cf0bc349aaa14796bb55edf7d2c781fb6867db590a7f",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-005",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "15bf43653a7befced3280bc28cc289d403abc5ea3e920d0b3a4019aeceb5f2c4",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "a4731629450a1ff6505574ac43c260947c2d3b7dde2356245a9fe28b0857aa1c",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-006",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "a06d933c1c9ef1c1850ef255651b7e3a3edf6e3e482006e52620d5b59966cfb2",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "a018e4db2a165184f6db4c6004130fc77daade06ef85f45664a03737b3d0f006",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "b5b052fe65dbe9d36017fa7bebe167201e5d8b063ceac4e8b36fdb0935dd3f80",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-007",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "8b02652d5a450e7b937dfe39a7b0a9a579129f59d8698c1a57427732a3cccbf4",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "dd2c48bdaa87085a28f192372f1a209ce4deeb7320af081a8728703ba1022845",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "ae3470e5fddff7e87ddd344917790861f32620c71dead5839f5bea0b1d267415",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-008",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "f9852aca3cc2f20451f9bfc6c97676f5b615d60f6202c03c2cb8e69a03ebd6d1",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "d84b9cce857ea21256bb4fcdd389ebf9f6f1acb5bdd2257c250275e5872e02af",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-009",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "cc6af073da040d01684e0efa67a49365b1f428a57dc54fc0a78eb5e7484b554e",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "4fb61faec703f909640b06c8d9b16d3a0b8654625f0b76dad9a301ae0bf35d63",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-010",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "09713fc317b16d526c60bb1339cbb7e397d097662149b9737e96c36b81917260",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "e15227a675daa3ab9db1dd7fe7a28c14a14838ffa9e3de5ce088fe03cb0537c1",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-011",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "3765a048eb2b23d3a314f4a6c566e2c1cf537125f2777e1ce56b3962ebe5b40a",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "a756cb43f7e992b336f1d422a79816e7be8cd5b6d1f3c8ac593e6dc3e6a501fc",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "6c623c1f9da9d652b61e14098bc47d9e6ac05a27245422021385010ac0fa16e2",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-012",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "c0a2d7b8df64c99f2d9b82e77942fcda774506ba1aaed88012c84f114048f409",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "a22d082dfba1b9969f7156c6f1082d93cfd329b7d4f59b276968c7f391834d14",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "15bf43653a7befced3280bc28cc289d403abc5ea3e920d0b3a4019aeceb5f2c4",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 3,
+          "context_sha256": "bb08fe3f14129a63a2ddb99d5145a9ebd905e0bad23ad3f58180937ccc55f16a",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-013",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "a640635d8c55e3ff44680a3ab54934ab7a3a13110551aa39f7840fc7cb84da80",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "7f4620410c6a6596e7321b7bfddaa2d43458a9adb7b8adbc893e5a0c01fdd737",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-014",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "69b693480194fe885446d37ed4a428da32d6c0e712357719d175a8d0035031ba",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "26d6baa2ae9113ab47fc8d860bb89aa0ef250cb63ed609a063ed82a9f04ace64",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "9510acb769538c1b72fecc5f7bbafd4d22877662eb0e591ae79f33cf17ccd6e2",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-015",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "b28cd55d2c204df4380c1011026cfd92b21fad3d7f1d3771711bd2cd87495e8d",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "e59d17d898a8711adeb57b8ebbb4c18b3eff2915f57d71fa0a6f2cc3ae2afe2b",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "5c89651d27564ce3ecef5b4928d60bfccb476ace35a8a3adb8218cdb31c63cb3",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-016",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "720c9b587ae91931c1adc1dfc17982fe6b64bf418a2ef711e6940658962a9311",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "817e1593d229feff61a44e889ee6a1f17b4b349f219c0f9e717d4a1cca2414a9",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-017",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "9316c67f62ad84dfdc8754f8e4c78ecba39c512a74af214ed5a65c7ce4145bb9",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "7c47bbe20ab5b8c6a79e8dfbd80e5cf658522f0d9d98b513bca37161f4457a3d",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-018",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "20cb088df764c865d2273a931bdc147a4f65578a0d21ada18d1b20d2ff5250f3",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "411a342ac0dd40677b4f7c2d1cee82fbdd3935499fc0780560b6d5d26138acda",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-019",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "f0829a32481171b37f692d9a2649f154b19f0c9d79904871e662b53c42d2f803",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "657054e56ad783ba01e35e45aca2d83c9a2b59d74181b4bb38b580342d95ee27",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "e6a9f9ac8e62d44008a1577b4a26164b89c361a6fe74cbabe4f9806d5dbecb23",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 3,
+          "context_sha256": "cb8ebfb358105d403c760392a3764bd60b0a74f5a8196b81bd24c3c642dc8329",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "MH-020",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ce7d62ac5a8f3acc571b8b84ba7fd480cbd628cdc529ad17b0acec5e5e6854a6",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "08f37618eac4fabdd49e9543d3e913559fb6df019d66f9944ae95dbf75149510",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "UA-001",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-002",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-003",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-004",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-005",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-006",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-007",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-008",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-009",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-010",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-011",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-012",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-013",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-014",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-015",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-016",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-017",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-018",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-019",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "UA-020",
+      "status": "passed",
+      "contexts": []
+    },
+    {
+      "case_id": "AMB-001",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "53dbcd10fcb5257f3d82a233d6fea78e105d064dc5743657b26a365fbe86b929",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-002",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "5a1a45a5f51eee46b4be7a29c24353bb7c5d6e5cc036adb7a0012bab5f981a81",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-003",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "1660faafadb43d325ea1b14a2d3463b772e44a78c05db04a3d6157f878a776c4",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-004",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "a79c852e2ec3609ce59101693aa5c78381eb96d4b05af77b73b429f3abce6413",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-005",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "31a040a469496385933dbcb6f3816335a29aec34f6933ae86631265052fe1a78",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "4bafc3832705ac167258cd60e5343f0f83fb7d0865d6d2ffa0749ce65e14da2a",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-006",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "e70e4c1edab4d95fbb3a1039ef2d984d6e21bf09c025b6144e9bf2d8811f6c98",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "3dc8358629bdb6dbc159ceb53a7b6c8ddcc1a9f9f2f8da0d231cde25ec5a56c6",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-007",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "b113a3a3c36ad5a19ccd997a02502777946f994b62cfb3019c197cb82fb9e446",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-008",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "29d6663f5e1eb54cb3d7572d92d4cf027c49523c1408b21f6f60a546b8753924",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "85e17b60ce0be8434013b9e28edbf10c3719dca83b540c1409d7cedeedebb137",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "720b96d59f47dcb577eb485f502f1c6138176d995f580ce4278b7816ebcb0e04",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-009",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "eedc7392a2713f08d73a3db0f527a9fb4bd455b5209dfba48bc608a77fc0bec3",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-010",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "6837f3404f01f8d0a160c9079ea9919fbc2a9260fdc7138999fa69f04335ef55",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "ae32c851fd4ff3f0ec7559426ff22dcbc6c1bcfe0f41b9454242485d9ebd56eb",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-011",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "fac5ea8c9de69756905a01964f5d944a44ab18787b5b9eb5aec4899e00368bfb",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-012",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "569e14aa4626b9cb0d2cea5444b164423ab4e23ae229eafbbf772310c07543e5",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-013",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "abf990b16cbd4302de1c61014082dc6dd9e0b15e47fe5ecff206111883740b8b",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-014",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "bd159d444e4ea4f4f23798d0b86ce699a1c900972accdb92f61f4b60a01dcb6a",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "ad9d73bf615236d4d8326bc3de934805c25e80fff5b515c3d9625ae792e6779a",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "0bb61201d860f6716510ec058ef0a68cd6977d8289f63eecc0525db7371c1b8a",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 3,
+          "context_sha256": "b3597dcd418758dca49f1c235ecb3761f4696bca349807b862905339d3be3ac8",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-015",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "e8c0cecd17a6c2cde6d96b150d5f16a50dacca8cae0d101f0161b8ef0ce85d5a",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "9d485de9d0416054df8967ac633411cb4ddb52dba98b07e7bdad0b39f6158e26",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-016",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "aae0f195c6dcf167911b22979f2795193c1c04ff232f6569dff8486224382fcd",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "e8695826211f586335383224d1ff6e04a85969e0e6b9e7b0b7025fc03df109f5",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "69b693480194fe885446d37ed4a428da32d6c0e712357719d175a8d0035031ba",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-017",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "f1fc7e43e00c8efdc77f08712354e26d7d5ebe3bbce50c4b8710f144c576f872",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "6e16340cfa792b90965a581c528654e348c0dd1bda18a76fa25b4abcbc12f0bc",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-018",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "b28cd55d2c204df4380c1011026cfd92b21fad3d7f1d3771711bd2cd87495e8d",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "09594cde7ff86e3577156df6aa7d22ecc780f72b49ad0a55176109de535ab68f",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-019",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "31ce0ce0ab1dc8ebc3733652586a4862bc3ff1f3d0deeec527cef7c027861428",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "4bdac239c1394ea920bb80a1cef78fa5e018d160dcf284a472c2a9872e79dc66",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 2,
+          "context_sha256": "193d4ea54e31c4a7e5720b5575c53a909886e5575341fea6fa8ee1d2341f189e",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "AMB-020",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "15bf43653a7befced3280bc28cc289d403abc5ea3e920d0b3a4019aeceb5f2c4",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "9871b4dc1492184eadcef65e2b6db8eda6cd5051b3da54ee5adb9319f232a81d",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-001",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "8570ddda9f30024dac8d7dcdfcebdb54dcdeca7abc3cb8a5384f9d8b76d6ef53",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-002",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "35366814d32aeb0c6caa64e63d3be3457ff94eb68463b3ec48c75aa0fa908a0e",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "6afe81de81fce41addc36f7999dce575303cae93c3cb26e58a940739c829c3f5",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-003",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "dadf54df62f9c2bac631a155b5e762b259659e287732d48b2f01e8086c81a38f",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "d914c6d4e755d6c5013577464e241c6e78d6ac010a08e1450c3d9072c2f9de55",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-004",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "51de60026fa05867a2852307ecd55d0eefc10ece5df28c793fb048899a75b6cf",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-005",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "26314a5cb7f2ac5ee1a6d120dc427b57376c99dbadc8f143c39cbbb4256fcfcf",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-006",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "c380906280679425adf1e4f297c7a7392bf66f1389e2e5c3b90ee0274c8d89ac",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-007",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "e78fc8819bb04ee70b826f358b4309b349f857645142c02341b832f3bef70dac",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-008",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "2e7b4a604d0ae1702a6f35e6dc56b2c55db004dc1397d3163b5f707660a2e199",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-009",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ccfa29fcc6bea05e64375e34e8c153d229bfa5ffd90b23e7d59b81bf2dd1660a",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-010",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "1436805830b3cc079fb1ea48d9cca26a6cdece6f2448f9cf68851e8883360802",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-011",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "fe28503896f55071e3a04fa3b1abcd4d7f7c9f813b4a62f87678e46cdb4a9db6",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-012",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "6837f3404f01f8d0a160c9079ea9919fbc2a9260fdc7138999fa69f04335ef55",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-013",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ae32c851fd4ff3f0ec7559426ff22dcbc6c1bcfe0f41b9454242485d9ebd56eb",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-014",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "c90299a64dcbc5f312c6a9855c91a118385e6081021425fd6586c2677fc30ef5",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-015",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "b3597dcd418758dca49f1c235ecb3761f4696bca349807b862905339d3be3ac8",
+          "exact_source": true,
+          "coordinate_match": true
+        },
+        {
+          "context_index": 1,
+          "context_sha256": "ae3470e5fddff7e87ddd344917790861f32620c71dead5839f5bea0b1d267415",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-016",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ee32f4965e7d0c98aa6dd97b89f4c073dfd30df019494e0c8415c20aaae1043e",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-017",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "435b553c094fb31e957b9f94a8c5469203b30dde81c0469396958a5db718295e",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-018",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "c0a2d7b8df64c99f2d9b82e77942fcda774506ba1aaed88012c84f114048f409",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-019",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "ccfa29fcc6bea05e64375e34e8c153d229bfa5ffd90b23e7d59b81bf2dd1660a",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    },
+    {
+      "case_id": "ADV-020",
+      "status": "passed",
+      "contexts": [
+        {
+          "context_index": 0,
+          "context_sha256": "69dadf015a7945c9c5b346a6cb213c15eb06e2f3e13ef68eecc6f6c3a4925e69",
+          "exact_source": true,
+          "coordinate_match": true
+        }
+      ]
+    }
+  ]
+}
