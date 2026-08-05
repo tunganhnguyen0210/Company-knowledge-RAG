@@ -60,6 +60,7 @@
 - `tests/unit/evaluation/test_golden.py`
 - `tests/unit/ingestion/test_structure.py`
 - `tests/unit/evaluation/test_validation.py`
+- `tests/component/evaluation/test_validation.py`
 - `tests/unit/generation/test_execution.py`
 - `tests/unit/evaluation/test_artifacts.py`
 - `tests/unit/evaluation/test_metrics.py`
@@ -524,6 +525,8 @@ rtk git commit -m "feat: validate finalized golden dataset"
 
 ```python
 # tests/unit/ingestion/test_structure.py
+import re
+
 from domain.schemas import Document, DocumentStatus, SourceCoordinates
 from ingestion.chunker import chunk_document
 from ingestion.structure import extract_legal_sections
@@ -556,7 +559,7 @@ def test_article_inherits_current_chapter() -> None:
     assert article_three.coordinates == SourceCoordinates(
         doc_id="law.md", chapter="Chương II", article="Điều 3"
     )
-    assert article_three.text.startswith("Điều 3. Quy định tiếp theo")
+    assert article_three.text.startswith("### Điều 3. Quy định tiếp theo")
 
 
 def test_split_chunks_keep_article_coordinates() -> None:
@@ -593,8 +596,6 @@ def test_plain_docx_legal_headings_match_markdown_hierarchy() -> None:
     assert plain_coordinates == markdown_coordinates
     assert sum(item.article is not None for item in plain_coordinates) == 3
 ```
-
-Add `import re` to the test module.
 
 - [ ] **Step 2: Run the tests and confirm deterministic hierarchy is absent**
 
@@ -935,10 +936,10 @@ document = service.ingest_bytes(
 )
 chunks = store.list_document_chunks(document.id, document.version)
 assert chunks
-    assert {chunk.coordinates.doc_id for chunk in chunks} == {"01_2021_ND-CP_283247.md"}
-    article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
-    assert article_chunks
-    assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)
+assert {chunk.coordinates.doc_id for chunk in chunks} == {"01_2021_ND-CP_283247.md"}
+article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
+assert article_chunks
+assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)
 ```
 
 Update `_chunk_trace_payload` to include `doc_id`, `chapter`, and `article`; keep text subject to the existing trace privacy rules.
@@ -968,6 +969,7 @@ rtk git commit -m "feat: persist and inspect chunk coordinates"
 **Files:**
 - Modify: `src/evaluation/golden.py`
 - Create: `tests/unit/evaluation/test_validation.py`
+- Create: `tests/component/evaluation/test_validation.py`
 
 **Interfaces:**
 - Consumes: `GoldenDataset`, canonical Markdown, and metadata-bearing chunks.
@@ -977,9 +979,9 @@ rtk git commit -m "feat: persist and inspect chunk coordinates"
 
 ```python
 # tests/unit/evaluation/test_validation.py
+import json
 from pathlib import Path
 
-from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from evaluation.golden import (
     Difficulty,
     GoldenCase,
@@ -1044,6 +1046,52 @@ def test_context_in_wrong_article_is_rejected(tmp_path: Path) -> None:
     report = validate_golden_dataset(dataset, canonical, chunks=None, audit_root=tmp_path)
 
     assert [issue.code for issue in report.errors] == ["context_coordinate_mismatch"]
+
+
+def _copy_audits(tmp_path: Path) -> None:
+    for filename in ("id_migration_map.json", "golden_set_grounding_review.json"):
+        (tmp_path / filename).write_bytes((Path("evaluation") / filename).read_bytes())
+
+
+def test_migration_evidence_rejects_wrong_commit_mapping_and_retired_record(tmp_path: Path) -> None:
+    _copy_audits(tmp_path)
+    path = tmp_path / "id_migration_map.json"
+    migration = json.loads(path.read_text(encoding="utf-8"))
+    migration["migration_commit"] = "wrong"
+    migration["old_to_new"].pop("61")
+    migration["retired"][0]["status"] = "active"
+    path.write_text(json.dumps(migration, ensure_ascii=False), encoding="utf-8")
+
+    report = validate_golden_dataset(
+        load_golden_dataset(Path("evaluation/golden_set")),
+        Path("data/extracted/01_2021_ND-CP_283247.md"),
+        chunks=None,
+        audit_root=tmp_path,
+    )
+
+    assert "invalid_id_migration_map" in {warning.code for warning in report.warnings}
+    assert report.full_conformance is False
+
+
+def test_grounding_evidence_rejects_wrong_case_id_status_index_and_hash(tmp_path: Path) -> None:
+    _copy_audits(tmp_path)
+    path = tmp_path / "golden_set_grounding_review.json"
+    review = json.loads(path.read_text(encoding="utf-8"))
+    review["cases"][0]["case_id"] = "DL-999"
+    review["cases"][0]["status"] = "failed"
+    review["cases"][0]["contexts"][0]["context_index"] = 99
+    review["cases"][0]["contexts"][0]["context_sha256"] = "0" * 64
+    path.write_text(json.dumps(review, ensure_ascii=False), encoding="utf-8")
+
+    report = validate_golden_dataset(
+        load_golden_dataset(Path("evaluation/golden_set")),
+        Path("data/extracted/01_2021_ND-CP_283247.md"),
+        chunks=None,
+        audit_root=tmp_path,
+    )
+
+    assert "invalid_grounding_review" in {warning.code for warning in report.warnings}
+    assert report.full_conformance is False
 ```
 
 - [ ] **Step 2: Run the tests and verify validation types are missing**
@@ -1059,9 +1107,11 @@ Expected: FAIL because `validate_golden_dataset` and report models do not exist.
 - [ ] **Step 3: Implement validation issue/report models and exact canonical checks**
 
 ```python
-# append to src/evaluation/golden.py
-from ingestion.structure import extract_legal_sections
+# add to the existing top-level import section in src/evaluation/golden.py
+from hashlib import sha256
+
 from domain.schemas import Chunk
+from ingestion.structure import extract_legal_sections
 
 
 class ValidationIssue(BaseModel):
@@ -1122,21 +1172,61 @@ def validate_golden_dataset(
                     errors.append(ValidationIssue(code="context_not_recoverable_from_chunks", message="context is not recoverable from ordered article chunks", case_id=case.id))
     migration_path = audit_root / "id_migration_map.json"
     review_path = audit_root / "golden_set_grounding_review.json"
+    expected_migration = {
+        "schema_version": 1,
+        "migration_commit": "f97292a",
+        "old_to_new": {
+            "1": "DL-001", "5": "DL-002", "7": "DL-003", "9": "DL-004",
+            "13": "DL-005", "17": "DL-006", "21": "DL-007", "25": "DL-008",
+            "29": "DL-009", "33": "DL-010", "37": "DL-011", "41": "DL-012",
+            "45": "DL-013", "49": "DL-014", "53": "DL-015", "57": "DL-016",
+            "61": "DL-017", "65": None, "69": "DL-018", "73": "DL-019", "77": "DL-020",
+        },
+        "retired": [{
+            "old_id": "65",
+            "status": "retired",
+            "reason": "The question asks for a number of days while Article 35 defines the filing-time event, so it is not a sound direct lookup.",
+        }],
+    }
     if not migration_path.exists():
         warnings.append(ValidationIssue(code="missing_id_migration_map", message=f"missing audit artifact: {migration_path.name}"))
     else:
         migration = json.loads(migration_path.read_text(encoding="utf-8"))
-        targets = {value for value in migration.get("old_to_new", {}).values() if value is not None}
-        retired = {item.get("old_id") for item in migration.get("retired", [])}
-        if migration.get("schema_version") != 1 or targets != {f"DL-{index:03d}" for index in range(1, 21)} or migration.get("old_to_new", {}).get("65", "missing") is not None or "65" not in retired:
+        if migration != expected_migration:
             warnings.append(ValidationIssue(code="invalid_id_migration_map", message="ID migration evidence does not match the issued direct-lookup namespace"))
     if not review_path.exists():
         warnings.append(ValidationIssue(code="missing_grounding_review", message=f"missing audit artifact: {review_path.name}"))
     else:
         review = json.loads(review_path.read_text(encoding="utf-8"))
-        passed_contexts = [item for case in review.get("cases", []) for item in case.get("contexts", []) if item.get("exact_source") and item.get("coordinate_match")]
         dataset_bytes = json.dumps([case.model_dump(mode="json") for case in dataset.cases], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
-        if review.get("schema_version") != 1 or review.get("canonical_doc_id") != canonical_path.name or review.get("canonical_sha256") != sha256(canonical.encode("utf-8")).hexdigest() or review.get("dataset_sha256") != sha256(dataset_bytes).hexdigest() or review.get("validated_cases") != 100 or review.get("validated_contexts") != 130 or len(review.get("cases", [])) != 100 or len(passed_contexts) != 130:
+        expected_cases = []
+        for case in dataset.cases:
+            expected_contexts = []
+            for context_index, context in enumerate(case.golden_truth_contexts):
+                evidence = context.golden_truth_context
+                metadata = context.golden_metadata
+                key = (metadata.doc_id, metadata.chapter, metadata.article)
+                expected_contexts.append({
+                    "context_index": context_index,
+                    "context_sha256": sha256(evidence.encode("utf-8")).hexdigest(),
+                    "exact_source": evidence in canonical,
+                    "coordinate_match": evidence in article_text.get(key, ""),
+                })
+            expected_cases.append({
+                "case_id": case.id,
+                "status": "passed" if all(item["exact_source"] and item["coordinate_match"] for item in expected_contexts) else "failed",
+                "contexts": expected_contexts,
+            })
+        expected_review = {
+            "schema_version": 1,
+            "canonical_doc_id": canonical_path.name,
+            "canonical_sha256": sha256(canonical.encode("utf-8")).hexdigest(),
+            "dataset_sha256": sha256(dataset_bytes).hexdigest(),
+            "validated_cases": len(dataset.cases),
+            "validated_contexts": sum(len(case.golden_truth_contexts) for case in dataset.cases),
+            "cases": expected_cases,
+        }
+        if review != expected_review:
             warnings.append(ValidationIssue(code="invalid_grounding_review", message="grounding review evidence does not match the current canonical source and dataset"))
     return GoldenValidationReport(
         errors=errors,
@@ -1151,8 +1241,11 @@ Add `import json` and `from hashlib import sha256`. Do not treat mere file prese
 - [ ] **Step 4: Add raw-DOCX parser/chunker recoverability coverage**
 
 ```python
-# append to tests/unit/evaluation/test_validation.py
+# tests/component/evaluation/test_validation.py
+from pathlib import Path
+
 from domain.schemas import Document, DocumentStatus
+from evaluation.golden import load_golden_dataset, validate_golden_dataset
 from ingestion.chunker import chunk_document
 from ingestion.parser import parse_document
 
@@ -1191,8 +1284,8 @@ If this test exposes a genuine mismatch, fix `structure.py` or `chunker.py`; nev
 Run:
 
 ```powershell
-rtk proxy uv run pytest -p no:cacheprovider tests/unit/evaluation/test_golden.py tests/unit/evaluation/test_validation.py tests/unit/ingestion/test_structure.py -q
-rtk ruff check src/evaluation/golden.py tests/unit/evaluation/test_validation.py
+rtk proxy uv run pytest -p no:cacheprovider tests/unit/evaluation/test_golden.py tests/unit/evaluation/test_validation.py tests/component/evaluation/test_validation.py tests/unit/ingestion/test_structure.py -q
+rtk ruff check src/evaluation/golden.py tests/unit/evaluation/test_validation.py tests/component/evaluation/test_validation.py
 ```
 
 Expected: tests PASS; the finalized reissued dataset and both validated audit artifacts report full conformance with no warnings.
@@ -1200,7 +1293,7 @@ Expected: tests PASS; the finalized reissued dataset and both validated audit ar
 Commit:
 
 ```powershell
-rtk git add src/evaluation/golden.py tests/unit/evaluation/test_validation.py
+rtk git add src/evaluation/golden.py tests/unit/evaluation/test_validation.py tests/component/evaluation/test_validation.py
 rtk git commit -m "feat: validate golden grounding and chunk recovery"
 ```
 
@@ -1544,7 +1637,7 @@ rtk git commit -m "refactor: expose internal rag execution evidence"
 
 **Interfaces:**
 - Consumes: golden cases and execution evidence from Tasks 1 and 5.
-- Produces: `EvaluationRequest`, `RunManifest`, `IndexSnapshot`, `RetrievalRun`, `GenerationRun`, `EvaluationReport`, `fingerprint(value) -> str`, `artifact_fingerprint(value: BaseModel) -> str`, `RunRepository`, `LocalRunRepository`, and `InMemoryRunRepository`.
+- Produces: `EvaluationRequest`, `RunManifest`, `IndexSnapshot`, `RetrievalRun` (including `golden_dir`, complete `dataset_source_files`, `dataset_scope`, and `canonical_source` replay selection), `GenerationRun`, `EvaluationReport`, `fingerprint(value) -> str`, `artifact_fingerprint(value: BaseModel) -> str`, `RunRepository`, `LocalRunRepository`, and `InMemoryRunRepository`.
 
 - [ ] **Step 1: Write failing fingerprint and round-trip tests**
 
@@ -1709,9 +1802,10 @@ class EvaluationRequest(BaseModel):
             self.golden_files or self.question_types or self.case_ids or self.limit is not None
         ):
             raise ValueError("ingest always validates the complete standard dataset")
-        if self.mode is EvaluationMode.GENERATION and (
-            self.golden_files or self.question_types or self.case_ids or self.limit is not None
-        ):
+        replay_replacements = self.model_fields_set & {
+            "golden_dir", "golden_files", "question_types", "case_ids", "limit", "canonical_source"
+        }
+        if self.mode is EvaluationMode.GENERATION and replay_replacements:
             raise ValueError("generation replay inherits the saved retrieval selection")
         return self
 
@@ -1760,8 +1854,10 @@ class RetrievalRun(ArtifactModel):
     run_id: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     dataset_fingerprint: str
+    golden_dir: Path
     dataset_source_files: list[str]
     dataset_scope: str
+    canonical_source: Path
     index_snapshot_fingerprint: str
     configuration: dict[str, Any]
     cases: list[RetrievalCaseArtifact]
@@ -1925,6 +2021,7 @@ class InMemoryRunRepository:
     def __init__(self) -> None:
         self.manifests: dict[str, RunManifest] = {}
         self.snapshots: dict[str, IndexSnapshot] = {}
+        self.snapshot_save_calls = 0
         self.retrieval_runs: dict[str, RetrievalRun] = {}
         self.generation_runs: dict[str, GenerationRun] = {}
         self.reports: dict[str, EvaluationReport] = {}
@@ -1941,6 +2038,7 @@ class InMemoryRunRepository:
             raise FileNotFoundError(f"manifest not found: {run_id}") from exc
 
     def save_snapshot(self, snapshot: IndexSnapshot) -> Path:
+        self.snapshot_save_calls += 1
         self.snapshots[snapshot.run_id] = snapshot
         return Path(snapshot.run_id) / "index_snapshot.json"
 
@@ -1980,11 +2078,17 @@ from evaluation.artifacts import (
     artifact_fingerprint,
     fingerprint,
 )
-from evaluation.golden import GoldenType
+from evaluation.golden import GoldenType, load_golden_dataset
 from generation.execution import GenerationExecution, RankedHit, RetrievalExecution
 
 
-def make_chunk(*, chunk_id: str = "chunk-1", text: str = "retrieved original text") -> Chunk:
+def make_chunk(
+    *,
+    chunk_id: str = "chunk-1",
+    text: str = "retrieved original text",
+    position: int = 0,
+    coordinates: SourceCoordinates | None = None,
+) -> Chunk:
     return Chunk(
         id=chunk_id,
         document_id="document-1",
@@ -1994,18 +2098,25 @@ def make_chunk(*, chunk_id: str = "chunk-1", text: str = "retrieved original tex
         source_name="01_2021_ND-CP_283247.docx",
         mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         status=DocumentStatus.READY,
-        position=0,
-        coordinates=SourceCoordinates(
-            doc_id="01_2021_ND-CP_283247.md",
-            chapter="Chương I",
-            article="Điều 1",
+        position=position,
+        coordinates=coordinates or SourceCoordinates(
+            doc_id="01_2021_ND-CP_283247.md", chapter="Chương I", article="Điều 1"
         ),
     )
 
 
-def make_retrieval_run(*, run_id: str = "retrieval-1") -> RetrievalRun:
-    source_file = Path("evaluation/golden_set/golden_set_direct_lookup.json")
-    dataset = load_golden_dataset(Path("evaluation/golden_set"), files=[source_file])
+def make_retrieval_run(
+    *,
+    run_id: str = "retrieval-1",
+    dataset_scope: str = "partial",
+    golden_dir: Path = Path("evaluation/golden_set"),
+    canonical_source: Path = Path("data/extracted/01_2021_ND-CP_283247.md"),
+) -> RetrievalRun:
+    source_file = golden_dir / "golden_set_direct_lookup.json"
+    dataset = load_golden_dataset(
+        golden_dir,
+        files=None if dataset_scope == "full" else [source_file],
+    )
     hit = SearchHit(chunk=make_chunk(), score=0.9)
     case = RetrievalCaseArtifact(
         case_id="DL-001",
@@ -2026,8 +2137,10 @@ def make_retrieval_run(*, run_id: str = "retrieval-1") -> RetrievalRun:
         dataset_fingerprint=fingerprint(
             [case.model_dump(mode="json") for case in dataset.cases]
         ),
-        dataset_source_files=[str(source_file)],
-        dataset_scope="partial",
+        golden_dir=golden_dir,
+        dataset_source_files=dataset.source_files,
+        dataset_scope=dataset.scope,
+        canonical_source=canonical_source,
         index_snapshot_fingerprint="snapshot-fingerprint",
         configuration={"top_k": 5},
         cases=[case],
@@ -2420,7 +2533,7 @@ rtk git commit -m "feat: score deterministic rag quality"
 
 **Interfaces:**
 - Consumes: Tasks 1-7 plus injected ingestion, registry, store, chat, repository, settings snapshot, and semantic judge.
-- Produces: the approved `EvaluationRunner.run(request) -> EvaluationReport` interface for all CLI modes.
+- Produces: the approved `EvaluationRunner.run(request) -> EvaluationReport` interface for all CLI modes, single-write snapshots/reports, and generation replay that inherits the saved retrieval run's complete golden/canonical selection.
 
 - [ ] **Step 1: Write failing validate/retrieval/replay/e2e orchestration tests**
 
@@ -2428,8 +2541,12 @@ rtk git commit -m "feat: score deterministic rag quality"
 # tests/unit/evaluation/test_runner.py
 from pathlib import Path
 
-from domain.schemas import Document, DocumentStatus, SearchHit
-from evaluation.artifacts import EvaluationMode, EvaluationReport, EvaluationRequest
+import pytest
+from pydantic import ValidationError
+
+from domain.schemas import Document, DocumentStatus, SearchHit, SourceCoordinates
+from evaluation.artifacts import EvaluationMode, EvaluationRequest
+from evaluation.golden import load_golden_dataset
 from evaluation.repository import InMemoryRunRepository
 from evaluation.runner import EvaluationRunner
 from generation.execution import GenerationExecution, RankedHit, RetrievalExecution
@@ -2459,11 +2576,29 @@ class FakeRegistry:
 
 class FakeStore:
     def __init__(self) -> None:
-        self.chunk = make_chunk()
+        dataset = load_golden_dataset(Path("evaluation/golden_set"))
+        self.chunks = [
+            make_chunk(
+                chunk_id=f"{case.id}-{context_index}",
+                text=context.golden_truth_context,
+                position=position,
+                coordinates=SourceCoordinates(
+                    doc_id=context.golden_metadata.doc_id,
+                    chapter=context.golden_metadata.chapter,
+                    article=context.golden_metadata.article,
+                ),
+            )
+            for position, (case, context_index, context) in enumerate(
+                (case, context_index, context)
+                for case in dataset.cases
+                for context_index, context in enumerate(case.golden_truth_contexts)
+            )
+        ]
+        self.chunk = self.chunks[0]
         self.search_calls = 0
 
     def list_document_chunks(self, document_id: str, version: int | None = None):
-        return [self.chunk]
+        return self.chunks
 
     def search(self, query: str, limit: int = 5):
         self.search_calls += 1
@@ -2586,6 +2721,45 @@ def test_generation_mode_reuses_saved_hits_without_search(tmp_path) -> None:
     assert store.search_calls == 0
 
 
+def test_generation_request_rejects_replacement_selection() -> None:
+    with pytest.raises(ValidationError, match="inherits the saved retrieval selection"):
+        EvaluationRequest(
+            mode=EvaluationMode.GENERATION,
+            from_run="retrieval-1",
+            canonical_source=Path("replacement.md"),
+        )
+
+
+def test_generation_inherits_full_golden_and_canonical_selection(tmp_path: Path) -> None:
+    golden_dir = tmp_path / "golden"
+    golden_dir.mkdir()
+    for source in Path("evaluation/golden_set").glob("*.json"):
+        (golden_dir / source.name).write_bytes(source.read_bytes())
+    canonical_source = tmp_path / "canonical.md"
+    canonical_source.write_bytes(
+        Path("data/extracted/01_2021_ND-CP_283247.md").read_bytes()
+    )
+    runner, store = _runner_with_saved_retrieval(tmp_path)
+    runner.repository.retrieval_runs.clear()
+    runner.repository.save_retrieval(
+        make_retrieval_run(
+            dataset_scope="full",
+            golden_dir=golden_dir,
+            canonical_source=canonical_source,
+        )
+    )
+
+    report = runner.run(
+        EvaluationRequest(mode=EvaluationMode.GENERATION, from_run="retrieval-1")
+    )
+
+    manifest = runner.repository.manifests[report.run_id]
+    assert report.status == "complete"
+    assert store.search_calls == 0
+    assert manifest.arguments["golden_dir"] == str(golden_dir)
+    assert manifest.arguments["canonical_source"] == str(canonical_source)
+
+
 def test_e2e_reuses_existing_index_unless_ingest_is_explicit(tmp_path) -> None:
     runner = _runner(tmp_path)
     ingestion = FakeIngestion()
@@ -2598,12 +2772,26 @@ def test_e2e_reuses_existing_index_unless_ingest_is_explicit(tmp_path) -> None:
     assert runner.repository.report_save_calls == 1
 
 
-def test_missing_audit_artifacts_keep_even_full_e2e_ineligible(tmp_path) -> None:
+def test_only_full_complete_e2e_is_baseline_eligible(tmp_path) -> None:
     runner = _successful_runner(tmp_path)
     full = runner.run(EvaluationRequest(mode=EvaluationMode.E2E))
     limited = runner.run(EvaluationRequest(mode=EvaluationMode.E2E, limit=5))
-    assert full.baseline_eligible is False
+    assert full.baseline_eligible is True
     assert limited.baseline_eligible is False
+
+
+def test_e2e_ingestion_saves_one_immutable_snapshot(tmp_path: Path) -> None:
+    source = tmp_path / "01_2021_ND-CP_283247.docx"
+    source.write_bytes(b"fake-docx")
+    runner = _runner(tmp_path)
+    runner.ingestion = FakeIngestion()
+
+    report = runner.run(
+        EvaluationRequest(mode=EvaluationMode.E2E, ingestion_source=source, limit=1)
+    )
+
+    assert report.status == "complete"
+    assert runner.repository.snapshot_save_calls == 1
 ```
 
 - [ ] **Step 2: Run tests and confirm staged runner is absent**
@@ -2668,18 +2856,31 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
             if request.mode is EvaluationMode.GENERATION and request.from_run is not None
             else None
         )
-        replay_files = (
-            [Path(path) for path in replay_source.dataset_source_files]
-            if replay_source is not None and replay_source.dataset_scope == "partial"
-            else None
-        )
-        dataset = load_golden_dataset(request.golden_dir, files=replay_files or request.golden_files or None)
-        self.repository.save_manifest(self._build_manifest(request, dataset, run_id))
+        effective_request = request
+        if replay_source is not None:
+            replay_files = [Path(path) for path in replay_source.dataset_source_files]
+            effective_request = request.model_copy(update={
+                "golden_dir": replay_source.golden_dir,
+                "golden_files": replay_files if replay_source.dataset_scope == "partial" else [],
+                "canonical_source": replay_source.canonical_source,
+            })
+            dataset = load_golden_dataset(
+                replay_source.golden_dir,
+                files=replay_files if replay_source.dataset_scope == "partial" else None,
+            )
+            if dataset.source_files != replay_source.dataset_source_files:
+                raise ValueError("retrieval artifact golden source-file selection is incompatible")
+        else:
+            dataset = load_golden_dataset(
+                request.golden_dir,
+                files=request.golden_files or None,
+            )
+        self.repository.save_manifest(self._build_manifest(effective_request, dataset, run_id))
         validation = validate_golden_dataset(
             dataset,
-            canonical_path=request.canonical_source,
+            canonical_path=effective_request.canonical_source,
             chunks=None,
-            audit_root=request.golden_dir.parent,
+            audit_root=effective_request.golden_dir.parent,
         )
         if validation.errors:
             return self._finish_report(
@@ -2707,19 +2908,19 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
             )
         )
         try:
-            if request.mode is EvaluationMode.VALIDATE:
-                return self._run_validate(request, dataset, validation, run_id)
-            if request.mode is EvaluationMode.INGEST:
-                return self._run_ingest(request, dataset, validation, run_id)
-            if request.mode is EvaluationMode.RETRIEVAL:
+            if effective_request.mode is EvaluationMode.VALIDATE:
+                return self._run_validate(effective_request, dataset, validation, run_id)
+            if effective_request.mode is EvaluationMode.INGEST:
+                return self._run_ingest(effective_request, dataset, validation, run_id)
+            if effective_request.mode is EvaluationMode.RETRIEVAL:
                 return self._finish_report(
-                    self._retrieval_report(request, dataset, selected, validation, run_id)
+                    self._retrieval_report(effective_request, dataset, selected, validation, run_id)
                 )
-            if request.mode is EvaluationMode.GENERATION:
+            if effective_request.mode is EvaluationMode.GENERATION:
                 return self._finish_report(
-                    self._generation_report(request, dataset, validation, run_id)
+                    self._generation_report(effective_request, dataset, validation, run_id)
                 )
-            return self._run_e2e(request, dataset, selected, validation, run_id)
+            return self._run_e2e(effective_request, dataset, selected, validation, run_id)
         except Exception as exc:
             return self._finish_report(
                 EvaluationReport(
@@ -2781,10 +2982,12 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
                 "runtime": fingerprint(self.runtime_configuration),
                 "selection": fingerprint(
                     {
+                        "golden_dir": str(request.golden_dir),
                         "files": [str(path) for path in request.golden_files],
                         "types": sorted(item.value for item in request.question_types),
                         "case_ids": sorted(request.case_ids),
                         "limit": request.limit,
+                        "canonical_source": str(request.canonical_source),
                     }
                 ),
             },
@@ -3029,8 +3232,10 @@ Add one shared ingestion helper and the two mode methods:
             dataset_fingerprint=fingerprint(
                 [case.model_dump(mode="json") for case in dataset.cases]
             ),
+            golden_dir=request.golden_dir,
             dataset_source_files=dataset.source_files,
             dataset_scope=dataset.scope,
+            canonical_source=request.canonical_source,
             index_snapshot_fingerprint=snapshot.snapshot_fingerprint,
             configuration=self.runtime_configuration,
             cases=artifacts,
@@ -3069,21 +3274,21 @@ Add one shared ingestion helper and the two mode methods:
             for item in retrieval.cases
         }
         return EvaluationReport(
-                run_id=run_id,
-                mode=request.mode,
-                status=status,
-                dataset_size=len(dataset.cases),
-                evaluated_cases=len(selected),
-                validation=validation.model_dump(mode="json"),
-                aggregates=aggregates,
-                target_comparison=compare_to_target(aggregates),
-                case_scores=case_scores,
-                errors=errors,
-                artifact_ids={
-                    "index_snapshot": snapshot.snapshot_fingerprint,
-                    "retrieval_run": retrieval.run_fingerprint,
-                },
-                baseline_eligible=False,
+            run_id=run_id,
+            mode=request.mode,
+            status=status,
+            dataset_size=len(dataset.cases),
+            evaluated_cases=len(selected),
+            validation=validation.model_dump(mode="json"),
+            aggregates=aggregates,
+            target_comparison=compare_to_target(aggregates),
+            case_scores=case_scores,
+            errors=errors,
+            artifact_ids={
+                "index_snapshot": snapshot.snapshot_fingerprint,
+                "retrieval_run": retrieval.run_fingerprint,
+            },
+            baseline_eligible=False,
         )
 ```
 
@@ -3208,21 +3413,21 @@ Add generation replay exactly against saved ranked hits, followed by the composi
         }
         status = "complete" if not errors else "incomplete"
         return EvaluationReport(
-                run_id=run_id,
-                mode=request.mode,
-                status=status,
-                dataset_size=len(dataset.cases),
-                evaluated_cases=len(retrieval.cases),
-                validation=validation.model_dump(mode="json"),
-                aggregates=aggregates,
-                target_comparison=compare_to_target(aggregates),
-                case_scores=case_scores,
-                errors=errors,
-                artifact_ids={
-                    "retrieval_run": retrieval.run_fingerprint,
-                    "generation_run": generation.run_fingerprint,
-                },
-                baseline_eligible=False,
+            run_id=run_id,
+            mode=request.mode,
+            status=status,
+            dataset_size=len(dataset.cases),
+            evaluated_cases=len(retrieval.cases),
+            validation=validation.model_dump(mode="json"),
+            aggregates=aggregates,
+            target_comparison=compare_to_target(aggregates),
+            case_scores=case_scores,
+            errors=errors,
+            artifact_ids={
+                "retrieval_run": retrieval.run_fingerprint,
+                "generation_run": generation.run_fingerprint,
+            },
+            baseline_eligible=False,
         )
 
     def _run_e2e(
@@ -3234,7 +3439,7 @@ Add generation replay exactly against saved ranked hits, followed by the composi
         run_id: str,
     ) -> EvaluationReport:
         if request.ingestion_source is not None:
-            document, chunks = self._ingest_source(request)
+            _document, chunks = self._ingest_source(request)
             validation = validate_golden_dataset(
                 dataset,
                 request.canonical_source,
@@ -3243,9 +3448,6 @@ Add generation replay exactly against saved ranked hits, followed by the composi
             )
             if validation.errors:
                 raise ValueError("; ".join(issue.message for issue in validation.errors))
-            self.repository.save_snapshot(
-                self._build_snapshot(run_id, request, document, chunks, validation)
-            )
         retrieval_report = self._retrieval_report(
             request,
             dataset,
