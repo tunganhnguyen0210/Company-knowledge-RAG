@@ -1053,14 +1053,112 @@ def _copy_audits(tmp_path: Path) -> None:
         (tmp_path / filename).write_bytes((Path("evaluation") / filename).read_bytes())
 
 
-def test_migration_evidence_rejects_wrong_commit_mapping_and_retired_record(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("filename", "warning_code", "path", "value", "remove"),
+    [
+        (
+            "id_migration_map.json",
+            "invalid_id_migration_map",
+            ("migration_commit",),
+            "wrong",
+            False,
+        ),
+        (
+            "id_migration_map.json",
+            "invalid_id_migration_map",
+            ("old_to_new", "61"),
+            "DL-999",
+            False,
+        ),
+        (
+            "id_migration_map.json",
+            "invalid_id_migration_map",
+            ("old_to_new", "61"),
+            None,
+            True,
+        ),
+        (
+            "id_migration_map.json",
+            "invalid_id_migration_map",
+            ("retired", 0, "status"),
+            "active",
+            False,
+        ),
+        (
+            "golden_set_grounding_review.json",
+            "invalid_grounding_review",
+            ("cases", 0, "case_id"),
+            "DL-999",
+            False,
+        ),
+        (
+            "golden_set_grounding_review.json",
+            "invalid_grounding_review",
+            ("cases", 0, "status"),
+            "failed",
+            False,
+        ),
+        (
+            "golden_set_grounding_review.json",
+            "invalid_grounding_review",
+            ("cases", 0, "contexts", 0, "context_index"),
+            99,
+            False,
+        ),
+        (
+            "golden_set_grounding_review.json",
+            "invalid_grounding_review",
+            ("canonical_sha256",),
+            "0" * 64,
+            False,
+        ),
+        (
+            "golden_set_grounding_review.json",
+            "invalid_grounding_review",
+            ("dataset_sha256",),
+            "0" * 64,
+            False,
+        ),
+        (
+            "golden_set_grounding_review.json",
+            "invalid_grounding_review",
+            ("cases", 0, "contexts", 0, "context_sha256"),
+            "0" * 64,
+            False,
+        ),
+    ],
+    ids=[
+        "migration-commit",
+        "migration-mapping",
+        "migration-completeness",
+        "retired-record",
+        "grounding-case-id",
+        "grounding-case-status",
+        "grounding-context-index",
+        "grounding-canonical-hash",
+        "grounding-dataset-hash",
+        "grounding-context-hash",
+    ],
+)
+def test_each_audit_evidence_field_is_validated_independently(
+    tmp_path: Path,
+    filename: str,
+    warning_code: str,
+    path: tuple[str | int, ...],
+    value: object,
+    remove: bool,
+) -> None:
     _copy_audits(tmp_path)
-    path = tmp_path / "id_migration_map.json"
-    migration = json.loads(path.read_text(encoding="utf-8"))
-    migration["migration_commit"] = "wrong"
-    migration["old_to_new"].pop("61")
-    migration["retired"][0]["status"] = "active"
-    path.write_text(json.dumps(migration, ensure_ascii=False), encoding="utf-8")
+    artifact_path = tmp_path / filename
+    artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    target = artifact
+    for segment in path[:-1]:
+        target = target[segment]
+    if remove:
+        del target[path[-1]]
+    else:
+        target[path[-1]] = value
+    artifact_path.write_text(json.dumps(artifact, ensure_ascii=False), encoding="utf-8")
 
     report = validate_golden_dataset(
         load_golden_dataset(Path("evaluation/golden_set")),
@@ -1069,28 +1167,7 @@ def test_migration_evidence_rejects_wrong_commit_mapping_and_retired_record(tmp_
         audit_root=tmp_path,
     )
 
-    assert "invalid_id_migration_map" in {warning.code for warning in report.warnings}
-    assert report.full_conformance is False
-
-
-def test_grounding_evidence_rejects_wrong_case_id_status_index_and_hash(tmp_path: Path) -> None:
-    _copy_audits(tmp_path)
-    path = tmp_path / "golden_set_grounding_review.json"
-    review = json.loads(path.read_text(encoding="utf-8"))
-    review["cases"][0]["case_id"] = "DL-999"
-    review["cases"][0]["status"] = "failed"
-    review["cases"][0]["contexts"][0]["context_index"] = 99
-    review["cases"][0]["contexts"][0]["context_sha256"] = "0" * 64
-    path.write_text(json.dumps(review, ensure_ascii=False), encoding="utf-8")
-
-    report = validate_golden_dataset(
-        load_golden_dataset(Path("evaluation/golden_set")),
-        Path("data/extracted/01_2021_ND-CP_283247.md"),
-        chunks=None,
-        audit_root=tmp_path,
-    )
-
-    assert "invalid_grounding_review" in {warning.code for warning in report.warnings}
+    assert warning_code in {warning.code for warning in report.warnings}
     assert report.full_conformance is False
 ```
 
@@ -1716,7 +1793,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
 from domain.schemas import Chunk
-from evaluation.golden import GoldenType, load_golden_dataset
+from evaluation.golden import GoldenType
 from generation.execution import GenerationExecution, RetrievalExecution
 
 
@@ -2735,7 +2812,7 @@ def test_generation_inherits_full_golden_and_canonical_selection(tmp_path: Path)
     golden_dir.mkdir()
     for source in Path("evaluation/golden_set").glob("*.json"):
         (golden_dir / source.name).write_bytes(source.read_bytes())
-    canonical_source = tmp_path / "canonical.md"
+    canonical_source = tmp_path / "01_2021_ND-CP_283247.md"
     canonical_source.write_bytes(
         Path("data/extracted/01_2021_ND-CP_283247.md").read_bytes()
     )
@@ -2792,6 +2869,26 @@ def test_e2e_ingestion_saves_one_immutable_snapshot(tmp_path: Path) -> None:
 
     assert report.status == "complete"
     assert runner.repository.snapshot_save_calls == 1
+
+
+@pytest.mark.parametrize("mode", [EvaluationMode.VALIDATE, EvaluationMode.GENERATION])
+def test_preflight_failures_are_retained_as_reports(
+    tmp_path: Path,
+    mode: EvaluationMode,
+) -> None:
+    runner = _runner(tmp_path)
+    request = (
+        EvaluationRequest(mode=mode, canonical_source=tmp_path / "missing.md")
+        if mode is EvaluationMode.VALIDATE
+        else EvaluationRequest(mode=mode, from_run="missing-retrieval")
+    )
+
+    report = runner.run(request)
+
+    assert report.status == "failed"
+    assert report.errors[0].startswith("FileNotFoundError:")
+    assert report.report_path is not None
+    assert runner.repository.report_save_calls == 1
 ```
 
 - [ ] **Step 2: Run tests and confirm staged runner is absent**
@@ -2851,97 +2948,121 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
 ```python
     def run(self, request: EvaluationRequest) -> EvaluationReport:
         run_id = uuid4().hex
-        replay_source = (
-            self.repository.load_retrieval(request.from_run)
-            if request.mode is EvaluationMode.GENERATION and request.from_run is not None
-            else None
-        )
-        effective_request = request
-        if replay_source is not None:
-            replay_files = [Path(path) for path in replay_source.dataset_source_files]
-            effective_request = request.model_copy(update={
-                "golden_dir": replay_source.golden_dir,
-                "golden_files": replay_files if replay_source.dataset_scope == "partial" else [],
-                "canonical_source": replay_source.canonical_source,
-            })
-            dataset = load_golden_dataset(
-                replay_source.golden_dir,
-                files=replay_files if replay_source.dataset_scope == "partial" else None,
-            )
-            if dataset.source_files != replay_source.dataset_source_files:
-                raise ValueError("retrieval artifact golden source-file selection is incompatible")
-        else:
-            dataset = load_golden_dataset(
-                request.golden_dir,
-                files=request.golden_files or None,
-            )
-        self.repository.save_manifest(self._build_manifest(effective_request, dataset, run_id))
-        validation = validate_golden_dataset(
-            dataset,
-            canonical_path=effective_request.canonical_source,
-            chunks=None,
-            audit_root=effective_request.golden_dir.parent,
-        )
-        if validation.errors:
-            return self._finish_report(
-                EvaluationReport(
-                    run_id=run_id,
-                    mode=request.mode,
-                    status="failed",
-                    dataset_size=len(dataset.cases),
-                    evaluated_cases=0,
-                    validation=validation.model_dump(mode="json"),
-                    aggregates={},
-                    errors=[issue.message for issue in validation.errors],
-                    artifact_ids={},
-                    baseline_eligible=False,
-                )
-            )
-        selected = (
-            []
-            if request.mode in {EvaluationMode.VALIDATE, EvaluationMode.INGEST, EvaluationMode.GENERATION}
-            else select_cases(
-                dataset,
-                question_types=request.question_types or None,
-                case_ids=request.case_ids or None,
-                limit=request.limit,
-            )
-        )
         try:
-            if effective_request.mode is EvaluationMode.VALIDATE:
-                return self._run_validate(effective_request, dataset, validation, run_id)
-            if effective_request.mode is EvaluationMode.INGEST:
-                return self._run_ingest(effective_request, dataset, validation, run_id)
-            if effective_request.mode is EvaluationMode.RETRIEVAL:
-                return self._finish_report(
-                    self._retrieval_report(effective_request, dataset, selected, validation, run_id)
+            replay_source = (
+                self.repository.load_retrieval(request.from_run)
+                if request.mode is EvaluationMode.GENERATION and request.from_run is not None
+                else None
+            )
+            effective_request = request
+            if replay_source is not None:
+                replay_files = [Path(path) for path in replay_source.dataset_source_files]
+                effective_request = request.model_copy(update={
+                    "golden_dir": replay_source.golden_dir,
+                    "golden_files": replay_files if replay_source.dataset_scope == "partial" else [],
+                    "canonical_source": replay_source.canonical_source,
+                })
+                dataset = load_golden_dataset(
+                    replay_source.golden_dir,
+                    files=replay_files if replay_source.dataset_scope == "partial" else None,
                 )
-            if effective_request.mode is EvaluationMode.GENERATION:
-                return self._finish_report(
-                    self._generation_report(effective_request, dataset, validation, run_id)
+                if dataset.source_files != replay_source.dataset_source_files:
+                    raise ValueError("retrieval artifact golden source-file selection is incompatible")
+            else:
+                dataset = load_golden_dataset(
+                    request.golden_dir,
+                    files=request.golden_files or None,
                 )
-            return self._run_e2e(effective_request, dataset, selected, validation, run_id)
+            self.repository.save_manifest(self._build_manifest(effective_request, dataset, run_id))
+            validation = validate_golden_dataset(
+                dataset,
+                canonical_path=effective_request.canonical_source,
+                chunks=None,
+                audit_root=effective_request.golden_dir.parent,
+            )
+            if validation.errors:
+                return self._finish_report(
+                    EvaluationReport(
+                        run_id=run_id,
+                        mode=request.mode,
+                        status="failed",
+                        dataset_size=len(dataset.cases),
+                        evaluated_cases=0,
+                        validation=validation.model_dump(mode="json"),
+                        aggregates={},
+                        errors=[issue.message for issue in validation.errors],
+                        artifact_ids={},
+                        baseline_eligible=False,
+                    )
+                )
+            selected = (
+                []
+                if request.mode in {EvaluationMode.VALIDATE, EvaluationMode.INGEST, EvaluationMode.GENERATION}
+                else select_cases(
+                    dataset,
+                    question_types=request.question_types or None,
+                    case_ids=request.case_ids or None,
+                    limit=request.limit,
+                )
+            )
+            try:
+                if effective_request.mode is EvaluationMode.VALIDATE:
+                    return self._run_validate(effective_request, dataset, validation, run_id)
+                if effective_request.mode is EvaluationMode.INGEST:
+                    return self._run_ingest(effective_request, dataset, validation, run_id)
+                if effective_request.mode is EvaluationMode.RETRIEVAL:
+                    return self._finish_report(
+                        self._retrieval_report(effective_request, dataset, selected, validation, run_id)
+                    )
+                if effective_request.mode is EvaluationMode.GENERATION:
+                    return self._finish_report(
+                        self._generation_report(effective_request, dataset, validation, run_id)
+                    )
+                return self._run_e2e(effective_request, dataset, selected, validation, run_id)
+            except Exception as exc:
+                return self._finish_report(
+                    EvaluationReport(
+                        run_id=run_id,
+                        mode=request.mode,
+                        status="failed",
+                        dataset_size=len(dataset.cases),
+                        evaluated_cases=0,
+                        validation=validation.model_dump(mode="json"),
+                        aggregates={},
+                        errors=[f"{type(exc).__name__}: {exc}"],
+                        artifact_ids={},
+                        baseline_eligible=False,
+                    )
+                )
         except Exception as exc:
             return self._finish_report(
                 EvaluationReport(
                     run_id=run_id,
                     mode=request.mode,
                     status="failed",
-                    dataset_size=len(dataset.cases),
+                    dataset_size=0,
                     evaluated_cases=0,
-                    validation=validation.model_dump(mode="json"),
+                    validation=GoldenValidationReport(
+                        errors=[],
+                        warnings=[],
+                        validated_cases=0,
+                        full_conformance=False,
+                    ).model_dump(mode="json"),
                     aggregates={},
                     errors=[f"{type(exc).__name__}: {exc}"],
                     artifact_ids={},
                     baseline_eligible=False,
                 )
             )
-
     def _finish_report(self, report: EvaluationReport) -> EvaluationReport:
-        manifest = self.repository.load_manifest(report.run_id)
-        self.repository.save_manifest(
-            manifest.model_copy(update={"artifact_lineage": report.artifact_ids})
-        )
+        try:
+            manifest = self.repository.load_manifest(report.run_id)
+        except FileNotFoundError:
+            pass
+        else:
+            self.repository.save_manifest(
+                manifest.model_copy(update={"artifact_lineage": report.artifact_ids})
+            )
         path = self.repository.save_report(report)
         return report.model_copy(update={"report_path": path})
 
@@ -3945,6 +4066,13 @@ def test_generation_rejects_new_selection_flags() -> None:
         parse_request(["generation", "--from-run", "retrieval-1", "--type", "multi_hop"])
 
 
+def test_generation_parser_omits_inherited_selection_fields() -> None:
+    request = parse_request(["generation", "--from-run", "retrieval-1"])
+
+    assert request.mode is EvaluationMode.GENERATION
+    assert request.from_run == "retrieval-1"
+
+
 def test_validate_rejects_limit_because_standard_validation_is_always_full() -> None:
     with pytest.raises(SystemExit):
         parse_request(["validate", "--limit", "1"])
@@ -4058,16 +4186,20 @@ def parse_request(argv: Sequence[str]) -> EvaluationRequest:
     }
     golden_files = values.pop("golden_file", [])
     case_ids = set(values.pop("case_id", []))
-    try:
-        return EvaluationRequest(
-            mode=mode,
+    request_values = {
+        "mode": mode,
+        "ingestion_source": source or e2e_ingest,
+        "run_ragas": values.pop("ragas", False),
+        **values,
+    }
+    if mode is not EvaluationMode.GENERATION:
+        request_values.update(
             golden_files=golden_files,
             question_types=question_types,
             case_ids=case_ids,
-            ingestion_source=source or e2e_ingest,
-            run_ragas=values.pop("ragas", False),
-            **values,
         )
+    try:
+        return EvaluationRequest(**request_values)
     except ValidationError as exc:
         parser.error(str(exc))
         raise AssertionError("argparse.error always exits")
