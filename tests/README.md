@@ -52,7 +52,15 @@ uv run mypy
 uv run pytest -q
 ```
 
-## 4. Adding a Regression Test
+## 4. Efficient Test Execution
+
+1. In TDD, run the smallest test that proves red, then rerun it after the relevant change to prove green.
+2. Record each successful command and the source, test, configuration, and dependency surface it covers.
+3. Treat that evidence as fresh while its covered surface remains unchanged; do not rerun a passing command merely because one or two minutes elapsed.
+4. Expand to another scope only when a failure, relevant edit, or coupled contract leaves a concrete risk unproven. After a later failure is fixed, rerun the failed command and the last passing scope that the break could have invalidated.
+5. Run full verification once on the final tree only when the plan or acceptance contract requires it; reuse an identical final-tree result instead of repeating it.
+
+## 5. Adding a Regression Test
 
 1. Identify the affected production module.
 2. Read the nearest existing tests.
@@ -60,16 +68,15 @@ uv run pytest -q
 4. Reproduce the bug with a failing test.
 5. Apply the smallest production fix.
 6. Run the targeted test.
-7. Run the affected module.
-8. Run the test suite.
+7. Apply the efficient-execution rules above; broader scopes require a concrete unproven risk.
 
-## 5. Test Support
+## 6. Test Support
 
 Reusable helpers are organized under `tests/support/`:
 - `tests/support/builders.py`: Domain object construction helpers (e.g. `make_chunk`).
 - `tests/support/providers.py`: Shared deterministic provider fakes (`CitedProvider`, `UncitedProvider`, etc.).
 - `tests/support/tracing.py`: Shared tracing test doubles (`RecordingTracer`, `RecordingObservation`).
 
-## 6. Golden-Set Policy
+## 7. Golden-Set Policy
 
 Do not modify `evaluation/golden_set/` unless the task explicitly concerns evaluation data.
