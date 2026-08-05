@@ -1,0 +1,197 @@
+[
+  {
+    "id": 3,
+    "type": "ambiguous",
+    "question": "Ai là người ký tên vào hồ sơ?",
+    "expected_answer": "Dựa trên quy định về nguyên tắc đăng ký, bạn vui lòng cho biết công ty bạn có 1 hay nhiều người đại diện theo pháp luật?\n- Nếu công ty có nhiều đại diện pháp luật: Người đại diện đứng ra ký nộp hồ sơ phải đảm bảo quyền hạn theo Điều 12 Luật Doanh nghiệp.\n- Nếu thông thường: Người thành lập hoặc người đại diện theo pháp luật tự kê khai và ký tên chịu trách nhiệm.",
+    "ground_truth_context": "Điều 4. Nguyên tắc áp dụng giải quyết thủ tục đăng ký doanh nghiệp\n\n1. Người thành lập doanh nghiệp hoặc doanh nghiệp tự kê khai hồ sơ đăng ký doanh nghiệp và chịu trách nhiệm trước pháp luật về tính hợp pháp, trung thực và chính xác của các thông tin kê khai trong hồ sơ đăng ký doanh nghiệp và các báo cáo.\n2. Trường hợp công ty trách nhiệm hữu hạn và công ty cổ phần có nhiều hơn một người đại diện theo pháp luật thì người đại diện theo pháp luật thực hiện thủ tục đăng ký doanh nghiệp phải đảm bảo và chịu trách nhiệm về việc thực hiện đúng quyền hạn, nghĩa vụ của mình theo quy định tại khoản 2 Điều 12 Luật Doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 4"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 11,
+    "type": "ambiguous",
+    "question": "Nộp hồ sơ ở đâu?",
+    "expected_answer": "Dựa trên quy định cơ quan đăng ký kinh doanh, bạn muốn đăng ký Doanh nghiệp hay Hộ kinh doanh?\n- Nếu là Doanh nghiệp/Công ty: Nộp tại Phòng Đăng ký kinh doanh thuộc Sở Kế hoạch và Đầu tư tỉnh/thành phố.\n- Nếu là Hộ kinh doanh: Nộp tại Cơ quan đăng ký kinh doanh cấp huyện (Phòng Tài chính - Kế hoạch thuộc UBND cấp huyện).",
+    "ground_truth_context": "Điều 14. Cơ quan đăng ký kinh doanh\n\n1. Cơ quan đăng ký kinh doanh được tổ chức ở tỉnh, thành phố trực thuộc Trung ương (sau đây gọi chung là cấp tỉnh) và ở quận, huyện, thị xã, thành phố thuộc tỉnh (sau đây gọi chung là cấp huyện), bao gồm:\na) Ở cấp tỉnh: Phòng Đăng ký kinh doanh thuộc Sở Kế hoạch và Đầu tư (sau đây gọi chung là Phòng Đăng ký kinh doanh).\nPhòng Đăng ký kinh doanh có thể tổ chức các điểm để tiếp nhận hồ sơ và trả kết quả thuộc Phòng Đăng ký kinh doanh tại các địa điểm khác nhau trên địa bàn cấp tỉnh;\nb) Ở cấp huyện: Phòng Tài chính - Kế hoạch thuộc Ủy ban nhân dân cấp huyện (sau đây gọi chung là Cơ quan đăng ký kinh doanh cấp huyện).",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương II",
+      "article": "Điều 14"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 15,
+    "type": "ambiguous",
+    "question": "Công bố thông tin làm thế nào?",
+    "expected_answer": "Dựa trên quy định về công bố nội dung đăng ký doanh nghiệp: Việc đề nghị công bố và nộp phí được thực hiện ngay tại thời điểm nộp hồ sơ đăng ký doanh nghiệp. Thông tin công bố sẽ được đăng tải công khai trên Cổng thông tin quốc gia về đăng ký doanh nghiệp.",
+    "ground_truth_context": "Điều 35. Công bố nội dung đăng ký doanh nghiệp\n\n1. Các nội dung công bố quy định tại khoản 1 và khoản 2 Điều 32 Luật Doanh nghiệp.\n2. Thông tin công bố nội dung đăng ký doanh nghiệp được đăng tải trên Cổng thông tin quốc gia về đăng ký doanh nghiệp.\n3. Việc đề nghị công bố nội dung đăng ký doanh nghiệp và nộp phí công bố nội dung đăng ký doanh nghiệp được thực hiện tại thời điểm doanh nghiệp nộp hồ sơ đăng ký doanh nghiệp. Trường hợp doanh nghiệp không được cấp đăng ký doanh nghiệp, doanh nghiệp sẽ được hoàn trả phí công bố nội dung đăng ký doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 35"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 23,
+    "type": "ambiguous",
+    "question": "Mở ngân hàng nộp giấy gì?",
+    "expected_answer": "Dựa trên quy định đăng ký tổ chức tín dụng, ngoài hồ sơ đăng ký doanh nghiệp tương ứng với loại hình, bạn bắt buộc phải nộp kèm bản sao Giấy phép hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.",
+    "ground_truth_context": "Điều 29. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với tổ chức tín dụng, chi nhánh ngân hàng nước ngoài, văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng\n\n1. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với tổ chức tín dụng, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của tổ chức tín dụng thực hiện theo quy định tại Nghị định này tương ứng với từng loại hình doanh nghiệp, kèm theo hồ sơ phải có bản sao giấy phép hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 29"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 27,
+    "type": "ambiguous",
+    "question": "Điều kiện được cấp giấy đăng ký là gì?",
+    "expected_answer": "Dựa trên quy định đăng ký kinh doanh, bạn muốn hỏi về điều kiện cấp giấy đăng ký cho Doanh nghiệp hay Hộ kinh doanh?\n- Nếu là Doanh nghiệp: Doanh nghiệp được cấp Giấy chứng nhận đăng ký doanh nghiệp khi có đủ các điều kiện theo quy định tại khoản 1 Điều 27 Luật Doanh nghiệp.\n- Nếu là Hộ kinh doanh: Hộ kinh doanh được cấp Giấy chứng nhận khi đáp ứng đủ 4 điều kiện (Ngành nghề không bị cấm; Tên đặt đúng quy định; Hồ sơ hợp lệ; Nộp đủ lệ phí).",
+    "ground_truth_context": "Điều 34. Cấp Giấy chứng nhận đăng ký doanh nghiệp\n\n1. Doanh nghiệp được cấp Giấy chứng nhận đăng ký doanh nghiệp khi có đủ các điều kiện theo quy định tại khoản 1 Điều 27 Luật Doanh nghiệp.\n\nĐiều 82. Giấy chứng nhận đăng ký hộ kinh doanh\n\n1. Giấy chứng nhận đăng ký hộ kinh doanh được cấp cho hộ kinh doanh thành lập và hoạt động theo quy định tại Nghị định này. Hộ kinh doanh được cấp Giấy chứng nhận đăng ký hộ kinh doanh khi có đủ các điều kiện sau đây:\na) Ngành, nghề đăng ký kinh doanh không bị cấm đầu tư kinh doanh;\nb) Tên của hộ kinh doanh được đặt theo đúng quy định tại Điều 88 Nghị định này;\nc) Có hồ sơ đăng ký hộ kinh doanh hợp lệ;\nd) Nộp đủ lệ phí đăng ký hộ kinh doanh theo quy định.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 34"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 31,
+    "type": "ambiguous",
+    "question": "Thay đổi thông tin ai ký tên?",
+    "expected_answer": "Dựa trên quy định đăng ký thay đổi, bạn thay đổi nội dung thông thường hay thay đổi người đại diện theo pháp luật?\n- Nếu thông thường (như địa chỉ, ngành nghề...): Thông báo thay đổi do người đại diện theo pháp luật hiện tại ký.\n- Nếu thay đổi người đại diện theo pháp luật: Người ký thông báo là Chủ tịch HĐTV / Chủ tịch HĐQT / Chủ tịch công ty (hoặc Chủ tịch HĐTV, HĐQT mới được bầu nếu người đại diện cũ là Chủ tịch).",
+    "ground_truth_context": "Điều 47. Đăng ký thay đổi địa chỉ trụ sở chính của doanh nghiệp\n\n2. Trường hợp chuyển địa chỉ trụ sở chính, doanh nghiệp gửi hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi đặt trụ sở mới. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thay đổi nội dung đăng ký doanh nghiệp do người đại diện theo pháp luật của doanh nghiệp ký;\n\nĐiều 50. Đăng ký thay đổi người đại diện theo pháp luật của công ty trách nhiệm hữu hạn, công ty cổ phần\n\n2. Người ký thông báo thay đổi người đại diện theo pháp luật là một trong các cá nhân sau đây:\na) Chủ tịch Hội đồng thành viên hoặc Chủ tịch công ty đối với công ty trách nhiệm hữu hạn một thành viên;\nb) Chủ tịch Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên. Trường hợp Chủ tịch Hội đồng thành viên là người đại diện theo pháp luật thì người ký thông báo là Chủ tịch Hội đồng thành viên mới được Hội đồng thành viên bầu;\nc) Chủ tịch Hội đồng quản trị đối với công ty cổ phần. Trường hợp Chủ tịch Hội đồng quản trị là người đại diện theo pháp luật thì người ký thông báo là Chủ tịch Hội đồng quản trị mới được Hội đồng quản trị bầu;",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VI",
+      "article": "Điều 50"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 39,
+    "type": "ambiguous",
+    "question": "Đổi tên công ty phải làm sao?",
+    "expected_answer": "Dựa trên quy định đổi tên doanh nghiệp, bạn cho biết công ty bạn thuộc loại hình nào?\n- Nếu là Công ty TNHH 1TV: Nộp Thông báo thay đổi nội dung đăng ký doanh nghiệp kèm Nghị quyết, quyết định của chủ sở hữu công ty.\n- Nếu là Công ty TNHH 2TV trở lên, Công ty Hợp danh: Nộp Thông báo kèm Nghị quyết, quyết định và bản sao biên bản họp của HĐTV.\n- Nếu là Công ty Cổ phần: Nộp Thông báo kèm Nghị quyết, quyết định và bản sao biên bản họp của Đại hội đồng cổ đông.",
+    "ground_truth_context": "Điều 48. Đăng ký đổi tên doanh nghiệp\n\n1. Trường hợp đổi tên doanh nghiệp, doanh nghiệp gửi hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi doanh nghiệp đặt trụ sở chính. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thay đổi nội dung đăng ký doanh nghiệp do người đại diện theo pháp luật của doanh nghiệp ký;\nb) Nghị quyết, quyết định và bản sao biên bản họp của Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty hợp danh, của Đại hội đồng cổ đông đối với công ty cổ phần; nghị quyết, quyết định của chủ sở hữu công ty đối với công ty trách nhiệm hữu hạn một thành viên về việc đổi tên doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VI",
+      "article": "Điều 48"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 43,
+    "type": "ambiguous",
+    "question": "Bán lại công ty làm thế nào?",
+    "expected_answer": "Dựa trên quy định thay đổi do bán/chuyển nhượng doanh nghiệp, bạn cho biết công ty bạn thuộc loại hình nào?\n- Nếu là Doanh nghiệp tư nhân: Người mua nộp hồ sơ đăng ký thay đổi chủ DNTN (gồm Thông báo thay đổi có chữ ký bên bán và mua, bản sao giấy tờ người mua, Hợp đồng mua bán DNTN).\n- Nếu là Công ty TNHH 1TV: Người nhận chuyển nhượng nộp hồ sơ thay đổi chủ sở hữu (gồm Thông báo thay đổi, bản sao giấy tờ người nhận, Điều lệ sửa đổi, Hợp đồng chuyển nhượng vốn).\n- Nếu là Công ty TNHH 2TV trở lên: Nộp Thông báo thay đổi nội dung đăng ký doanh nghiệp, Danh sách thành viên, Hợp đồng chuyển nhượng phần vốn góp.",
+    "ground_truth_context": "Điều 53. Đăng ký thay đổi chủ sở hữu công ty trách nhiệm hữu hạn một thành viên\n\n1. Trường hợp chủ sở hữu công ty chuyển nhượng toàn bộ vốn điều lệ cho một cá nhân hoặc một tổ chức thì người nhận chuyển nhượng phải nộp hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi công ty đặt trụ sở chính...\n\nĐiều 54. Đăng ký thay đổi chủ doanh nghiệp tư nhân trong trường hợp bán, tặng cho doanh nghiệp, chủ doanh nghiệp chết\n\n1. Trường hợp chủ doanh nghiệp tư nhân bán, tặng cho doanh nghiệp hoặc chủ doanh nghiệp tư nhân chết thì người mua, người được tặng cho, người thừa kế phải nộp hồ sơ đăng ký thay đổi chủ doanh nghiệp tư nhân đến Phòng Đăng ký kinh doanh nơi doanh nghiệp đặt trụ sở chính...",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VI",
+      "article": "Điều 54"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 51,
+    "type": "ambiguous",
+    "question": "Mở địa điểm mới nộp ở đâu?",
+    "expected_answer": "Dựa trên quy định lập địa điểm kinh doanh, bạn nộp Thông báo lập địa điểm kinh doanh đến Phòng Đăng ký kinh doanh nơi đặt địa điểm kinh doanh trong thời hạn 10 ngày kể từ ngày quyết định lập.",
+    "ground_truth_context": "Điều 31. Hồ sơ, trình tự, thủ tục đăng ký hoạt động chi nhánh, văn phòng đại diện, thông báo lập địa điểm kinh doanh\n\n2. Thông báo lập địa điểm kinh doanh\na) Doanh nghiệp có thể lập địa điểm kinh doanh tại địa chỉ khác nơi doanh nghiệp đặt trụ sở chính hoặc đặt chi nhánh;\nb) Trong thời hạn 10 ngày kể từ ngày quyết định lập địa điểm kinh doanh, doanh nghiệp gửi thông báo lập địa điểm kinh doanh đến Phòng Đăng ký kinh doanh nơi đặt địa điểm kinh doanh;",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 31"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 55,
+    "type": "ambiguous",
+    "question": "Kinh doanh lại sớm thì báo thế nào?",
+    "expected_answer": "Dựa trên quy định tiếp tục kinh doanh trước thời hạn, bạn là Doanh nghiệp hay Hộ kinh doanh?\n- Nếu là Doanh nghiệp: Gửi thông báo đến Phòng Đăng ký kinh doanh chậm nhất 03 ngày làm việc trước ngày tiếp tục kinh doanh.\n- Nếu là Hộ kinh doanh: Gửi thông báo bằng văn bản đến Cơ quan đăng ký kinh doanh cấp huyện ít nhất 03 ngày làm việc trước khi tiếp tục kinh doanh.",
+    "ground_truth_context": "Điều 66. Đăng ký tạm ngừng kinh doanh, tiếp tục kinh doanh trước thời hạn đã thông báo đối với doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh\n\n1. Trường hợp doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh tạm ngừng kinh doanh hoặc tiếp tục kinh doanh trước thời hạn đã thông báo, doanh nghiệp gửi thông báo đến Phòng Đăng ký kinh doanh nơi doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh đặt trụ sở chậm nhất 03 ngày làm việc trước ngày tạm ngừng kinh doanh hoặc tiếp tục kinh doanh trước thời hạn đã thông báo.\n\nĐiều 91. Tạm ngừng kinh doanh, tiếp tục kinh doanh trước thời hạn đã thông báo của hộ kinh doanh\n\n2. Trường hợp hộ kinh doanh tạm ngừng kinh doanh, tiếp tục kinh doanh trước thời hạn đã thông báo, hộ kinh doanh gửi thông báo bằng văn bản cho Cơ quan đăng ký kinh doanh cấp huyện nơi hộ kinh doanh đã đăng ký ít nhất 03 ngày làm việc trước khi tạm ngừng kinh doanh hoặc tiếp tục kinh doanh trước thời hạn đã thông báo.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VII",
+      "article": "Điều 66"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 63,
+    "type": "ambiguous",
+    "question": "Một hộ được mở mấy chỗ?",
+    "expected_answer": "Dựa trên quy định về địa điểm kinh doanh, một hộ kinh doanh có thể hoạt động kinh doanh tại nhiều địa điểm nhưng phải chọn một địa điểm để đăng ký trụ sở hộ kinh doanh và phải thông báo cho Cơ quan quản lý thuế, cơ quan quản lý thị trường nơi tiến hành hoạt động kinh doanh đối với các địa điểm kinh doanh còn lại.",
+    "ground_truth_context": "Điều 86. Địa điểm kinh doanh của hộ kinh doanh\n\n1. Địa điểm kinh doanh của hộ kinh doanh là nơi hộ kinh doanh thực hiện hoạt động kinh doanh.\n2. Một hộ kinh doanh có thể hoạt động kinh doanh tại nhiều địa điểm nhưng phải chọn một địa điểm để đăng ký trụ sở hộ kinh doanh và phải thông báo cho Cơ quan quản lý thuế, cơ quan quản lý thị trường nơi tiến hành hoạt động kinh doanh đối với các địa điểm kinh doanh còn lại.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VIII",
+      "article": "Điều 86"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 67,
+    "type": "ambiguous",
+    "question": "Mất giấy hộ kinh doanh làm thế nào?",
+    "expected_answer": "Dựa trên quy định cấp lại Giấy chứng nhận đăng ký hộ kinh doanh, trường hợp bị mất, hộ kinh doanh gửi văn bản đề nghị cấp lại đến Cơ quan đăng ký kinh doanh cấp huyện nơi đặt trụ sở hộ kinh doanh để được xem xét cấp lại trong thời hạn 03 ngày làm việc kể từ ngày nhận được văn bản đề nghị.",
+    "ground_truth_context": "Điều 94. Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh\n\n1. Trường hợp Giấy chứng nhận đăng ký hộ kinh doanh bị mất, cháy, rách, nát hoặc bị tiêu hủy dưới hình thức khác, hộ kinh doanh có thể gửi văn bản đề nghị cấp lại Giấy chứng nhận đăng ký hộ kinh doanh đến Cơ quan đăng ký kinh doanh cấp huyện nơi đặt trụ sở hộ kinh doanh. Cơ quan đăng ký kinh doanh cấp huyện xem xét cấp lại Giấy chứng nhận đăng ký hộ kinh doanh trong thời hạn 03 ngày làm việc kể từ ngày nhận được văn bản đề nghị.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VIII",
+      "article": "Điều 94"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 71,
+    "type": "ambiguous",
+    "question": "Đổi vốn hộ kinh doanh nộp giấy gì?",
+    "expected_answer": "Dựa trên quy định thay đổi nội dung đăng ký hộ kinh doanh, chủ hộ kinh doanh có trách nhiệm gửi Thông báo thay đổi nội dung đăng ký hộ kinh doanh do chủ hộ ký (kèm bản sao biên bản họp thành viên hộ gia đình nếu các thành viên hộ gia đình cùng đăng ký) đến Cơ quan đăng ký kinh doanh cấp huyện trong thời hạn 10 ngày kể từ ngày có thay đổi.",
+    "ground_truth_context": "Điều 90. Đăng ký thay đổi nội dung đăng ký hộ kinh doanh\n\n1. Chủ hộ kinh doanh có trách nhiệm đăng ký thay đổi nội dung Giấy chứng nhận đăng ký hộ kinh doanh với Cơ quan đăng ký kinh doanh trong thời hạn 10 ngày kể từ ngày có thay đổi.\n2. Khi thay đổi nội dung đăng ký hộ kinh doanh, trừ các trường hợp quy định tại khoản 3 và khoản 4 Điều này, hộ kinh doanh gửi hồ sơ thông báo thay đổi nội dung đăng ký hộ kinh doanh đến Cơ quan đăng ký kinh doanh cấp huyện nơi đã đăng ký. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thay đổi nội dung đăng ký hộ kinh doanh do chủ hộ kinh doanh ký;\nb) Bản sao biên bản họp thành viên hộ gia đình về việc đăng ký thay đổi nội dung đăng ký hộ kinh doanh đối với trường hợp các thành viên hộ gia đình đăng ký hộ kinh doanh.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VIII",
+      "article": "Điều 90"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 75,
+    "type": "ambiguous",
+    "question": "Kê khai sai thông tin bị làm sao?",
+    "expected_answer": "Dựa trên quy định xử lý thông tin kê khai không trung thực, không chính xác:\n- Đối với Doanh nghiệp: Phòng Đăng ký kinh doanh thông báo Giấy chứng nhận đã cấp không có hiệu lực, chuyển cơ quan thẩm quyền xử lý và yêu cầu nộp lại hồ sơ hợp lệ trong 30 ngày.\n- Đối với Hộ kinh doanh: Cơ quan đăng ký kinh doanh cấp huyện thông báo Giấy chứng nhận đã cấp không có hiệu lực, chuyển cơ quan thẩm quyền xử lý và yêu cầu hoàn chỉnh nộp lại hồ sơ trong 30 ngày. Trường hợp kê khai giả mạo sẽ bị thu hồi Giấy chứng nhận.",
+    "ground_truth_context": "Điều 69. Xử lý trường hợp cấp đăng ký doanh nghiệp không đúng hồ sơ, trình tự, thủ tục hoặc thông tin kê khai trong hồ sơ đăng ký doanh nghiệp là không trung thực, không chính xác\n\n2. Trường hợp thông tin kê khai trong hồ sơ đăng ký doanh nghiệp là không trung thực, không chính xác...\n\nĐiều 94. Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh\n\n3. Việc xử lý đối với trường hợp Giấy chứng nhận đăng ký hộ kinh doanh được cấp trên cơ sở thông tin kê khai trong hồ sơ đăng ký hộ kinh doanh là không trung thực, không chính xác được thực hiện theo quy định...",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VIII",
+      "article": "Điều 94"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 79,
+    "type": "ambiguous",
+    "question": "Vướng mắc thủ tục hỏi ở đâu?",
+    "expected_answer": "Dựa trên quy định về trách nhiệm hướng dẫn thủ tục:\n- Nếu là thủ tục đăng ký doanh nghiệp: Liên hệ Phòng Đăng ký kinh doanh thuộc Sở Kế hoạch và Đầu tư cấp tỉnh để được hướng dẫn.\n- Nếu là thủ tục đăng ký hộ kinh doanh: Liên hệ Cơ quan đăng ký kinh doanh cấp huyện (Phòng Tài chính - Kế hoạch) hoặc Phòng Đăng ký kinh doanh cấp tỉnh.",
+    "ground_truth_context": "Điều 15. Nhiệm vụ, quyền hạn của Phòng Đăng ký kinh doanh\n\n2. Hướng dẫn doanh nghiệp và người thành lập doanh nghiệp về hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp; hướng dẫn Cơ quan đăng ký kinh doanh cấp huyện về hồ sơ, trình tự, thủ tục đăng ký hộ kinh doanh.\n\nĐiều 16. Nhiệm vụ, quyền hạn của Cơ quan đăng ký kinh doanh cấp huyện\n\n2. Hướng dẫn hộ kinh doanh và người thành lập hộ kinh doanh về hồ sơ, trình tự, thủ tục đăng ký hộ kinh doanh.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương II",
+      "article": "Điều 15"
+    },
+    "difficulty": "easy"
+  }
+]
