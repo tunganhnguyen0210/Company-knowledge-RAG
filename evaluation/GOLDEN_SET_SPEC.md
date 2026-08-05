@@ -129,12 +129,7 @@ Các chỉ số đánh giá tự động gồm Faithfulness, Answer Relevancy v�
 ## 9. Trạng thái sau cập nhật ngày 2026-08-05
 
 - 5 file × 20 samples = 100 samples.
-- ID đã chuyển sang namespace độc lập theo type.
-- 100/100 samples đã vượt qua kiểm tra grounding context và metadata bằng exact-source validation.
+- ID đã chuyển sang namespace độc lập theo type; xem `id_migration_map.json` cho ánh xạ đầy đủ.
 - Legacy direct sample ID `65` đã được retire vì không khớp tốt với dạng `direct_lookup`: câu hỏi yêu cầu số ngày trong khi Điều 35 quy định sự kiện tại thời điểm nộp hồ sơ.
-
-## 10. Trạng thái sau lần tái phát hành ngày 2026-08-05
-
-- Đã tái phát hành bộ dữ liệu vàng 100 case đã hoàn thiện, kèm hai điểm trim được duyệt tại `AMB-014` context index `1` và `AMB-019` context index `1`.
-- Cả hai context nêu trên đã bị cắt đúng tại ranh giới Chương đã khai báo (Chương IX cho `AMB-014`, Chương IV cho `AMB-019`) vì phần văn bản sau ranh giới thuộc Chương khác với Chương được khai báo trong `golden_metadata`; không có ID hay metadata nào khác bị thay đổi.
-- Bản review grounding đã được tái tạo (`golden_set_grounding_review.json`) và chứng minh 100/100 case và 130/130 context đều đạt `exact_source=true` và `coordinate_match=true`.
+- Cùng ngày 2026-08-05, bộ dữ liệu đã được tái phát hành theo phương án đã duyệt, với hai điểm trim tại `AMB-014` context index `1` và `AMB-019` context index `1`. Cả hai context nêu trên đã bị cắt đúng tại ranh giới Điều đã khai báo (điểm cắt là nhãn `# Chương IX` cho `AMB-014` và `# Chương IV` cho `AMB-019`, đánh dấu nơi Điều được khai báo trong `golden_metadata` kết thúc và Điều/Chương kế tiếp bắt đầu); không có ID hay metadata nào khác bị thay đổi.
+- Bản review grounding tái tạo sau lần phát hành này (`golden_set_grounding_review.json`) chứng minh 100/100 case và 130/130 context đều đạt `exact_source=true` và `coordinate_match=true` bằng exact-source validation.
