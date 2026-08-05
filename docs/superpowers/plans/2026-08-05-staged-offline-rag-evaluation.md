@@ -982,6 +982,8 @@ rtk git commit -m "feat: persist and inspect chunk coordinates"
 import json
 from pathlib import Path
 
+import pytest
+
 from evaluation.golden import (
     Difficulty,
     GoldenCase,
@@ -1720,9 +1722,13 @@ rtk git commit -m "refactor: expose internal rag execution evidence"
 
 ```python
 # tests/unit/evaluation/test_artifacts.py
-from evaluation.artifacts import EvaluationMode, EvaluationRequest, artifact_fingerprint, fingerprint
+from pathlib import Path
+
+import pytest
+
+from evaluation.artifacts import EvaluationMode, EvaluationRequest, EvaluationReport, IndexSnapshot, RunManifest, artifact_fingerprint, fingerprint
 from evaluation.repository import InMemoryRunRepository, LocalRunRepository
-from tests.support.evaluation_fakes import make_retrieval_run
+from tests.support.evaluation_fakes import make_generation_run, make_retrieval_run
 
 
 def test_fingerprint_is_stable_across_dictionary_order() -> None:
@@ -1737,6 +1743,55 @@ def test_local_repository_round_trips_retrieval_run(tmp_path) -> None:
 
     assert repository.load_retrieval("retrieval-1") == run
 
+
+def test_baseline_candidate_requires_authoritative_dataset_and_canonical_paths() -> None:
+    authoritative = EvaluationRequest(mode=EvaluationMode.E2E)
+    assert authoritative.baseline_candidate is True
+    assert authoritative.model_copy(update={"golden_dir": Path("tmp/golden")}).baseline_candidate is False
+    assert authoritative.model_copy(update={"canonical_source": Path("tmp/canonical.md")}).baseline_candidate is False
+
+def _write_once_cases() -> list[tuple[str, object, object]]:
+    retrieval = make_retrieval_run(run_id="once")
+    return [
+        ("manifest.json", RunManifest.model_construct(run_id="once"), "save_manifest"),
+        ("index_snapshot.json", IndexSnapshot.model_construct(run_id="once"), "save_snapshot"),
+        ("retrieval.jsonl", retrieval, "save_retrieval"),
+        ("generation.jsonl", make_generation_run(retrieval=retrieval).model_copy(update={"run_id": "once"}), "save_generation"),
+        ("report.json", EvaluationReport.model_construct(run_id="once"), "save_report"),
+    ]
+
+
+@pytest.mark.parametrize(("filename", "artifact", "method"), _write_once_cases())
+def test_local_repository_rejects_duplicate_artifact_saves_without_rewrite(
+    tmp_path: Path,
+    filename: str,
+    artifact: object,
+    method: str,
+) -> None:
+    repository = LocalRunRepository(tmp_path)
+    save = getattr(repository, method)
+    save(artifact)
+    destination = tmp_path / "once" / filename
+    original = destination.read_bytes()
+
+    with pytest.raises(FileExistsError):
+        save(artifact)
+
+    assert destination.read_bytes() == original
+
+
+@pytest.mark.parametrize(("_filename", "artifact", "method"), _write_once_cases())
+def test_memory_repository_rejects_duplicate_artifact_saves(
+    _filename: str,
+    artifact: object,
+    method: str,
+) -> None:
+    repository = InMemoryRunRepository()
+    save = getattr(repository, method)
+    save(artifact)
+
+    with pytest.raises(FileExistsError):
+        save(artifact)
 
 def test_limited_request_is_not_baseline_eligible() -> None:
     request = EvaluationRequest(mode=EvaluationMode.E2E, limit=10)
@@ -2027,11 +2082,14 @@ class RunRepository(Protocol):
 
 def _atomic_write(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        raise FileExistsError(f"artifact already exists: {path}")
     temporary = path.with_suffix(f"{path.suffix}.tmp")
+    if temporary.exists():
+        raise FileExistsError(f"temporary artifact already exists: {temporary}")
     temporary.write_text(text, encoding="utf-8")
     temporary.replace(path)
     return path
-
 
 def _json(model: BaseModel) -> str:
     return json.dumps(model.model_dump(mode="json"), ensure_ascii=False, indent=2)
@@ -2928,7 +2986,7 @@ class EvaluationRunner:
         registry: DocumentRegistry | None,
         store: ChunkStore | None,
         chat: ChatService | None,
-        repository: LocalRunRepository | InMemoryRunRepository,
+        repository: RunRepository,
         runtime_configuration: dict[str, object],
         semantic_judge: SemanticJudge | None,
     ) -> None:
@@ -2973,7 +3031,7 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
                     request.golden_dir,
                     files=request.golden_files or None,
                 )
-            self.repository.save_manifest(self._build_manifest(effective_request, dataset, run_id))
+            manifest = self._build_manifest(effective_request, dataset, run_id)
             validation = validate_golden_dataset(
                 dataset,
                 canonical_path=effective_request.canonical_source,
@@ -3054,17 +3112,21 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
                     baseline_eligible=False,
                 )
             )
-    def _finish_report(self, report: EvaluationReport) -> EvaluationReport:
-        try:
-            manifest = self.repository.load_manifest(report.run_id)
-        except FileNotFoundError:
-            pass
-        else:
-            self.repository.save_manifest(
-                manifest.model_copy(update={"artifact_lineage": report.artifact_ids})
+    # Finalization contract: construct but do not save the manifest before dispatch; every mode returns an unsaved report to run, which calls _finish_report once with the manifest. _finish_report writes the lineage-complete final manifest once, then the report; preflight failures pass None. Remove phase-local finalizers.
+
+    def _finish_report(
+        self,
+        report: EvaluationReport,
+        manifest: RunManifest | None,
+    ) -> EvaluationReport:
+        if manifest is not None:
+            final_manifest = manifest.model_copy(
+                update={"artifact_lineage": report.artifact_ids}
             )
+            self.repository.save_manifest(final_manifest)
         path = self.repository.save_report(report)
         return report.model_copy(update={"report_path": path})
+    # Finalization contract: mode helpers return unsaved reports; run calls _finish_report(report, manifest) once, or _finish_report(failed_report, None) for preflight failure. Do not save a manifest before dispatch, load a manifest in _finish_report, or retain phase-local finalizers.
 
     def _build_manifest(
         self,
@@ -3591,6 +3653,10 @@ Add generation replay exactly against saved ranked hits, followed by the composi
             status == "complete"
             and request.baseline_candidate
             and validation.full_conformance
+            and request.golden_dir == DEFAULT_GOLDEN_DIR
+            and request.golden_files == []
+            and request.canonical_source == DEFAULT_CANONICAL_SOURCE
+            and len(dataset.cases) == 100
             and len(selected) == 100
         )
         return self._finish_report(
