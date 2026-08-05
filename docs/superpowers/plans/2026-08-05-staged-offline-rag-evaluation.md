@@ -17,7 +17,9 @@
 - Keep the public `ChatResponse` schema and existing citation-gated abstention behavior unchanged.
 - Replace the console entrypoint `company-rag-evaluate` with `rag-eval`; do not add a compatibility alias unless the user requests one.
 - Pin Ragas to `>=0.4,<0.5` and record the exact installed version in run manifests.
+- Treat `langchain-community<0.4` only as a resolver probe for the known Ragas import break; commit the exact equality constraint emitted from the verified installed version only after `import ragas.metrics.collections` passes.
 - Ragas is opt-in for v1. Only `retrieval`, `generation`, and `e2e` accept `--ragas`; without it, no judge client is built and no semantic call is made.
+- Apply the user's approved P0-3 option (a): trim AMB-014 context index 1 before `# Chương IX` and AMB-019 context index 1 before `# Chương IV`, then reissue the ambiguous file and regenerate/reconcile the migration and grounding-review evidence before claiming full conformance.
 - Correctness invariants block. Deterministic quality rates and Ragas scores compare against `0.85` but remain report-only.
 - Only complete, unfiltered, 100-case end-to-end runs may set `baseline_eligible=true`.
 - All shell commands in this plan use the repository-required `rtk` prefix.
@@ -68,8 +70,156 @@
 
 ### Existing tests and docs to modify
 
-- `tests/unit/ingestion/test_service.py`, `tests/unit/retrieval/test_qdrant_store.py`, `tests/unit/retrieval/test_retrieval.py`, `tests/unit/generation/test_abstention.py`, `tests/unit/ingestion/test_enrichment.py`, `tests/unit/retrieval/test_hybrid.py`, `tests/unit/providers/test_jina.py`, and `tests/unit/prompts/test_prompt.py` — supply required coordinates and prove unchanged behavior.
+- `tests/support/builders.py`, `tests/unit/generation/test_citation_gate.py`, `tests/unit/generation/test_tracing.py`, `tests/component/rag/test_retrieve_and_answer.py`, `tests/unit/ingestion/test_service.py`, `tests/unit/retrieval/test_qdrant_store.py`, `tests/unit/retrieval/test_retrieval.py`, `tests/unit/generation/test_abstention.py`, `tests/unit/ingestion/test_enrichment.py`, `tests/unit/retrieval/test_hybrid.py`, `tests/unit/providers/test_jina.py`, and `tests/unit/prompts/test_prompt.py` — supply required coordinates and prove unchanged behavior.
 - `README.md`, `docs/architectures/01-system-context.md`, `docs/architectures/02-document-loading-and-ingestion.md`, `docs/architectures/04-retrieval-generation-and-citations.md`, and `docs/architectures/05-observability-evaluation-and-operations.md` — document staged evaluation and the short CLI.
+
+### Approved golden-data reissue files
+
+- `evaluation/golden_set/golden_set_ambiguous.json` — trim the two approved boundary-crossing contexts without changing IDs, questions, answers, metadata, or case counts.
+- `evaluation/id_migration_map.json` — issue the legacy-to-prefixed direct-lookup ID map, including retired legacy ID `65`.
+- `evaluation/golden_set_grounding_review.json` — record deterministic 100-case/130-context exact-source and coordinate review evidence.
+- `evaluation/GOLDEN_SET_SPEC.md` — define both audit-artifact contracts and reconcile section 9 with the approved reissue.
+
+---
+
+### Task 0: Approved Golden-Data Reissue and Audit Evidence
+
+**Files:**
+- Modify: `evaluation/golden_set/golden_set_ambiguous.json`
+- Create: `evaluation/id_migration_map.json`
+- Create: `evaluation/golden_set_grounding_review.json`
+- Modify: `evaluation/GOLDEN_SET_SPEC.md`
+
+**Interfaces:**
+- Consumes: the finalized five golden files, canonical `data/extracted/01_2021_ND-CP_283247.md`, the historical direct-lookup IDs at `f97292a^`, and the user's approved P0-3 option (a).
+- Produces: a reissued five-file/100-case dataset whose 130 contexts are exact canonical substrings contained by their declared articles, plus machine-checkable ID-migration and grounding-review evidence consumed by Task 4.
+
+- [ ] **Step 1: Run the read-only failing prerequisite probe**
+
+```powershell
+@'
+import json
+from pathlib import Path
+
+root = Path("evaluation")
+cases = json.loads((root / "golden_set/golden_set_ambiguous.json").read_text(encoding="utf-8"))
+by_id = {case["id"]: case for case in cases}
+assert "\n\n# Chương IX" not in by_id["AMB-014"]["golden_truth_contexts"][1]["golden_truth_context"]
+assert "\n\n# Chương IV" not in by_id["AMB-019"]["golden_truth_contexts"][1]["golden_truth_context"]
+assert (root / "id_migration_map.json").is_file()
+assert (root / "golden_set_grounding_review.json").is_file()
+'@ | rtk proxy uv run python -
+```
+
+Expected: FAIL because both selected contexts cross their declared article boundary and both audit artifacts are absent. Do not weaken the coordinate rule.
+
+- [ ] **Step 2: Trim exactly the two approved context entries**
+
+```powershell
+@'
+import json
+from pathlib import Path
+
+path = Path("evaluation/golden_set/golden_set_ambiguous.json")
+cases = json.loads(path.read_text(encoding="utf-8"))
+boundaries = {"AMB-014": "Chương IX", "AMB-019": "Chương IV"}
+for case in cases:
+    if case["id"] not in boundaries:
+        continue
+    marker = f"\n\n# {boundaries[case['id']]}"
+    original = case["golden_truth_contexts"][1]["golden_truth_context"]
+    assert original.count(marker) == 1
+    trimmed = original.split(marker, 1)[0].rstrip()
+    assert trimmed and len(trimmed) < len(original)
+    case["golden_truth_contexts"][1]["golden_truth_context"] = trimmed
+path.write_text(json.dumps(cases, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+'@ | rtk proxy uv run python -
+```
+
+Expected: only AMB-014 context index 1 and AMB-019 context index 1 change. IDs, metadata, questions, answers, context counts, file count, and case count remain unchanged.
+
+- [ ] **Step 3: Issue the explicit migration evidence**
+
+Create `evaluation/id_migration_map.json` with `schema_version=1`, `migration_commit="f97292a"`, and this complete `old_to_new` map:
+
+```json
+{
+  "1": "DL-001", "5": "DL-002", "7": "DL-003", "9": "DL-004",
+  "13": "DL-005", "17": "DL-006", "21": "DL-007", "25": "DL-008",
+  "29": "DL-009", "33": "DL-010", "37": "DL-011", "41": "DL-012",
+  "45": "DL-013", "49": "DL-014", "53": "DL-015", "57": "DL-016",
+  "61": "DL-017", "65": null, "69": "DL-018", "73": "DL-019", "77": "DL-020"
+}
+```
+
+Add `retired=[{"old_id":"65","status":"retired","reason":"The question asks for a number of days while Article 35 defines the filing-time event, so it is not a sound direct lookup."}]`. Do not reuse ID `65` or invent a replacement.
+
+- [ ] **Step 4: Define artifact schemas and reconcile the issued status**
+
+In `evaluation/GOLDEN_SET_SPEC.md` section 5, define the migration artifact fields `schema_version`, `migration_commit`, `old_to_new`, and `retired`; every non-null target must be a unique issued `DL-*` ID and every null source must have one retired record. In section 7.2, define the grounding-review fields `schema_version`, `canonical_doc_id`, `canonical_sha256`, `dataset_sha256`, `validated_cases`, `validated_contexts`, and per-case `case_id`, `status`, plus per-context `context_index`, `context_sha256`, `exact_source`, and `coordinate_match`.
+
+Update section 9 only after Steps 2-3: record the approved 2026-08-05 reissue, name AMB-014/AMB-019 context index 1, state both were trimmed at the declared article boundary without changing IDs or metadata, and state that the regenerated review proves 100/100 cases and 130/130 contexts pass.
+
+- [ ] **Step 5: Generate and verify grounding-review evidence**
+
+Run this complete generator, which uses Task 2's markup-agnostic article slices and writes only after every assertion passes:
+
+```powershell
+@'
+import hashlib, json, re
+from pathlib import Path
+
+root = Path("evaluation")
+names = ["golden_set_direct_lookup.json", "golden_set_multi_hop.json", "golden_set_unanswerable.json", "golden_set_ambiguous.json", "golden_set_adversarial.json"]
+files = [root / "golden_set" / name for name in names]
+cases = [case for path in files for case in json.loads(path.read_text(encoding="utf-8"))]
+canonical_path = Path("data/extracted/01_2021_ND-CP_283247.md")
+canonical = canonical_path.read_text(encoding="utf-8")
+heading_re = re.compile(r"(?m)^(?:#{1,6}[ \t]+)?((?:Chương[ \t]+[IVXLCDM]+|Điều[ \t]+\d+[A-Za-z]?)\b.*)$")
+chapter_re = re.compile(r"^Chương\s+[IVXLCDM]+\b", re.IGNORECASE)
+article_re = re.compile(r"^(Điều\s+\d+[A-Za-z]?)\b", re.IGNORECASE)
+matches = list(heading_re.finditer(canonical))
+chapter = None
+articles = {}
+for index, match in enumerate(matches):
+    heading = match.group(1).strip()
+    if chapter_match := chapter_re.match(heading):
+        chapter = chapter_match.group(0)
+    if article_match := article_re.match(heading):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(canonical)
+        articles[(canonical_path.name, chapter, article_match.group(1))] = canonical[match.start():end].strip()
+records = []
+for case in cases:
+    contexts = []
+    for context_index, item in enumerate(case["golden_truth_contexts"]):
+        evidence = item["golden_truth_context"]
+        metadata = item["golden_metadata"]
+        key = (metadata["doc_id"], metadata["chapter"], metadata["article"])
+        contexts.append({"context_index": context_index, "context_sha256": hashlib.sha256(evidence.encode()).hexdigest(), "exact_source": evidence in canonical, "coordinate_match": evidence in articles.get(key, "")})
+    records.append({"case_id": case["id"], "status": "passed" if all(item["exact_source"] and item["coordinate_match"] for item in contexts) else "failed", "contexts": contexts})
+assert len(files) == 5 and len(cases) == 100 and len({case["id"] for case in cases}) == 100
+assert sum(len(case["golden_truth_contexts"]) for case in cases) == 130
+assert all(record["status"] == "passed" for record in records)
+dataset_bytes = json.dumps(cases, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+review = {"schema_version": 1, "canonical_doc_id": canonical_path.name, "canonical_sha256": hashlib.sha256(canonical.encode()).hexdigest(), "dataset_sha256": hashlib.sha256(dataset_bytes).hexdigest(), "validated_cases": 100, "validated_contexts": 130, "cases": records}
+(root / "golden_set_grounding_review.json").write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+'@ | rtk proxy uv run python -
+```
+
+Rerun Step 1, then verify migration targets are exactly `DL-001..DL-020`, old ID `65` is null and retired, recorded hashes match current files, and the review has exactly 100 passed cases/130 passed contexts.
+
+Expected: both probes PASS; section 9 is supported by artifacts that exist and match the reissued data.
+
+- [ ] **Step 6: Review and commit the reissue atomically**
+
+```powershell
+rtk git diff --check
+rtk git diff -- evaluation/golden_set/golden_set_ambiguous.json evaluation/id_migration_map.json evaluation/golden_set_grounding_review.json evaluation/GOLDEN_SET_SPEC.md
+rtk git add evaluation/golden_set/golden_set_ambiguous.json evaluation/id_migration_map.json evaluation/golden_set_grounding_review.json evaluation/GOLDEN_SET_SPEC.md
+rtk git commit -m "data: reissue grounded golden evidence"
+```
+
+Expected: only the two approved context values, the two evidence files, and their specification/status contract change.
 
 ---
 
@@ -355,8 +505,11 @@ rtk git commit -m "feat: validate finalized golden dataset"
 - Create: `tests/unit/ingestion/test_structure.py`
 - Modify: `src/domain/schemas.py`
 - Modify: `src/ingestion/chunker.py`
+- Modify: `tests/support/builders.py`
+- Modify: `tests/unit/generation/test_citation_gate.py`
+- Modify: `tests/unit/generation/test_tracing.py`
+- Modify: `tests/component/rag/test_retrieve_and_answer.py`
 - Modify: `tests/unit/ingestion/test_enrichment.py`
-- Modify: `tests/unit/generation/test_abstention.py`
 - Modify: `tests/unit/retrieval/test_hybrid.py`
 - Modify: `tests/unit/providers/test_jina.py`
 - Modify: `tests/unit/prompts/test_prompt.py`
@@ -429,7 +582,19 @@ def test_split_chunks_keep_article_coordinates() -> None:
     assert all(chunk.coordinates.chapter == "Chương I" for chunk in article_one)
     assert all(chunk.coordinates.doc_id == "law.md" for chunk in article_one)
     assert "".join(chunk.text for chunk in article_one) == article_one_text
+
+
+def test_plain_docx_legal_headings_match_markdown_hierarchy() -> None:
+    plain = re.sub(r"(?m)^#{1,6}[ \t]+", "", LEGAL_TEXT)
+
+    markdown_coordinates = [item.coordinates for item in extract_legal_sections(LEGAL_TEXT, "law.md")]
+    plain_coordinates = [item.coordinates for item in extract_legal_sections(plain, "law.md")]
+
+    assert plain_coordinates == markdown_coordinates
+    assert sum(item.article is not None for item in plain_coordinates) == 3
 ```
+
+Add `import re` to the test module.
 
 - [ ] **Step 2: Run the tests and confirm deterministic hierarchy is absent**
 
@@ -465,7 +630,9 @@ from pydantic import BaseModel
 
 from domain.schemas import SourceCoordinates
 
-HEADING_RE = re.compile(r"(?m)^(#{1,6})\s+(.+)$")
+LEGAL_HEADING_RE = re.compile(
+    r"(?m)^(?:#{1,6}[ \t]+)?((?:Chương[ \t]+[IVXLCDM]+|Điều[ \t]+\d+[A-Za-z]?)\b.*)$"
+)
 CHAPTER_RE = re.compile(r"^Chương\s+[IVXLCDM]+\b", re.IGNORECASE)
 ARTICLE_RE = re.compile(r"^(Điều\s+\d+[A-Za-z]?)\b", re.IGNORECASE)
 
@@ -477,7 +644,7 @@ class LegalSection(BaseModel):
 
 
 def extract_legal_sections(text: str, doc_id: str) -> list[LegalSection]:
-    matches = list(HEADING_RE.finditer(text))
+    matches = list(LEGAL_HEADING_RE.finditer(text))
     if not matches:
         stripped = text.strip()
         return [LegalSection(heading=None, text=stripped, coordinates=SourceCoordinates(doc_id=doc_id))] if stripped else []
@@ -487,7 +654,7 @@ def extract_legal_sections(text: str, doc_id: str) -> list[LegalSection]:
         output.append(LegalSection(heading=None, text=prefix, coordinates=SourceCoordinates(doc_id=doc_id)))
     chapter: str | None = None
     for index, match in enumerate(matches):
-        heading = match.group(2).strip()
+        heading = match.group(1).strip()
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         body = text[match.end() : end].strip()
         chapter_match = CHAPTER_RE.match(heading)
@@ -495,7 +662,7 @@ def extract_legal_sections(text: str, doc_id: str) -> list[LegalSection]:
         if chapter_match:
             chapter = chapter_match.group(0)
         article = article_match.group(1) if article_match else None
-        section_text = f"{heading}\n\n{body}".strip() if article else body
+        section_text = text[match.start() : end].strip() if article else body
         if section_text:
             output.append(
                 LegalSection(
@@ -581,8 +748,8 @@ For legal-coordinate tests, use explicit chapter/article values instead of the g
 Run:
 
 ```powershell
-rtk proxy uv run pytest -p no:cacheprovider tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_enrichment.py tests/unit/retrieval/test_retrieval.py tests/unit/generation/test_abstention.py tests/unit/retrieval/test_hybrid.py tests/unit/providers/test_jina.py tests/unit/prompts/test_prompt.py tests/unit/retrieval/test_qdrant_store.py -q
-rtk ruff check src/domain/schemas.py src/ingestion tests/unit/ingestion/test_structure.py
+rtk proxy uv run pytest -p no:cacheprovider tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_enrichment.py tests/unit/retrieval/test_retrieval.py tests/unit/generation/test_citation_gate.py tests/unit/generation/test_tracing.py tests/component/rag/test_retrieve_and_answer.py tests/unit/retrieval/test_hybrid.py tests/unit/providers/test_jina.py tests/unit/prompts/test_prompt.py tests/unit/retrieval/test_qdrant_store.py -q
+rtk ruff check src/domain/schemas.py src/ingestion tests/support/builders.py tests/unit/ingestion/test_structure.py tests/unit/generation/test_citation_gate.py tests/unit/generation/test_tracing.py tests/component/rag/test_retrieve_and_answer.py
 ```
 
 Expected: all selected tests PASS.
@@ -590,7 +757,7 @@ Expected: all selected tests PASS.
 Commit:
 
 ```powershell
-rtk git add src/domain/schemas.py src/ingestion/structure.py src/ingestion/chunker.py tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_enrichment.py tests/unit/generation/test_abstention.py tests/unit/retrieval/test_hybrid.py tests/unit/providers/test_jina.py tests/unit/prompts/test_prompt.py tests/unit/retrieval/test_qdrant_store.py tests/unit/retrieval/test_retrieval.py
+rtk git add src/domain/schemas.py src/ingestion/structure.py src/ingestion/chunker.py tests/support/builders.py tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_enrichment.py tests/unit/generation/test_citation_gate.py tests/unit/generation/test_tracing.py tests/component/rag/test_retrieve_and_answer.py tests/unit/retrieval/test_hybrid.py tests/unit/providers/test_jina.py tests/unit/prompts/test_prompt.py tests/unit/retrieval/test_qdrant_store.py tests/unit/retrieval/test_retrieval.py
 rtk git commit -m "feat: extract legal chunk coordinates"
 ```
 
@@ -768,7 +935,10 @@ document = service.ingest_bytes(
 )
 chunks = store.list_document_chunks(document.id, document.version)
 assert chunks
-assert {chunk.coordinates.doc_id for chunk in chunks} == {"01_2021_ND-CP_283247.md"}
+    assert {chunk.coordinates.doc_id for chunk in chunks} == {"01_2021_ND-CP_283247.md"}
+    article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
+    assert article_chunks
+    assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)
 ```
 
 Update `_chunk_trace_payload` to include `doc_id`, `chapter`, and `article`; keep text subject to the existing trace privacy rules.
@@ -858,11 +1028,8 @@ def test_finalized_dataset_is_exactly_grounded() -> None:
     )
 
     assert report.errors == []
-    assert {warning.code for warning in report.warnings} == {
-        "missing_id_migration_map",
-        "missing_grounding_review",
-    }
-    assert report.full_conformance is False
+    assert report.warnings == []
+    assert report.full_conformance is True
 
 
 def test_context_in_wrong_article_is_rejected(tmp_path: Path) -> None:
@@ -911,7 +1078,8 @@ class GoldenValidationReport(BaseModel):
 
 
 def _normalized(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip()
+    without_markers = re.sub(r"(?m)^#{1,6}[ \t]+", "", text)
+    return re.sub(r"\s+", " ", without_markers).strip()
 
 
 def validate_golden_dataset(
@@ -952,22 +1120,24 @@ def validate_golden_dataset(
                 key = (metadata.doc_id, metadata.chapter, metadata.article)
                 if _normalized(context.golden_truth_context) not in _normalized(chunk_text.get(key, "")):
                     errors.append(ValidationIssue(code="context_not_recoverable_from_chunks", message="context is not recoverable from ordered article chunks", case_id=case.id))
-    for filename, code in (
-        ("id_migration_map.json", "missing_id_migration_map"),
-        ("golden_set_grounding_review.json", "missing_grounding_review"),
-    ):
-        if not (audit_root / filename).exists():
-            warnings.append(ValidationIssue(code=code, message=f"missing audit artifact: {filename}"))
-        else:
-            warnings.append(
-                ValidationIssue(
-                    code=f"unvalidated_{filename.removesuffix('.json')}",
-                    message=(
-                        f"{filename} exists, but GOLDEN_SET_SPEC.md does not define a "
-                        "machine-validatable artifact schema"
-                    ),
-                )
-            )
+    migration_path = audit_root / "id_migration_map.json"
+    review_path = audit_root / "golden_set_grounding_review.json"
+    if not migration_path.exists():
+        warnings.append(ValidationIssue(code="missing_id_migration_map", message=f"missing audit artifact: {migration_path.name}"))
+    else:
+        migration = json.loads(migration_path.read_text(encoding="utf-8"))
+        targets = {value for value in migration.get("old_to_new", {}).values() if value is not None}
+        retired = {item.get("old_id") for item in migration.get("retired", [])}
+        if migration.get("schema_version") != 1 or targets != {f"DL-{index:03d}" for index in range(1, 21)} or migration.get("old_to_new", {}).get("65", "missing") is not None or "65" not in retired:
+            warnings.append(ValidationIssue(code="invalid_id_migration_map", message="ID migration evidence does not match the issued direct-lookup namespace"))
+    if not review_path.exists():
+        warnings.append(ValidationIssue(code="missing_grounding_review", message=f"missing audit artifact: {review_path.name}"))
+    else:
+        review = json.loads(review_path.read_text(encoding="utf-8"))
+        passed_contexts = [item for case in review.get("cases", []) for item in case.get("contexts", []) if item.get("exact_source") and item.get("coordinate_match")]
+        dataset_bytes = json.dumps([case.model_dump(mode="json") for case in dataset.cases], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        if review.get("schema_version") != 1 or review.get("canonical_doc_id") != canonical_path.name or review.get("canonical_sha256") != sha256(canonical.encode("utf-8")).hexdigest() or review.get("dataset_sha256") != sha256(dataset_bytes).hexdigest() or review.get("validated_cases") != 100 or review.get("validated_contexts") != 130 or len(review.get("cases", [])) != 100 or len(passed_contexts) != 130:
+            warnings.append(ValidationIssue(code="invalid_grounding_review", message="grounding review evidence does not match the current canonical source and dataset"))
     return GoldenValidationReport(
         errors=errors,
         warnings=warnings,
@@ -976,20 +1146,17 @@ def validate_golden_dataset(
     )
 ```
 
-Do not treat mere file presence as conformance. Until `GOLDEN_SET_SPEC.md` defines the two audit-artifact schemas, either missing or opaque audit files keep `full_conformance=false`; development runs continue, but baseline eligibility remains blocked.
+Add `import json` and `from hashlib import sha256`. Do not treat mere file presence as conformance: Task 0 defines and creates both artifact schemas, and missing or content/hash-incompatible evidence keeps `full_conformance=false`.
 
 - [ ] **Step 4: Add raw-DOCX parser/chunker recoverability coverage**
 
 ```python
 # append to tests/unit/evaluation/test_validation.py
-import pytest
-
 from domain.schemas import Document, DocumentStatus
 from ingestion.chunker import chunk_document
 from ingestion.parser import parse_document
 
 
-@pytest.mark.integration
 def test_real_docx_chunks_recover_all_answerable_golden_evidence() -> None:
     raw_path = Path("data/raw/01_2021_ND-CP_283247.docx")
     parsed_text, mime_type = parse_document(raw_path.name, raw_path.read_bytes())
@@ -1028,7 +1195,7 @@ rtk proxy uv run pytest -p no:cacheprovider tests/unit/evaluation/test_golden.py
 rtk ruff check src/evaluation/golden.py tests/unit/evaluation/test_validation.py
 ```
 
-Expected: tests PASS; the finalized dataset reports only the two known missing audit warnings.
+Expected: tests PASS; the finalized reissued dataset and both validated audit artifacts report full conformance with no warnings.
 
 Commit:
 
@@ -1385,7 +1552,7 @@ rtk git commit -m "refactor: expose internal rag execution evidence"
 # tests/unit/evaluation/test_artifacts.py
 from evaluation.artifacts import EvaluationMode, EvaluationRequest, artifact_fingerprint, fingerprint
 from evaluation.repository import InMemoryRunRepository, LocalRunRepository
-from tests.evaluation_fakes import make_retrieval_run
+from tests.support.evaluation_fakes import make_retrieval_run
 
 
 def test_fingerprint_is_stable_across_dictionary_order() -> None:
@@ -1410,6 +1577,19 @@ def test_artifact_fingerprint_excludes_run_identity_and_timestamp() -> None:
     first = make_retrieval_run(run_id="run-a")
     second = make_retrieval_run(run_id="run-b")
 
+    assert artifact_fingerprint(first) == artifact_fingerprint(second)
+
+
+def test_artifact_fingerprint_excludes_nested_execution_volatiles() -> None:
+    first = make_retrieval_run()
+    source_case = first.cases[0]
+    assert source_case.retrieval is not None
+    changed = source_case.retrieval.model_copy(
+        update={"request_id": "different-request", "latency_ms": 999.0}
+    )
+    second = first.model_copy(
+        update={"cases": [source_case.model_copy(update={"retrieval": changed})]}
+    )
     assert artifact_fingerprint(first) == artifact_fingerprint(second)
 
 
@@ -1453,11 +1633,17 @@ def fingerprint(value: BaseModel | dict[str, Any] | list[Any]) -> str:
     return sha256(encoded).hexdigest()
 
 
-VOLATILE_ARTIFACT_FIELDS = {
-    "run_id",
-    "created_at",
-    "snapshot_fingerprint",
-    "run_fingerprint",
+VOLATILE_ARTIFACT_FIELDS: dict[str, object] = {
+    "run_id": True,
+    "created_at": True,
+    "snapshot_fingerprint": True,
+    "run_fingerprint": True,
+    "cases": {
+        "__all__": {
+            "retrieval": {"latency_ms", "request_id"},
+            "generation": {"latency_ms", "usage"},
+        }
+    },
 }
 
 
@@ -1742,6 +1928,7 @@ class InMemoryRunRepository:
         self.retrieval_runs: dict[str, RetrievalRun] = {}
         self.generation_runs: dict[str, GenerationRun] = {}
         self.reports: dict[str, EvaluationReport] = {}
+        self.report_save_calls = 0
 
     def save_manifest(self, manifest: RunManifest) -> Path:
         self.manifests[manifest.run_id] = manifest
@@ -1772,6 +1959,7 @@ class InMemoryRunRepository:
         return Path(run.run_id) / "generation.jsonl"
 
     def save_report(self, report: EvaluationReport) -> Path:
+        self.report_save_calls += 1
         self.reports[report.run_id] = report
         return Path(report.run_id) / "report.json"
 ```
@@ -1886,7 +2074,7 @@ Run:
 
 ```powershell
 rtk proxy uv run pytest -p no:cacheprovider tests/unit/evaluation/test_artifacts.py -q
-rtk ruff check src/evaluation/artifacts.py src/evaluation/repository.py tests/unit/evaluation/test_artifacts.py
+rtk ruff check src/evaluation/artifacts.py src/evaluation/repository.py tests/support/evaluation_fakes.py tests/unit/evaluation/test_artifacts.py
 ```
 
 Expected: all tests PASS.
@@ -2245,7 +2433,7 @@ from evaluation.artifacts import EvaluationMode, EvaluationReport, EvaluationReq
 from evaluation.repository import InMemoryRunRepository
 from evaluation.runner import EvaluationRunner
 from generation.execution import GenerationExecution, RankedHit, RetrievalExecution
-from tests.evaluation_fakes import make_chunk, make_retrieval_run
+from tests.support.evaluation_fakes import make_chunk, make_retrieval_run
 
 
 class ExplodingDependency:
@@ -2386,7 +2574,7 @@ def test_retrieval_mode_continues_after_case_error(tmp_path) -> None:
     assert report.evaluated_cases == 2
     assert report.status == "incomplete"
     assert len(report.errors) == 1
-    assert runner.repository.saved_retrieval is not None
+    assert runner.repository.retrieval_runs
 
 
 def test_generation_mode_reuses_saved_hits_without_search(tmp_path) -> None:
@@ -2407,6 +2595,7 @@ def test_e2e_reuses_existing_index_unless_ingest_is_explicit(tmp_path) -> None:
 
     assert report.status == "complete"
     assert ingestion.calls == 0
+    assert runner.repository.report_save_calls == 1
 
 
 def test_missing_audit_artifacts_keep_even_full_e2e_ineligible(tmp_path) -> None:
@@ -2523,9 +2712,13 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
             if request.mode is EvaluationMode.INGEST:
                 return self._run_ingest(request, dataset, validation, run_id)
             if request.mode is EvaluationMode.RETRIEVAL:
-                return self._run_retrieval(request, dataset, selected, validation, run_id)
+                return self._finish_report(
+                    self._retrieval_report(request, dataset, selected, validation, run_id)
+                )
             if request.mode is EvaluationMode.GENERATION:
-                return self._run_generation(request, dataset, validation, run_id)
+                return self._finish_report(
+                    self._generation_report(request, dataset, validation, run_id)
+                )
             return self._run_e2e(request, dataset, selected, validation, run_id)
         except Exception as exc:
             return self._finish_report(
@@ -2775,7 +2968,7 @@ Add one shared ingestion helper and the two mode methods:
                 )
             )
 
-    def _run_retrieval(
+    def _retrieval_report(
         self,
         request: EvaluationRequest,
         dataset: GoldenDataset,
@@ -2875,8 +3068,7 @@ Add one shared ingestion helper and the two mode methods:
             item.case_id: item.deterministic_scores | semantic_scores.get(item.case_id, {})
             for item in retrieval.cases
         }
-        return self._finish_report(
-            EvaluationReport(
+        return EvaluationReport(
                 run_id=run_id,
                 mode=request.mode,
                 status=status,
@@ -2892,7 +3084,6 @@ Add one shared ingestion helper and the two mode methods:
                     "retrieval_run": retrieval.run_fingerprint,
                 },
                 baseline_eligible=False,
-            )
         )
 ```
 
@@ -2901,7 +3092,7 @@ Add one shared ingestion helper and the two mode methods:
 Add generation replay exactly against saved ranked hits, followed by the composing e2e method:
 
 ```python
-    def _run_generation(
+    def _generation_report(
         self,
         request: EvaluationRequest,
         dataset: GoldenDataset,
@@ -3016,8 +3207,7 @@ Add generation replay exactly against saved ranked hits, followed by the composi
             for item in generation.cases
         }
         status = "complete" if not errors else "incomplete"
-        return self._finish_report(
-            EvaluationReport(
+        return EvaluationReport(
                 run_id=run_id,
                 mode=request.mode,
                 status=status,
@@ -3033,7 +3223,6 @@ Add generation replay exactly against saved ranked hits, followed by the composi
                     "generation_run": generation.run_fingerprint,
                 },
                 baseline_eligible=False,
-            )
         )
 
     def _run_e2e(
@@ -3057,7 +3246,7 @@ Add generation replay exactly against saved ranked hits, followed by the composi
             self.repository.save_snapshot(
                 self._build_snapshot(run_id, request, document, chunks, validation)
             )
-        retrieval_report = self._run_retrieval(
+        retrieval_report = self._retrieval_report(
             request,
             dataset,
             selected,
@@ -3067,7 +3256,7 @@ Add generation replay exactly against saved ranked hits, followed by the composi
         generation_request = request.model_copy(
             update={"mode": EvaluationMode.GENERATION, "from_run": run_id}
         )
-        generation_report = self._run_generation(
+        generation_report = self._generation_report(
             generation_request,
             dataset,
             validation,
@@ -3158,7 +3347,7 @@ rtk git commit -m "feat: orchestrate staged offline evaluation"
 from types import SimpleNamespace
 
 from evaluation.ragas_adapter import RagasJudge
-from tests.evaluation_fakes import make_generation_run, make_retrieval_run
+from tests.support.evaluation_fakes import make_generation_run, make_retrieval_run
 
 
 class FakeMetric:
@@ -3206,10 +3395,10 @@ def test_generation_uses_saved_contexts_answer_and_reference() -> None:
 
 - [ ] **Step 2: Pin Ragas and refresh the lock file**
 
-Change the eval dependency group to:
+Keep the Ragas minor-series constraint and add `<0.4` only as a resolver probe:
 
 ```toml
-eval = ["ragas>=0.4,<0.5"]
+eval = ["ragas>=0.4,<0.5", "langchain-community<0.4"]
 ```
 
 Run:
@@ -3217,9 +3406,16 @@ Run:
 ```powershell
 rtk proxy uv lock
 rtk proxy uv sync --group dev --group eval
+rtk proxy uv run --group eval python -c "import ragas.metrics.collections"
+$resolvedLangchainCommunity = rtk proxy uv run --group eval python -c "from importlib.metadata import version; print(version('langchain-community'))"
+if (-not $resolvedLangchainCommunity) { throw "langchain-community did not resolve" }
+rtk proxy uv add --group eval "langchain-community==$resolvedLangchainCommunity"
+rtk proxy uv lock
+rtk proxy uv sync --group dev --group eval
+rtk proxy uv run --group eval python -c "from importlib.metadata import version; import ragas.metrics.collections; print(version('ragas'), version('langchain-community'))"
 ```
 
-Expected: `uv.lock` resolves one Ragas v0.4 release and sync completes.
+Expected: the probe import must pass before its installed 0.3.x version is captured. The committed `pyproject.toml` and `uv.lock` contain `ragas>=0.4,<0.5` plus the exact equality constraint emitted from `$resolvedLangchainCommunity`; the final import/version command passes. Do not commit the unproven `<0.4` probe constraint and do not hard-code `<0.4` as if the review proved compatibility.
 
 - [ ] **Step 3: Add explicit OpenAI-compatible judge settings**
 
@@ -3874,7 +4070,7 @@ Run:
 rtk proxy uv run --group eval pytest -p no:cacheprovider tests -q
 ```
 
-Expected: all non-integration tests PASS; no paid or network model call occurs.
+Expected: all tests PASS, including the local raw-DOCX recoverability guard; no paid or network model call occurs.
 
 - [ ] **Step 3: Run static checks**
 
@@ -3896,7 +4092,7 @@ Run:
 rtk proxy uv run rag-eval validate
 ```
 
-Expected: the 100-case schema and grounding checks pass; the report explicitly lists the two missing audit artifacts as warnings and sets full conformance/baseline eligibility false without pretending the files exist.
+Expected: the reissued 100-case/130-context schema and grounding checks pass; both audit artifacts are content/hash validated, full conformance is true, and validate mode remains baseline-ineligible because only a complete full e2e run can establish a baseline.
 
 - [ ] **Step 5: Run the external smoke only when credentials and Qdrant are available**
 
@@ -3940,6 +4136,6 @@ rtk git commit -m "docs: document staged rag evaluation lifecycle"
 - [ ] E2e ingestion is opt-in; unchanged documents are hash-skipped; force requires an explicit source.
 - [ ] Ragas v0.4 scores only captured evidence and never reruns the application pipeline.
 - [ ] Scores below `0.85` are report-only; requested execution failures make the run incomplete.
-- [ ] Only complete, full 100-case e2e runs can become baseline eligible, and missing audit artifacts prevent that eligibility.
+- [ ] Only complete, full 100-case e2e runs with content/hash-valid audit artifacts can become baseline eligible.
 - [ ] Default tests require no network or paid judge calls.
 - [ ] Reports are ignored by Git and preserve provenance without exposing secrets.
