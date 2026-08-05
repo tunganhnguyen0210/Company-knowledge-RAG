@@ -1,85 +1,104 @@
 # Quy Chuẩn Đặc Tả Golden Set (Golden Set Specification)
 
-Tài liệu này định nghĩa chuẩn hóa cấu trúc dữ liệu, tiêu chuẩn phân loại, quy trình đánh giá chất lượng đối với tập dữ liệu vàng (**Golden Dataset**) dùng trong việc kiểm thử và đo lường chất lượng hệ thống RAG (Retrieval-Augmented Generation). 
+Tài liệu này định nghĩa cấu trúc, quy mô, quy tắc định danh và quy trình kiểm chứng nguồn cho Golden Dataset dùng để đánh giá hệ thống RAG trên Nghị định 01/2021/NĐ-CP.
 
-Tất cả các quy trình tạo Golden Set (thủ công hoặc tự động bằng LLM/Agent) **bắt buộc phải tuân thủ nghiêm ngặt đặc tả này**.
-
----
-
-## 1. Cấu trúc JSON Schema (Định dạng chung)
-
-Mỗi test case trong Golden Set được đại diện bởi một JSON Object có cấu trúc định dạng chung chuẩn như sau:
+## 1. JSON Schema chuẩn
 
 ```json
 {
-  "id": "<integer>",
-  "type": "<string>",
+  "id": "<TYPE_PREFIX>-<3-digit sequence>",
+  "type": "<direct_lookup|multi_hop|unanswerable|ambiguous|adversarial>",
   "question": "<string>",
   "expected_answer": "<string>",
   "golden_truth_contexts": [
     {
-      "golden_truth_context": "<string>",
+      "golden_truth_context": "<exact source excerpt>",
       "golden_metadata": {
-        "doc_id": "<string>",
-        "chapter": "<string>",
-        "article": "<string>"
-      }
-    },
-    {
-      "golden_truth_context": "<string>",
-      "golden_metadata": {
-        "doc_id": "<string>",
-        "chapter": "<string>",
-        "article": "<string>"
+        "doc_id": "01_2021_ND-CP_283247.md",
+        "chapter": "<Chương I..IX>",
+        "article": "<Điều 1..101>"
       }
     }
   ],
-  "difficulty": "<string>"
+  "difficulty": "<easy|medium|hard>"
 }
 ```
 
----
+## 2. Quy tắc trường dữ liệu
 
-## 2. Chi Tiết Các Trường Dữ Liệu (Field Specifications)
+| Trường | Kiểu | Ràng buộc |
+|---|---|---|
+| `id` | string | Khớp regex `^(DL|MH|UA|AMB|ADV)-\d{3}$`; duy nhất toàn bộ tập |
+| `type` | string | Một trong 5 loại đã định nghĩa |
+| `question` | string | Câu hỏi tiếng Việt tự nhiên, có mục tiêu đánh giá rõ |
+| `expected_answer` | string | Câu trả lời chuẩn, không vượt quá bằng chứng của nguồn |
+| `golden_truth_contexts` | array | Tối thiểu 1 phần tử với câu trả lời được; bắt buộc `[]` với `unanswerable` |
+| `golden_truth_context` | string | Đoạn trích nguyên văn, liên tục, truy vết được trong nguồn |
+| `golden_metadata` | object | Chỉ gồm `doc_id`, `chapter`, `article` và phải khớp vị trí thật |
+| `difficulty` | string | `easy`, `medium`, hoặc `hard` |
 
-| Trường (Field) | Kiểu dữ liệu | Ràng buộc / Giá trị cho phép | Mô tả chi tiết |
-| :--- | :--- | :--- | :--- |
-| `id` | `integer` | Số nguyên tăng dần (`1, 2, 3...`) | Định danh duy nhất cho từng test case trong tập Golden Set. |
-| `type` | `string` | Enum: `direct_lookup`, `multi_hop`, `unanswerable`, `ambiguous`, `adversarial` | Phân loại loại hình câu hỏi để phục vụ đánh giá phân đoạn (segmented evaluation). |
-| `question` | `string` | Văn bản tiếng Việt tự nhiên | Câu hỏi đóng vai người dùng cuối có ý định nghiệp vụ rõ ràng, sắc bén. |
-| `expected_answer` | `string` | Văn bản tiếng Việt tự nhiên | Câu trả lời chuẩn (Ground Truth Answer), diễn giải tự nhiên, đi thẳng vào trọng tâm. |
-| `golden_truth_contexts` | `array of dict` | Danh sách các đối tượng bối cảnh (`array`) | Danh sách các đối tượng bối cảnh bằng chứng. Mỗi phần tử là một `dict` chứa `golden_truth_context` và `golden_metadata` tương ứng. |
-| `golden_truth_contexts[].golden_truth_context` | `string` | Chuỗi văn bản gốc trích xuất | Đoạn văn bản trích trực tiếp từ tài liệu nguồn dùng làm bằng chứng đối soát. Rỗng đối với câu `unanswerable`. |
-| `golden_truth_contexts[].golden_metadata` | `object` | Tọa độ pháp lý & Định danh tài liệu | Đối tượng định vị vị trí của đoạn `golden_truth_context` tương ứng chỉ gồm 3 trường: `doc_id`, `chapter`, `article`. |
-| `difficulty` | `string` | Enum: `easy`, `medium`, `hard` | Tiêu chí đánh giá độ khó của câu hỏi đối với hệ thống RAG. |
+## 3. Năm loại câu hỏi
 
----
+1. `direct_lookup`: tra cứu trực tiếp một quy định hoặc tình huống đơn điểm.
+2. `multi_hop`: phải kết hợp tối thiểu hai quy định/đoạn bằng chứng có vai trò độc lập trong lập luận.
+3. `unanswerable`: thông tin không tồn tại trong toàn bộ nguồn; `golden_truth_contexts` bắt buộc rỗng.
+4. `ambiguous`: câu hỏi thiếu chủ thể, loại thủ tục hoặc điều kiện cần thiết; đáp án phải nêu điểm cần làm rõ và các nhánh được nguồn hỗ trợ.
+5. `adversarial`: chứa giả định sai hoặc gài bẫy; đáp án phải bác bỏ giả định và đưa quy định đúng.
 
-## 3. Quy Định Phân Loại 5 Dạng Câu Hỏi (`type`)
+## 4. Quy mô bắt buộc
 
-1. **`direct_lookup`**: Tra cứu trực tiếp thông tin đơn điểm nhắm vào tình huống nghiệp vụ cụ thể.
-2. **`multi_hop`**: Tổng hợp suy luận thông tin từ nhiều điều khoản/đoạn văn bản khác nhau (mảng `golden_truth_contexts` chứa nhiều phần tử dict).
-3. **`unanswerable`**: Câu hỏi ngoài phạm vi/không có dữ liệu nhằm kiểm thử khả năng từ chối trả lời (chống ảo giác), `golden_truth_contexts: []`.
-4. **`ambiguous`**: Câu hỏi mơ hồ/thiếu bối cảnh nhằm kiểm thử khả năng xử lý kịch bản tổng quan.
-5. **`adversarial`**: Câu hỏi gài bẫy/chứa giả định sai sự thật nhằm kiểm thử khả năng đính chính và chống tiêm nhiễm (Prompt Injection).
+Mỗi file phải có đúng 20 samples; tổng cộng 100 samples.
 
----
+| File | Type | Số lượng | Dải ID |
+|---|---|---:|---|
+| `golden_set_direct_lookup.json` | `direct_lookup` | 20 | `DL-001..DL-020` |
+| `golden_set_multi_hop.json` | `multi_hop` | 20 | `MH-001..MH-020` |
+| `golden_set_unanswerable.json` | `unanswerable` | 20 | `UA-001..UA-020` |
+| `golden_set_ambiguous.json` | `ambiguous` | 20 | `AMB-001..AMB-020` |
+| `golden_set_adversarial.json` | `adversarial` | 20 | `ADV-001..ADV-020` |
 
-## 4. Quy Trình Đánh Giá & Kiểm Soát Chất Lượng (Evaluation Workflow)
+## 5. Quy ước ID độc lập theo loại
 
-### 4.1. Quy Trình Review Chất Lượng Bằng LLM Reviewer Agent
-Để đảm bảo tính đúng đắn của dữ liệu trước khi đưa vào kiểm thử hệ thống, tập dữ liệu vàng được phân chia thành các phần để thẩm định song song với tài liệu nguồn.
+- Mỗi loại có namespace riêng và bắt đầu từ `001`.
+- Prefix: `DL` = direct lookup, `MH` = multi-hop, `UA` = unanswerable, `AMB` = ambiguous, `ADV` = adversarial.
+- ID đã phát hành không được tái sử dụng cho nội dung khác. Khi loại một sample, ID đó được ghi nhận là retired trong lịch sử/migration report.
+- Không dùng lại hệ thống số nguyên xen kẽ giữa các file.
+- `id_migration_map.json` lưu ánh xạ ID cũ sang ID mới cho lần chuyển đổi này.
 
-* **Kiểm tra 5 Checkpoints**: Schema Integrity, Question Realism, Answer Faithfulness, Type Compliance, Context Accuracy.
+## 6. Quy tắc grounding bắt buộc
 
-### 4.2. Đo Lường Chỉ Số Đánh Giá Tự Động (Automatic Metrics Evaluation)
-Công cụ đánh giá tự động thực hiện đo lường chất lượng tập Golden Set dựa trên 3 nhóm chỉ số đa kịch bản (Type-Aware Metrics):
+Nguồn chuẩn duy nhất cho bộ dữ liệu này là `01_2021_ND-CP_283247.md`.
 
-1. **`Faithfulness`**: Độ trung thực của `expected_answer` dựa trên danh sách `golden_truth_contexts`.
-2. **`Answer Relevancy`**: Mức độ trả lời đúng trọng tâm của câu hỏi `question`.
-3. **`Question Quality`**: Độ sắc bén, rõ ràng và tự nhiên của `question`.
+1. `golden_truth_context` phải là đoạn trích nguyên văn có thể tìm thấy trong đúng Điều đã khai báo.
+2. Không được diễn giải, viết lại, ghép các đoạn không liên tục như thể chúng liền nhau, hoặc dùng dấu `...`/`…` để che phần bị lược bỏ. Nếu cần nhiều đoạn không liên tục, tạo nhiều phần tử context riêng.
+3. `chapter` và `article` phải được kiểm tra từ cấu trúc thật của nguồn, không suy đoán.
+4. `doc_id` phải dùng tên canonical `01_2021_ND-CP_283247.md`.
+5. `unanswerable` chỉ được gán khi đã kiểm tra toàn bộ tài liệu và không tìm thấy thông tin trả lời; context phải là `[]`.
+6. `expected_answer` không được bổ sung chi tiết chỉ có ở luật/văn bản được dẫn chiếu nhưng không xuất hiện trong nguồn, trừ khi sample chủ đích đánh giá khả năng nhận biết giới hạn nguồn và diễn đạt rõ việc dẫn chiếu.
 
-### Nguyên Tắc Kiểm Xử Lý Mẫu Dưới Ngưỡng (Threshold Control):
-* **Ngưỡng chất lượng tối thiểu**: `Threshold = 0.85 / 1.0`.
-* **KHÔNG tự động loại bỏ / xóa bớt mẫu**: Công cụ đánh giá **bảo toàn 100% các sample**, tuyệt đối không tự động xóa mẫu dữ liệu trong Golden Set.
-* **Xuất danh sách ID cần cải thiện**: Công cụ tự động liệt kê cụ thể **danh sách các `id` sample bị dưới ngưỡng** trong báo cáo đánh giá để người phát triển review và chỉnh sửa thủ công.
+## 7. Reviewer workflow
+
+Reviewer thực hiện hai lớp kiểm tra:
+
+### 7.1. Schema và phân loại
+- Đúng schema, type, difficulty, ID pattern.
+- Đúng 20 samples mỗi file và không trùng ID.
+- `multi_hop` thực sự cần nhiều bằng chứng; `ambiguous` có nhánh làm rõ; `adversarial` bác bỏ giả định sai.
+
+### 7.2. Grounding và metadata
+- Mỗi context là exact substring của nguồn canonical.
+- Context nằm trong đúng Điều khai báo.
+- Chương được suy ra đúng từ vị trí Điều.
+- Không có dấu lược bỏ hoặc văn bản do LLM tự tạo trong context.
+- Kết quả review được lưu tại `golden_set_grounding_review.json`.
+
+## 8. Ngưỡng chất lượng
+
+Các chỉ số đánh giá tự động gồm Faithfulness, Answer Relevancy và Question Quality. Ngưỡng tối thiểu là `0.85`. Công cụ không tự động xóa sample dưới ngưỡng; sample phải được sửa và review lại. Việc thay đổi quy mô hoặc loại sample cần có migration record và lý do rõ ràng.
+
+## 9. Trạng thái sau cập nhật ngày 2026-08-05
+
+- 5 file × 20 samples = 100 samples.
+- ID đã chuyển sang namespace độc lập theo type.
+- 100/100 samples đã vượt qua kiểm tra grounding context và metadata bằng exact-source validation.
+- Legacy direct sample ID `65` đã được retire vì không khớp tốt với dạng `direct_lookup`: câu hỏi yêu cầu số ngày trong khi Điều 35 quy định sự kiện tại thời điểm nộp hồ sơ.

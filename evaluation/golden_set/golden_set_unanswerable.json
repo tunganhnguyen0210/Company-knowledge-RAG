@@ -1,236 +1,162 @@
 [
   {
-    "id": 2,
+    "id": "UA-001",
     "type": "unanswerable",
     "question": "Mức thuế suất thuế giá trị gia tăng (GTGT) áp dụng cho doanh nghiệp mới thành lập là bao nhiêu %?",
     "expected_answer": "Thông tin về mức thuế suất thuế giá trị gia tăng (GTGT) không thuộc phạm vi quy định của tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương I",
-      "article": "Điều 3"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 6,
+    "id": "UA-002",
     "type": "unanswerable",
     "question": "Doanh nghiệp có bị thu hồi mã số thuế nếu chậm nộp tờ khai thuế GTGT 3 tháng không?",
     "expected_answer": "Tài liệu đăng ký doanh nghiệp không quy định về các chế tài xử phạt hoặc điều kiện thu hồi mã số thuế do chậm nộp tờ khai thuế. Thông tin này không được quy định trong tài liệu và không thuộc phạm vi điều chỉnh.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương I",
-      "article": "Điều 8"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 10,
+    "id": "UA-003",
     "type": "unanswerable",
     "question": "Nếu hệ thống đăng ký bị sự cố thì doanh nghiệp có được miễn tiền chậm nộp thuế không?",
     "expected_answer": "Chính sách miễn tiền chậm nộp thuế khi gặp sự cố kỹ thuật không nằm trong phạm vi nội dung của tài liệu này và không được quy định trong Nghị định về đăng ký doanh nghiệp.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương II",
-      "article": "Điều 13"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 14,
+    "id": "UA-004",
     "type": "unanswerable",
     "question": "Công ty không nộp phí lệ phí đăng ký doanh nghiệp thì bị phạt tiền từ bao nhiêu đến bao nhiêu?",
     "expected_answer": "Quy định chi tiết về mức phạt tiền vi phạm hành chính do chậm nộp lệ phí không có trong tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương III",
-      "article": "Điều 18"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 22,
+    "id": "UA-005",
     "type": "unanswerable",
     "question": "Công ty sáp nhập có được miễn hoàn toàn thuế thu nhập doanh nghiệp trong 2 năm đầu không?",
     "expected_answer": "Thông tin về các chính sách ưu đãi miễn giảm thuế thu nhập doanh nghiệp không có trong tài liệu quy định về đăng ký doanh nghiệp.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương IV",
-      "article": "Điều 28"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 26,
+    "id": "UA-006",
     "type": "unanswerable",
     "question": "Doanh nghiệp có phải xin Giấy phép lao động cho người lao động nước ngoài tại Cơ quan đăng ký kinh doanh không?",
     "expected_answer": "Thủ tục cấp Giấy phép lao động cho người nước ngoài thuộc thẩm quyền của cơ quan quản lý lao động, không thuộc phạm vi của Cơ quan đăng ký kinh doanh được quy định trong tài liệu.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương IV",
-      "article": "Điều 33"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 34,
+    "id": "UA-007",
     "type": "unanswerable",
     "question": "Doanh nghiệp nộp hồ sơ qua mạng có được cơ quan đăng ký cấp tài khoản ngân hàng miễn phí không?",
     "expected_answer": "Thủ tục mở tài khoản ngân hàng không thuộc phạm vi cung cấp dịch vụ của Cơ quan đăng ký kinh doanh và không được quy định trong tài liệu này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương V",
-      "article": "Điều 43"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 38,
+    "id": "UA-008",
     "type": "unanswerable",
     "question": "Khi thay đổi vốn điều lệ thì công ty phải nộp thêm tiền thuế môn bài là bao nhiêu?",
     "expected_answer": "Biểu mức thuế môn bài phải nộp theo vốn điều lệ không thuộc phạm vi quy định của tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VI",
-      "article": "Điều 48"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 42,
+    "id": "UA-009",
     "type": "unanswerable",
     "question": "Thành viên công ty TNHH chuyển nhượng vốn có phải nộp thuế thu nhập cá nhân 20% không?",
     "expected_answer": "Nghĩa vụ và thuế suất thuế thu nhập cá nhân khi chuyển nhượng vốn góp không được quy định trong tài liệu này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VI",
-      "article": "Điều 52"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 46,
+    "id": "UA-010",
     "type": "unanswerable",
     "question": "Cổ đông sáng lập không góp đủ số cổ phần đã đăng ký thì bị phạt bao nhiêu tiền?",
     "expected_answer": "Mức tiền phạt vi phạm hành chính đối với hành vi không góp đủ vốn cổ phần không thuộc phạm vi quy định của tài liệu này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VI",
-      "article": "Điều 57"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 50,
+    "id": "UA-011",
     "type": "unanswerable",
     "question": "Chi nhánh công ty muốn đăng ký mở rộng diện tích kho bãi thì xin cấp phép đất đai ở đâu?",
     "expected_answer": "Thủ tục cấp phép sử dụng đất đai và quy hoạch kho bãi thuộc thẩm quyền của cơ quan tài nguyên môi trường, không thuộc phạm vi đăng ký doanh nghiệp.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VI",
-      "article": "Điều 63"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 54,
+    "id": "UA-012",
     "type": "unanswerable",
     "question": "Doanh nghiệp bị đình chỉ hoạt động do vi phạm môi trường thì phải đóng phạt bao nhiêu tiền để mở lại?",
     "expected_answer": "Thông tin về mức phạt vi phạm pháp luật về môi trường không được quy định trong tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VII",
-      "article": "Điều 68"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 58,
+    "id": "UA-013",
     "type": "unanswerable",
     "question": "Chấm dứt hoạt động văn phòng đại diện có phải kiểm toán lại toàn bộ sổ sách kế toán 3 năm không?",
     "expected_answer": "Tài liệu đăng ký doanh nghiệp không quy định yêu cầu bắt buộc kiểm toán sổ sách kế toán khi chấm dứt hoạt động văn phòng đại diện. Thông tin này không được quy định trong tài liệu và không thuộc phạm vi điều chỉnh.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VII",
-      "article": "Điều 73"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 62,
+    "id": "UA-014",
     "type": "unanswerable",
     "question": "Trưởng văn phòng đại diện bị thu hồi giấy phép có bị cấm xuất cảnh không?",
     "expected_answer": "Quy định về việc tạm hoãn xuất cảnh đối với cá nhân không thuộc phạm vi điều chỉnh của tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VIII",
-      "article": "Điều 78"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 66,
+    "id": "UA-015",
     "type": "unanswerable",
     "question": "Hộ kinh doanh có được phát hành hóa đơn giá trị gia tăng khấu trừ không?",
     "expected_answer": "Quy định về việc phát hành và áp dụng hóa đơn thuế GTGT khấu trừ của hộ kinh doanh không có trong tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VIII",
-      "article": "Điều 83"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 70,
+    "id": "UA-016",
     "type": "unanswerable",
     "question": "Đăng ký hộ kinh doanh nhà trọ cho thuê có phải nộp tiền cam kết an ninh trật tự không?",
     "expected_answer": "Thủ tục cấp giấy chứng nhận đủ điều kiện an ninh trật tự cho nhà trọ thuộc thẩm quyền của cơ quan công an, không quy định trong tài liệu này. Thông tin này không được quy định trong tài liệu và không thuộc phạm vi điều chỉnh.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VIII",
-      "article": "Điều 88"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 74,
+    "id": "UA-017",
     "type": "unanswerable",
     "question": "Chủ hộ kinh doanh sau khi giải thể có được hưởng trợ cấp thất nghiệp hàng tháng không?",
     "expected_answer": "Điều kiện và chế độ hưởng trợ cấp thất nghiệp thuộc lĩnh vực bảo hiểm xã hội, không được quy định trong tài liệu này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương VIII",
-      "article": "Điều 93"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
   },
   {
-    "id": 78,
+    "id": "UA-018",
     "type": "unanswerable",
     "question": "Doanh nghiệp hoạt động theo Giấy phép đầu tư cũ có được hưởng ưu đãi thuế suất 10% trong 15 năm không?",
     "expected_answer": "Các chính sách ưu đãi thuế thu nhập doanh nghiệp đối với dự án đầu tư không thuộc phạm vi quy định của tài liệu đăng ký doanh nghiệp này.",
-    "ground_truth_context": "",
-    "gold_metadata": {
-      "doc_id": "01_2021_ND-CP_283247.md",
-      "chapter": "Chương IX",
-      "article": "Điều 98"
-    },
+    "golden_truth_contexts": [],
     "difficulty": "easy"
+  },
+  {
+    "type": "unanswerable",
+    "question": "Mức lương tối thiểu vùng mà doanh nghiệp mới thành lập phải trả cho người lao động là bao nhiêu?",
+    "expected_answer": "Nghị định về đăng ký doanh nghiệp này không quy định mức lương tối thiểu vùng hoặc chính sách tiền lương đối với người lao động.",
+    "golden_truth_contexts": [],
+    "difficulty": "easy",
+    "id": "UA-019"
+  },
+  {
+    "type": "unanswerable",
+    "question": "Người lao động nữ của doanh nghiệp được nghỉ thai sản bao nhiêu tháng và hưởng mức trợ cấp nào?",
+    "expected_answer": "Thời gian nghỉ thai sản và mức trợ cấp thai sản thuộc pháp luật lao động, bảo hiểm xã hội; các nội dung này không được quy định trong Nghị định về đăng ký doanh nghiệp.",
+    "golden_truth_contexts": [],
+    "difficulty": "easy",
+    "id": "UA-020"
   }
 ]
