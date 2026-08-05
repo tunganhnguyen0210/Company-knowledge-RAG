@@ -16,7 +16,10 @@ Mỗi test case trong Golden Set được đại diện bởi một JSON Object 
   "type": "direct_lookup",
   "question": "Khi đăng ký thành lập doanh nghiệp thì có thể thực hiện liên thông những thủ tục hành chính nào cùng lúc?",
   "expected_answer": "Khi đăng ký thành lập doanh nghiệp, chi nhánh hoặc văn phòng đại diện, doanh nghiệp có thể thực hiện liên thông các thủ tục hành chính gồm: khai trình việc sử dụng lao động, cấp mã số đơn vị tham gia bảo hiểm xã hội và đăng ký sử dụng hóa đơn.",
-  "ground_truth_context": "Điều 1. Phạm vi điều chỉnh\n\n1. Nghị định này quy định chi tiết về hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp; đăng ký hộ kinh doanh...\n2. Việc liên thông thủ tục đăng ký thành lập doanh nghiệp, chi nhánh, văn phòng đại diện, khai trình việc sử dụng lao động, cấp mã số đơn vị tham gia bảo hiểm xã hội, đăng ký sử dụng hóa đơn của doanh nghiệp...",
+  "context": [
+    "Điều 1. Phạm vi điều chỉnh\n\n1. Nghị định này quy định chi tiết về hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp; đăng ký hộ kinh doanh",
+    "2. Việc liên thông thủ tục đăng ký thành lập doanh nghiệp, chi nhánh, văn phòng đại diện, khai trình việc sử dụng lao động, cấp mã số đơn vị tham gia bảo hiểm xã hội, đăng ký sử dụng hóa đơn của doanh nghiệp"
+  ],
   "gold_metadata": {
     "doc_id": "01_2021_ND-CP_283247.md",
     "chapter": "Chương I",
@@ -36,7 +39,7 @@ Mỗi test case trong Golden Set được đại diện bởi một JSON Object 
 | `type` | `string` | Enum: `direct_lookup`, `multi_hop`, `unanswerable`, `ambiguous`, `adversarial` | Phân loại loại hình câu hỏi để phục vụ đánh giá phân đoạn (segmented evaluation). |
 | `question` | `string` | Văn bản tiếng Việt tự nhiên | Câu hỏi đóng vai người dùng cuối có ý định nghiệp vụ rõ ràng, sắc bén, không hỏi chung chung, không nêu số Điều/Khoản. |
 | `expected_answer` | `string` | Khác rỗng (trừ trường hợp từ chối) | Câu trả lời chuẩn (Ground Truth Answer), diễn giải tự nhiên, đi thẳng vào trọng tâm, không ghi mã mục cứng. |
-| `ground_truth_context` | `string` | Chuỗi văn bản gốc trích xuất | Đoạn văn bản trích trực tiếp từ tài liệu nguồn dùng làm bằng chứng đối soát (Ground Truth Context). |
+| `context` | `array of string` | Danh sách các chuỗi văn bản (`array`) | Danh sách các đoạn văn bản trích trực tiếp từ tài liệu nguồn dùng làm bằng chứng đối soát (Ground Truth Contexts). Có thể chứa 1 hoặc nhiều đoạn (đặc biệt phù hợp cho `multi_hop`), hoặc rỗng (`[]`) đối với `unanswerable`. |
 | `gold_metadata` | `object` | Tọa độ pháp lý & Định danh tài liệu | Cấu trúc định vị vị trí câu hỏi trong tài liệu (`doc_id`, `chapter`, `article`). |
 | `difficulty` | `string` | Enum: `easy`, `medium`, `hard` | Tiêu chí đánh giá độ khó của câu hỏi đối với hệ thống RAG. |
 
@@ -63,7 +66,7 @@ Mỗi test case trong Golden Set được đại diện bởi một JSON Object 
 ### 4.2. Đo Lường Chỉ Số Đánh Giá Tự Động (Automatic Metrics Evaluation)
 Công cụ đánh giá tự động [scripts/evaluate_golden_set.py](file:///e:/VIN-INTERNSHIP/Cowork-RAG/scripts/evaluate_golden_set.py) thực hiện đo lường chất lượng tập Golden Set dựa trên 3 nhóm chỉ số đa kịch bản (Type-Aware Metrics):
 
-1. **`Faithfulness`**: Độ trung thực của `expected_answer` dựa trên `ground_truth_context` (đặc biệt xử lý riêng cho câu `unanswerable` và `adversarial`).
+1. **`Faithfulness`**: Độ trung thực của `expected_answer` dựa trên `context` (đặc biệt xử lý riêng cho câu `unanswerable` và `adversarial`).
 2. **`Answer Relevancy`**: Mức độ trả lời đúng trọng tâm của câu hỏi `question`.
 3. **`Question Quality`**: Độ sắc bén, rõ ràng và tự nhiên của `question`.
 
