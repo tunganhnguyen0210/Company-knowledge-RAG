@@ -91,12 +91,8 @@ def generate_golden_set(input_file, output_file):
         
         meta = {
             "doc_id": doc_id,
-            "part": art["part"],
             "chapter": art["chapter"],
-            "section": art["section"],
-            "article": f"Điều {num}",
-            "clause": None,
-            "point": None
+            "article": f"Điều {num}"
         }
         
         # 1. direct_lookup (easy)

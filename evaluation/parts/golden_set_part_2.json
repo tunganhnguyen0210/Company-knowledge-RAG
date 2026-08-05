@@ -1,0 +1,210 @@
+[
+  {
+    "id": 17,
+    "type": "direct_lookup",
+    "question": "Hồ sơ đăng ký thành lập doanh nghiệp tư nhân bắt buộc gồm những loại giấy tờ nào?",
+    "expected_answer": "Hồ sơ gồm Giấy đề nghị đăng ký doanh nghiệp và bản sao giấy tờ pháp lý của cá nhân đối với chủ doanh nghiệp tư nhân.",
+    "ground_truth_context": "Điều 21. Hồ sơ đăng ký doanh nghiệp đối với doanh nghiệp tư nhân\n\n1. Giấy đề nghị đăng ký doanh nghiệp.\n2. Bản sao giấy tờ pháp lý của cá nhân đối với chủ doanh nghiệp tư nhân.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 21"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 18,
+    "type": "unanswerable",
+    "question": "Hồ sơ đăng ký công ty cổ phần có yêu cầu phải nộp Giấy chứng nhận thẩm duyệt phòng cháy chữa cháy không?",
+    "expected_answer": "Thủ tục thẩm duyệt và Giấy chứng nhận phòng cháy chữa cháy không thuộc thành phần hồ sơ đăng ký doanh nghiệp được quy định trong tài liệu. Thông tin này không được quy định trong tài liệu và không thuộc phạm vi điều chỉnh.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 23"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 19,
+    "type": "ambiguous",
+    "question": "Mở công ty cần những gì?",
+    "expected_answer": "Dựa trên ngữ cảnh thành lập công ty TNHH 1 thành viên, bạn vui lòng cho biết chủ sở hữu là Cá nhân hay Tổ chức?\n- Nếu là Cá nhân: Hồ sơ gồm Giấy đề nghị đăng ký doanh nghiệp, Điều lệ công ty và bản sao CCCD/Hộ chiếu.\n- Nếu là Tổ chức: Cần nộp thêm Quyết định thành lập tổ chức, bản sao giấy tờ tùy thân của người đại diện ủy quyền và văn bản cử người đại diện.",
+    "ground_truth_context": "Điều 24. Hồ sơ đăng ký doanh nghiệp đối với công ty trách nhiệm hữu hạn một thành viên\n\n1. Giấy đề nghị đăng ký doanh nghiệp.\n2. Điều lệ công ty.\n3. Bản sao các giấy tờ sau đây:\na) Giấy tờ pháp lý của cá nhân đối với người đại diện theo pháp luật của doanh nghiệp;\nb) Giấy tờ pháp lý của cá nhân đối với chủ sở hữu công ty là cá nhân; Giấy tờ pháp lý của tổ chức đối với chủ sở hữu công ty là tổ chức (trừ trường hợp chủ sở hữu công ty là Nhà nước); Giấy tờ pháp lý của cá nhân đối với người đại diện theo ủy quyền và văn bản cử người đại diện theo ủy quyền.\nĐối với chủ sở hữu công ty là tổ chức nước ngoài thì bản sao giấy tờ pháp lý của tổ chức phải được hợp pháp hóa lãnh sự;\nc) Giấy chứng nhận đăng ký đầu tư đối với trường hợp doanh nghiệp được thành lập bởi nhà đầu tư nước ngoài hoặc tổ chức kinh tế có vốn đầu tư nước ngoài theo quy định tại Luật Đầu tư và các văn bản hướng dẫn thi hành.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 24"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 20,
+    "type": "adversarial",
+    "question": "Hồ sơ đăng ký thành lập công ty TNHH hai thành viên trở lên nghe nói không cần soạn thảo Điều lệ công ty có đúng không?",
+    "expected_answer": "Thông tin này không chính xác. Hồ sơ đăng ký thành lập công ty TNHH hai thành viên trở lên bắt buộc phải có Điều lệ công ty.",
+    "ground_truth_context": "Điều 23. Hồ sơ đăng ký doanh nghiệp đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty cổ phần\n\n1. Giấy đề nghị đăng ký doanh nghiệp.\n2. Điều lệ công ty.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 23"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 21,
+    "type": "direct_lookup",
+    "question": "Thành lập công ty hợp danh cần nộp kèm danh sách nào trong hồ sơ đăng ký doanh nghiệp?",
+    "expected_answer": "Hồ sơ đăng ký thành lập công ty hợp danh bắt buộc phải nộp kèm Danh sách thành viên công ty hợp danh.",
+    "ground_truth_context": "Điều 22. Hồ sơ đăng ký doanh nghiệp đối với công ty hợp danh\n\n1. Giấy đề nghị đăng ký doanh nghiệp.\n2. Điều lệ công ty.\n3. Danh sách thành viên.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 22"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 22,
+    "type": "unanswerable",
+    "question": "Công ty sáp nhập có được miễn hoàn toàn thuế thu nhập doanh nghiệp trong 2 năm đầu không?",
+    "expected_answer": "Thông tin về các chính sách ưu đãi miễn giảm thuế thu nhập doanh nghiệp không có trong tài liệu quy định về đăng ký doanh nghiệp.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 28"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 23,
+    "type": "ambiguous",
+    "question": "Mở ngân hàng nộp giấy gì?",
+    "expected_answer": "Dựa trên quy định đăng ký tổ chức tín dụng, ngoài hồ sơ đăng ký doanh nghiệp tương ứng với loại hình, bạn bắt buộc phải nộp kèm bản sao Giấy phép hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.",
+    "ground_truth_context": "Điều 29. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với tổ chức tín dụng, chi nhánh ngân hàng nước ngoài, văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng\n\n1. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với tổ chức tín dụng, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của tổ chức tín dụng thực hiện theo quy định tại Nghị định này tương ứng với từng loại hình doanh nghiệp, kèm theo hồ sơ phải có bản sao giấy phép hoặc văn bản chấp thuận do Ngân hàng Nhà nước Việt Nam cấp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 29"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 24,
+    "type": "adversarial",
+    "question": "Thành lập doanh nghiệp xã hội thì không cần nộp Cam kết thực hiện mục tiêu xã hội, môi trường đúng không?",
+    "expected_answer": "Thông tin này không chính xác. Khi đăng ký thành lập doanh nghiệp xã hội, kèm theo hồ sơ bắt buộc phải có Cam kết thực hiện mục tiêu xã hội, môi trường do những người theo quy định ký.",
+    "ground_truth_context": "Điều 28. Hồ sơ, trình tự, thủ tục đăng ký doanh nghiệp đối với doanh nghiệp xã hội\n\n1. Hồ sơ, trình tự, thủ tục đăng ký thành lập doanh nghiệp xã hội, chi nhánh, văn phòng đại diện, địa điểm kinh doanh của doanh nghiệp xã hội thực hiện theo quy định tại Nghị định này tương ứng với từng loại hình doanh nghiệp. Kèm theo hồ sơ phải có Cam kết thực hiện mục tiêu xã hội, môi trường do những người sau đây ký:",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 28"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 25,
+    "type": "direct_lookup",
+    "question": "Khi thay đổi cổ đông sáng lập của công ty cổ phần chưa niêm yết thì doanh nghiệp nộp hồ sơ gồm những giấy tờ gì?",
+    "expected_answer": "Việc thông báo thay đổi chỉ thực hiện trong trường hợp cổ đông sáng lập chưa thanh toán hoặc chỉ thanh toán một phần số cổ phần đã đăng ký mua. Hồ sơ bao gồm: 1. Thông báo thay đổi nội dung đăng ký doanh nghiệp do người đại diện theo pháp luật ký; 2. Danh sách cổ đông sáng lập công ty cổ phần (trong đó không bao gồm thông tin về cổ đông sáng lập chưa thanh toán số cổ phần đã đăng ký mua).",
+    "ground_truth_context": "Điều 57. Thông báo thay đổi thông tin của cổ đông sáng lập công ty cổ phần chưa niêm yết\n\n2. Việc thông báo thay đổi thông tin của cổ đông sáng lập với Phòng Đăng ký kinh doanh chỉ thực hiện trong trường hợp cổ đông sáng lập chưa thanh toán hoặc chỉ thanh toán một phần số cổ phần đã đăng ký mua theo quy định tại Điều 113 Luật Doanh nghiệp. Doanh nghiệp có trách nhiệm thực hiện thông báo thay đổi thông tin của cổ đông sáng lập trong thời hạn 30 ngày kể từ ngày kết thúc thời hạn phải thanh toán đủ số cổ phần đã đăng ký mua.\n3. Trường hợp thay đổi thông tin của cổ đông sáng lập quy định tại khoản 2 Điều này, công ty gửi hồ sơ thông báo thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi công ty đặt trụ sở chính. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thay đổi nội dung đăng ký doanh nghiệp do người đại diện theo pháp luật của doanh nghiệp ký;\nb) Danh sách cổ đông sáng lập công ty cổ phần, trong đó không bao gồm thông tin về cổ đông sáng lập chưa thanh toán số cổ phần đã đăng ký mua.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VI",
+      "article": "Điều 57"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 26,
+    "type": "unanswerable",
+    "question": "Doanh nghiệp có phải xin Giấy phép lao động cho người lao động nước ngoài tại Cơ quan đăng ký kinh doanh không?",
+    "expected_answer": "Thủ tục cấp Giấy phép lao động cho người nước ngoài thuộc thẩm quyền của cơ quan quản lý lao động, không thuộc phạm vi của Cơ quan đăng ký kinh doanh được quy định trong tài liệu.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 33"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 27,
+    "type": "ambiguous",
+    "question": "Điều kiện được cấp giấy đăng ký là gì?",
+    "expected_answer": "Dựa trên quy định đăng ký kinh doanh, bạn muốn hỏi về điều kiện cấp giấy đăng ký cho Doanh nghiệp hay Hộ kinh doanh?\n- Nếu là Doanh nghiệp: Doanh nghiệp được cấp Giấy chứng nhận đăng ký doanh nghiệp khi có đủ các điều kiện theo quy định tại khoản 1 Điều 27 Luật Doanh nghiệp.\n- Nếu là Hộ kinh doanh: Hộ kinh doanh được cấp Giấy chứng nhận khi đáp ứng đủ 4 điều kiện (Ngành nghề không bị cấm; Tên đặt đúng quy định; Hồ sơ hợp lệ; Nộp đủ lệ phí).",
+    "ground_truth_context": "Điều 34. Cấp Giấy chứng nhận đăng ký doanh nghiệp\n\n1. Doanh nghiệp được cấp Giấy chứng nhận đăng ký doanh nghiệp khi có đủ các điều kiện theo quy định tại khoản 1 Điều 27 Luật Doanh nghiệp.\n\nĐiều 82. Giấy chứng nhận đăng ký hộ kinh doanh\n\n1. Giấy chứng nhận đăng ký hộ kinh doanh được cấp cho hộ kinh doanh thành lập và hoạt động theo quy định tại Nghị định này. Hộ kinh doanh được cấp Giấy chứng nhận đăng ký hộ kinh doanh khi có đủ các điều kiện sau đây:\na) Ngành, nghề đăng ký kinh doanh không bị cấm đầu tư kinh doanh;\nb) Tên của hộ kinh doanh được đặt theo đúng quy định tại Điều 88 Nghị định này;\nc) Có hồ sơ đăng ký hộ kinh doanh hợp lệ;\nd) Nộp đủ lệ phí đăng ký hộ kinh doanh theo quy định.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 34"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 28,
+    "type": "adversarial",
+    "question": "Doanh nghiệp đăng ký các ngành nghề thuộc danh mục cấm đầu tư kinh doanh thì vẫn được cấp giấy chứng nhận đúng không?",
+    "expected_answer": "Thông tin này không chính xác. Cơ quan đăng ký kinh doanh chỉ xem xét ghi nhận ngành nghề đăng ký nếu không thuộc ngành, nghề cấm đầu tư kinh doanh.",
+    "ground_truth_context": "Điều 7. Ghi ngành, nghề kinh doanh\n\n5. Đối với những ngành, nghề kinh doanh không có trong Hệ thống ngành kinh tế Việt Nam và chưa được quy định tại các văn bản quy phạm pháp luật khác thì Cơ quan đăng ký kinh doanh xem xét ghi nhận ngành, nghề kinh doanh này vào Cơ sở dữ liệu quốc gia về đăng ký doanh nghiệp nếu không thuộc ngành, nghề cấm đầu tư kinh doanh, đồng thời thông báo cho Bộ Kế hoạch và Đầu tư (Tổng cục Thống kê) để bổ sung ngành, nghề kinh doanh mới.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương I",
+      "article": "Điều 7"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 29,
+    "type": "direct_lookup",
+    "question": "Doanh nghiệp tạm ngừng kinh doanh phải gửi thông báo bằng văn bản đến cơ quan đăng ký trước bao nhiêu ngày làm việc?",
+    "expected_answer": "Trường hợp tạm ngừng kinh doanh, doanh nghiệp phải gửi thông báo bằng văn bản đến Phòng Đăng ký kinh doanh nơi doanh nghiệp đặt trụ sở chậm nhất 03 ngày làm việc trước ngày tạm ngừng kinh doanh.",
+    "ground_truth_context": "Điều 66. Đăng ký tạm ngừng kinh doanh, tiếp tục kinh doanh trước thời hạn đã thông báo đối với doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh\n\n1. Trường hợp doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh tạm ngừng kinh doanh hoặc tiếp tục kinh doanh trước thời hạn đã thông báo, doanh nghiệp gửi thông báo đến Phòng Đăng ký kinh doanh nơi doanh nghiệp, chi nhánh, văn phòng đại diện, địa điểm kinh doanh đặt trụ sở chậm nhất 03 ngày làm việc trước ngày tạm ngừng kinh doanh hoặc tiếp tục kinh doanh trước thời hạn đã thông báo.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VII",
+      "article": "Điều 66"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 30,
+    "type": "unanswerable",
+    "question": "Phòng Đăng ký kinh doanh có tiếp nhận thanh toán lệ phí đăng ký doanh nghiệp bằng tiền điện tử Bitcoin không?",
+    "expected_answer": "Tài liệu chỉ quy định thanh toán lệ phí bằng tiền mặt, chuyển khoản hoặc dịch vụ thanh toán điện tử trên Cổng thông tin quốc gia, không quy định về việc thanh toán bằng tiền điện tử Bitcoin. Thông tin này không được quy định trong tài liệu.",
+    "ground_truth_context": "",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương IV",
+      "article": "Điều 38"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 31,
+    "type": "ambiguous",
+    "question": "Thay đổi thông tin ai ký tên?",
+    "expected_answer": "Dựa trên quy định đăng ký thay đổi, bạn thay đổi nội dung thông thường hay thay đổi người đại diện theo pháp luật?\n- Nếu thông thường (như địa chỉ, ngành nghề...): Thông báo thay đổi do người đại diện theo pháp luật hiện tại ký.\n- Nếu thay đổi người đại diện theo pháp luật: Người ký thông báo là Chủ tịch HĐTV / Chủ tịch HĐQT / Chủ tịch công ty (hoặc Chủ tịch HĐTV, HĐQT mới được bầu nếu người đại diện cũ là Chủ tịch).",
+    "ground_truth_context": "Điều 47. Đăng ký thay đổi địa chỉ trụ sở chính của doanh nghiệp\n\n2. Trường hợp chuyển địa chỉ trụ sở chính, doanh nghiệp gửi hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi đặt trụ sở mới. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thay đổi nội dung đăng ký doanh nghiệp do người đại diện theo pháp luật của doanh nghiệp ký;\n\nĐiều 50. Đăng ký thay đổi người đại diện theo pháp luật của công ty trách nhiệm hữu hạn, công ty cổ phần\n\n2. Người ký thông báo thay đổi người đại diện theo pháp luật là một trong các cá nhân sau đây:\na) Chủ tịch Hội đồng thành viên hoặc Chủ tịch công ty đối với công ty trách nhiệm hữu hạn một thành viên;\nb) Chủ tịch Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên. Trường hợp Chủ tịch Hội đồng thành viên là người đại diện theo pháp luật thì người ký thông báo là Chủ tịch Hội đồng thành viên mới được Hội đồng thành viên bầu;\nc) Chủ tịch Hội đồng quản trị đối với công ty cổ phần. Trường hợp Chủ tịch Hội đồng quản trị là người đại diện theo pháp luật thì người ký thông báo là Chủ tịch Hội đồng quản trị mới được Hội đồng quản trị bầu;",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VI",
+      "article": "Điều 50"
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": 32,
+    "type": "adversarial",
+    "question": "Công ty chuyển trụ sở sang địa chỉ mới thì chỉ cần tự đổi biển hiệu chứ không phải làm thủ tục thông báo với cơ quan đăng ký phải không?",
+    "expected_answer": "Thông tin này không chính xác. Khi chuyển địa chỉ trụ sở chính, doanh nghiệp bắt buộc phải gửi hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi đặt trụ sở mới.",
+    "ground_truth_context": "Điều 47. Đăng ký thay đổi địa chỉ trụ sở chính của doanh nghiệp\n\n2. Trường hợp chuyển địa chỉ trụ sở chính, doanh nghiệp gửi hồ sơ đăng ký thay đổi nội dung đăng ký doanh nghiệp đến Phòng Đăng ký kinh doanh nơi đặt trụ sở mới. Hồ sơ bao gồm các giấy tờ sau đây:\na) Thông báo thay đổi nội dung đăng ký doanh nghiệp do người đại diện theo pháp luật của doanh nghiệp ký;\nb) Nghị quyết, quyết định của chủ sở hữu công ty đối với công ty trách nhiệm hữu hạn một thành viên; nghị quyết, quyết định và bản sao biên bản họp của Hội đồng thành viên đối với công ty trách nhiệm hữu hạn hai thành viên trở lên, công ty hợp danh, của Đại hội đồng cổ đông đối với công ty cổ phần về việc chuyển địa chỉ trụ sở chính của doanh nghiệp.",
+    "gold_metadata": {
+      "doc_id": "01_2021_ND-CP_283247.md",
+      "chapter": "Chương VI",
+      "article": "Điều 47"
+    },
+    "difficulty": "easy"
+  }
+]
