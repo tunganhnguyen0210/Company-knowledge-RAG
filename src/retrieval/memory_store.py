@@ -26,6 +26,21 @@ class MemoryChunkStore:
         ]
         return sorted(scored, key=lambda hit: (-hit.score, hit.chunk.id))[:limit]
 
+    def list_document_chunks(
+        self,
+        document_id: str,
+        version: int | None = None,
+    ) -> list[Chunk]:
+        return sorted(
+            (
+                chunk
+                for chunk in self.all_chunks
+                if chunk.document_id == document_id
+                and (version is None or chunk.version == version)
+            ),
+            key=lambda chunk: chunk.position,
+        )
+
     def ready(self) -> bool:
         return True
 

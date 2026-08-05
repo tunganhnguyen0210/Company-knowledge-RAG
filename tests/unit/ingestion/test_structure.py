@@ -67,3 +67,16 @@ def test_plain_docx_legal_headings_match_markdown_hierarchy() -> None:
 
     assert plain_coordinates == markdown_coordinates
     assert sum(item.article is not None for item in plain_coordinates) == 3
+
+
+def test_generic_markdown_headings_remain_sections_without_legal_coordinates() -> None:
+    sections = extract_legal_sections(
+        "# Leave\nEmployees may request leave.\n\n## Approval\nManagers approve it.",
+        "policy.md",
+    )
+
+    assert [section.heading for section in sections] == ["Leave", "Approval"]
+    assert [section.coordinates for section in sections] == [
+        SourceCoordinates(doc_id="policy.md"),
+        SourceCoordinates(doc_id="policy.md"),
+    ]

@@ -213,5 +213,8 @@ def _chunk_trace_payload(chunk: Chunk) -> dict[str, Any]:
         "content_hash": chunk.content_hash,
         "source_name": chunk.source_name,
         "mime_type": chunk.mime_type,
+        "doc_id": chunk.coordinates.doc_id,
+        "chapter": chunk.coordinates.chapter,
+        "article": chunk.coordinates.article,
         "text": chunk.text,
     }

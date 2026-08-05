@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
-from retrieval.qdrant_store import QdrantChunkStore, _point_id
+from retrieval.qdrant_store import QdrantChunkStore, _chunk_from_payload, _chunk_payload, _point_id
 
 
 def test_point_ids_are_stable_and_unique_for_chunks_in_same_document() -> None:
@@ -74,3 +74,39 @@ def test_existing_collection_with_wrong_vector_size_is_rejected() -> None:
 
     with pytest.raises(RuntimeError, match="vector size"):
         store.ensure_collection()
+
+
+def test_chunk_payload_flattens_source_coordinates() -> None:
+    chunk = Chunk(
+        id="chunk",
+        document_id="doc",
+        version=1,
+        text="Điều 1",
+        content_hash="hash",
+        source_name="law.docx",
+        mime_type="application/docx",
+        status=DocumentStatus.READY,
+        coordinates=SourceCoordinates(doc_id="law.md", chapter="Chương I", article="Điều 1"),
+    )
+
+    payload = _chunk_payload(chunk)
+
+    assert payload["doc_id"] == "law.md"
+    assert payload["chapter"] == "Chương I"
+    assert payload["article"] == "Điều 1"
+
+
+def test_legacy_payload_requires_corpus_reindex() -> None:
+    legacy_payload = {
+        "id": "chunk",
+        "document_id": "doc",
+        "version": 1,
+        "text": "legacy",
+        "content_hash": "hash",
+        "source_name": "law.docx",
+        "mime_type": "application/docx",
+        "status": "ready",
+    }
+
+    with pytest.raises(RuntimeError, match="re-index the corpus"):
+        _chunk_from_payload(legacy_payload)

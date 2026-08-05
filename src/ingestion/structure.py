@@ -9,6 +9,7 @@ from domain.schemas import SourceCoordinates
 LEGAL_HEADING_RE = re.compile(
     r"(?m)^(?:#{1,6}[ \t]+)?((?:Chương[ \t]+[IVXLCDM]+|Điều[ \t]+\d+[A-Za-z]?)\b.*)$"
 )
+GENERIC_HEADING_RE = re.compile(r"(?m)^#{1,6}[ \t]+(.+?)\s*$")
 CHAPTER_RE = re.compile(r"^Chương\s+[IVXLCDM]+\b", re.IGNORECASE)
 ARTICLE_RE = re.compile(r"^(Điều\s+\d+[A-Za-z]?)\b", re.IGNORECASE)
 
@@ -22,6 +23,30 @@ class LegalSection(BaseModel):
 def extract_legal_sections(text: str, doc_id: str) -> list[LegalSection]:
     matches = list(LEGAL_HEADING_RE.finditer(text))
     if not matches:
+        generic_matches = list(GENERIC_HEADING_RE.finditer(text))
+        if generic_matches:
+            output: list[LegalSection] = []
+            prefix = text[: generic_matches[0].start()].strip()
+            if prefix:
+                output.append(
+                    LegalSection(
+                        heading=None,
+                        text=prefix,
+                        coordinates=SourceCoordinates(doc_id=doc_id),
+                    )
+                )
+            for index, match in enumerate(generic_matches):
+                end = generic_matches[index + 1].start() if index + 1 < len(generic_matches) else len(text)
+                section_text = text[match.start() : end].strip()
+                if section_text:
+                    output.append(
+                        LegalSection(
+                            heading=match.group(1).strip(),
+                            text=section_text,
+                            coordinates=SourceCoordinates(doc_id=doc_id),
+                        )
+                    )
+            return output
         stripped = text.strip()
         if not stripped:
             return []

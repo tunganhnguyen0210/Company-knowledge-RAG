@@ -4,6 +4,7 @@ from hashlib import sha256
 from threading import Lock
 from typing import Any
 
+from pydantic import ValidationError
 from qdrant_client import QdrantClient, models
 
 from domain.schemas import Chunk, SearchHit
@@ -13,6 +14,23 @@ from retrieval.hybrid import (
     lexical_rank,
     reciprocal_rank_fusion,
 )
+
+
+def _chunk_payload(chunk: Chunk) -> dict[str, object]:
+    payload = chunk.model_dump(mode="json")
+    payload.update(chunk.coordinates.model_dump())
+    return payload
+
+
+def _chunk_from_payload(payload: dict[str, object] | None) -> Chunk:
+    try:
+        return Chunk.model_validate(payload)
+    except ValidationError as exc:
+        if isinstance(payload, dict) and "coordinates" not in payload:
+            raise RuntimeError(
+                "Qdrant chunk payload lacks required source coordinates; re-index the corpus"
+            ) from exc
+        raise
 
 
 class QdrantChunkStore:
@@ -63,7 +81,7 @@ class QdrantChunkStore:
                     f"Qdrant vector size is {actual_size}; expected {self.vector_size}"
                 )
             payload_schema = info.payload_schema or {}
-            for field in ("document_id", "status", "version"):
+            for field in ("document_id", "status", "doc_id", "chapter", "article", "version"):
                 if field in payload_schema:
                     continue
                 schema = (
@@ -94,7 +112,7 @@ class QdrantChunkStore:
             return
         vectors = self.embedder.embed_documents([chunk.retrieval_text or chunk.text for chunk in chunks])
         points = [
-            models.PointStruct(id=_point_id(chunk.id), vector=vector, payload=chunk.model_dump(mode="json"))
+            models.PointStruct(id=_point_id(chunk.id), vector=vector, payload=_chunk_payload(chunk))
             for chunk, vector in zip(chunks, vectors, strict=True)
         ]
         self.client.upsert(self.collection, points=points, wait=True)
@@ -136,7 +154,7 @@ class QdrantChunkStore:
         )
         dense = filter_by_min_score(
             [
-                SearchHit(chunk=Chunk.model_validate(point.payload), score=float(point.score))
+                SearchHit(chunk=_chunk_from_payload(point.payload), score=float(point.score))
                 for point in dense_response.points
             ],
             self.min_dense_score,
@@ -148,7 +166,7 @@ class QdrantChunkStore:
             with_payload=True,
             with_vectors=False,
         )
-        lexical_chunks = [Chunk.model_validate(record.payload) for record in records]
+        lexical_chunks = [_chunk_from_payload(record.payload) for record in records]
         lexical = lexical_rank(query, lexical_chunks, max(limit * 4, limit))
         rrf_limit = max(limit * 4, 20) if self.reranker else limit
         fused = reciprocal_rank_fusion(dense, lexical, rrf_limit)
@@ -156,6 +174,42 @@ class QdrantChunkStore:
             reranked: list[SearchHit] = self.reranker.rerank(query, fused, top_n=limit)
             return reranked
         return fused[:limit]
+
+    def list_document_chunks(
+        self,
+        document_id: str,
+        version: int | None = None,
+    ) -> list[Chunk]:
+        self.ensure_collection()
+        must = [
+            models.FieldCondition(
+                key="document_id",
+                match=models.MatchValue(value=document_id),
+            )
+        ]
+        if version is not None:
+            must.append(
+                models.FieldCondition(
+                    key="version",
+                    match=models.MatchValue(value=version),
+                )
+            )
+        output: list[Chunk] = []
+        offset: object | None = None
+        while True:
+            records, next_offset = self.client.scroll(
+                collection_name=self.collection,
+                scroll_filter=models.Filter(must=must),
+                limit=256,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            output.extend(_chunk_from_payload(record.payload) for record in records)
+            if next_offset is None:
+                break
+            offset = next_offset
+        return sorted(output, key=lambda chunk: chunk.position)
 
     def ready(self) -> bool:
         try:

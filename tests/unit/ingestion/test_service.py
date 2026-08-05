@@ -45,10 +45,10 @@ def test_new_content_replaces_active_document_version(tmp_path: Path) -> None:
     assert {chunk.text for chunk in store.all_chunks} == {"New policy"}
 
 
-def test_generic_heading_creates_chunk_with_none_section_and_coordinates(
+def test_generic_heading_creates_chunk_with_heading_section_and_coordinates(
     tmp_path: Path,
 ) -> None:
-    """Generic (non-legal) headings produce chunks with section=None."""
+    """Generic (non-legal) headings remain available as chunk sections."""
     def build(document) -> None:
         document.add_heading("Quy trinh su co", level=1)
         document.add_paragraph("Bao cao trong 24 gio.")
@@ -61,7 +61,7 @@ def test_generic_heading_creates_chunk_with_none_section_and_coordinates(
     assert document.status is DocumentStatus.READY
     chunks = store.all_chunks
     assert len(chunks) == 1
-    assert chunks[0].section is None
+    assert chunks[0].section == "Quy trinh su co"
     assert chunks[0].coordinates.doc_id == "suco.docx"
     # Verify the full content is preserved (heading + paragraph text)
     assert "Quy trinh su co" in chunks[0].text
@@ -140,3 +140,26 @@ def test_ingestion_service_allows_reingestion_of_same_source(tmp_path: Path) -> 
 
     assert first.id == second.id
     assert second.version == first.version + 1
+
+
+def test_ingestion_persists_canonical_legal_coordinates(tmp_path: Path) -> None:
+    def build(document) -> None:
+        document.add_heading("Chương I", level=1)
+        document.add_heading("Điều 1. Phạm vi điều chỉnh", level=3)
+        document.add_paragraph("Nội dung điều một.")
+
+    store = MemoryChunkStore()
+    service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
+
+    document = service.ingest_bytes(
+        "01_2021_ND-CP_283247.docx",
+        _docx_bytes(build),
+        {"canonical_doc_id": "01_2021_ND-CP_283247.md"},
+    )
+    chunks = store.list_document_chunks(document.id, document.version)
+
+    assert chunks
+    assert {chunk.coordinates.doc_id for chunk in chunks} == {"01_2021_ND-CP_283247.md"}
+    article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
+    assert article_chunks
+    assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)

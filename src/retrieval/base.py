@@ -8,5 +8,11 @@ class ChunkStore(Protocol):
 
     def search(self, query: str, limit: int = 5) -> list[SearchHit]: ...
 
+    def list_document_chunks(
+        self,
+        document_id: str,
+        version: int | None = None,
+    ) -> list[Chunk]: ...
+
     def ready(self) -> bool: ...
 
