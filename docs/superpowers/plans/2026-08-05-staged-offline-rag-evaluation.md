@@ -2155,15 +2155,21 @@ class LocalRunRepository:
 class InMemoryRunRepository:
     def __init__(self) -> None:
         self.manifests: dict[str, RunManifest] = {}
+        self.manifest_save_calls = 0
         self.snapshots: dict[str, IndexSnapshot] = {}
         self.snapshot_save_calls = 0
         self.retrieval_runs: dict[str, RetrievalRun] = {}
+        self.retrieval_save_calls = 0
         self.generation_runs: dict[str, GenerationRun] = {}
+        self.generation_save_calls = 0
         self.reports: dict[str, EvaluationReport] = {}
         self.report_save_calls = 0
 
     def save_manifest(self, manifest: RunManifest) -> Path:
+        if manifest.run_id in self.manifests:
+            raise FileExistsError(f"manifest already exists: {manifest.run_id}")
         self.manifests[manifest.run_id] = manifest
+        self.manifest_save_calls += 1
         return Path(manifest.run_id) / "manifest.json"
 
     def load_manifest(self, run_id: str) -> RunManifest:
@@ -2173,12 +2179,17 @@ class InMemoryRunRepository:
             raise FileNotFoundError(f"manifest not found: {run_id}") from exc
 
     def save_snapshot(self, snapshot: IndexSnapshot) -> Path:
-        self.snapshot_save_calls += 1
+        if snapshot.run_id in self.snapshots:
+            raise FileExistsError(f"snapshot already exists: {snapshot.run_id}")
         self.snapshots[snapshot.run_id] = snapshot
+        self.snapshot_save_calls += 1
         return Path(snapshot.run_id) / "index_snapshot.json"
 
     def save_retrieval(self, run: RetrievalRun) -> Path:
+        if run.run_id in self.retrieval_runs:
+            raise FileExistsError(f"retrieval run already exists: {run.run_id}")
         self.retrieval_runs[run.run_id] = run
+        self.retrieval_save_calls += 1
         return Path(run.run_id) / "retrieval.jsonl"
 
     def load_retrieval(self, run_id: str) -> RetrievalRun:
@@ -2188,12 +2199,17 @@ class InMemoryRunRepository:
             raise FileNotFoundError(f"retrieval run not found: {run_id}") from exc
 
     def save_generation(self, run: GenerationRun) -> Path:
+        if run.run_id in self.generation_runs:
+            raise FileExistsError(f"generation run already exists: {run.run_id}")
         self.generation_runs[run.run_id] = run
+        self.generation_save_calls += 1
         return Path(run.run_id) / "generation.jsonl"
 
     def save_report(self, report: EvaluationReport) -> Path:
-        self.report_save_calls += 1
+        if report.run_id in self.reports:
+            raise FileExistsError(f"report already exists: {report.run_id}")
         self.reports[report.run_id] = report
+        self.report_save_calls += 1
         return Path(report.run_id) / "report.json"
 ```
 
@@ -3006,6 +3022,7 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
 ```python
     def run(self, request: EvaluationRequest) -> EvaluationReport:
         run_id = uuid4().hex
+        manifest: RunManifest | None = None
         try:
             replay_source = (
                 self.repository.load_retrieval(request.from_run)
@@ -3039,47 +3056,48 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
                 audit_root=effective_request.golden_dir.parent,
             )
             if validation.errors:
-                return self._finish_report(
-                    EvaluationReport(
-                        run_id=run_id,
-                        mode=request.mode,
-                        status="failed",
-                        dataset_size=len(dataset.cases),
-                        evaluated_cases=0,
-                        validation=validation.model_dump(mode="json"),
-                        aggregates={},
-                        errors=[issue.message for issue in validation.errors],
-                        artifact_ids={},
-                        baseline_eligible=False,
+                report = EvaluationReport(
+                    run_id=run_id,
+                    mode=request.mode,
+                    status="failed",
+                    dataset_size=len(dataset.cases),
+                    evaluated_cases=0,
+                    validation=validation.model_dump(mode="json"),
+                    aggregates={},
+                    errors=[issue.message for issue in validation.errors],
+                    artifact_ids={},
+                    baseline_eligible=False,
+                )
+            else:
+                selected = (
+                    []
+                    if request.mode in {EvaluationMode.VALIDATE, EvaluationMode.INGEST, EvaluationMode.GENERATION}
+                    else select_cases(
+                        dataset,
+                        question_types=request.question_types or None,
+                        case_ids=request.case_ids or None,
+                        limit=request.limit,
                     )
                 )
-            selected = (
-                []
-                if request.mode in {EvaluationMode.VALIDATE, EvaluationMode.INGEST, EvaluationMode.GENERATION}
-                else select_cases(
-                    dataset,
-                    question_types=request.question_types or None,
-                    case_ids=request.case_ids or None,
-                    limit=request.limit,
-                )
-            )
-            try:
-                if effective_request.mode is EvaluationMode.VALIDATE:
-                    return self._run_validate(effective_request, dataset, validation, run_id)
-                if effective_request.mode is EvaluationMode.INGEST:
-                    return self._run_ingest(effective_request, dataset, validation, run_id)
-                if effective_request.mode is EvaluationMode.RETRIEVAL:
-                    return self._finish_report(
-                        self._retrieval_report(effective_request, dataset, selected, validation, run_id)
-                    )
-                if effective_request.mode is EvaluationMode.GENERATION:
-                    return self._finish_report(
-                        self._generation_report(effective_request, dataset, validation, run_id)
-                    )
-                return self._run_e2e(effective_request, dataset, selected, validation, run_id)
-            except Exception as exc:
-                return self._finish_report(
-                    EvaluationReport(
+                try:
+                    if effective_request.mode is EvaluationMode.VALIDATE:
+                        report = self._run_validate(effective_request, dataset, validation, run_id)
+                    elif effective_request.mode is EvaluationMode.INGEST:
+                        report = self._run_ingest(effective_request, dataset, validation, run_id)
+                    elif effective_request.mode is EvaluationMode.RETRIEVAL:
+                        report = self._retrieval_report(
+                            effective_request, dataset, selected, validation, run_id
+                        )
+                    elif effective_request.mode is EvaluationMode.GENERATION:
+                        report = self._generation_report(
+                            effective_request, dataset, validation, run_id
+                        )
+                    else:
+                        report = self._run_e2e(
+                            effective_request, dataset, selected, validation, run_id
+                        )
+                except Exception as exc:
+                    report = EvaluationReport(
                         run_id=run_id,
                         mode=request.mode,
                         status="failed",
@@ -3091,27 +3109,28 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
                         artifact_ids={},
                         baseline_eligible=False,
                     )
-                )
+            return self._finish_report(report, manifest)
         except Exception as exc:
-            return self._finish_report(
-                EvaluationReport(
-                    run_id=run_id,
-                    mode=request.mode,
-                    status="failed",
-                    dataset_size=0,
-                    evaluated_cases=0,
-                    validation=GoldenValidationReport(
-                        errors=[],
-                        warnings=[],
-                        validated_cases=0,
-                        full_conformance=False,
-                    ).model_dump(mode="json"),
-                    aggregates={},
-                    errors=[f"{type(exc).__name__}: {exc}"],
-                    artifact_ids={},
-                    baseline_eligible=False,
-                )
+            failed_report = EvaluationReport(
+                run_id=run_id,
+                mode=request.mode,
+                status="failed",
+                dataset_size=0,
+                evaluated_cases=0,
+                validation=GoldenValidationReport(
+                    errors=[],
+                    warnings=[],
+                    validated_cases=0,
+                    full_conformance=False,
+                ).model_dump(mode="json"),
+                aggregates={},
+                errors=[f"{type(exc).__name__}: {exc}"],
+                artifact_ids={},
+                baseline_eligible=False,
             )
+            if manifest is None:
+                return self._finish_report(failed_report, None)
+            return self._finish_report(failed_report, manifest)
     # Finalization contract: construct but do not save the manifest before dispatch; every mode returns an unsaved report to run, which calls _finish_report once with the manifest. _finish_report writes the lineage-complete final manifest once, then the report; preflight failures pass None. Remove phase-local finalizers.
 
     def _finish_report(
@@ -3188,19 +3207,17 @@ Add these private methods to `EvaluationRunner`; they centralize ordering and ma
         validation: GoldenValidationReport,
         run_id: str,
     ) -> EvaluationReport:
-        return self._finish_report(
-            EvaluationReport(
-                run_id=run_id,
-                mode=request.mode,
-                status="complete",
-                dataset_size=len(dataset.cases),
-                evaluated_cases=0,
-                validation=validation.model_dump(mode="json"),
-                aggregates={},
-                errors=[],
-                artifact_ids={},
-                baseline_eligible=False,
-            )
+        return EvaluationReport(
+            run_id=run_id,
+            mode=request.mode,
+            status="complete",
+            dataset_size=len(dataset.cases),
+            evaluated_cases=0,
+            validation=validation.model_dump(mode="json"),
+            aggregates={},
+            errors=[],
+            artifact_ids={},
+            baseline_eligible=False,
         )
 
     def _preflight_index(self, request: EvaluationRequest) -> tuple[Document, list[Chunk]]:
@@ -3324,34 +3341,30 @@ Add one shared ingestion helper and the two mode methods:
                 raise ValueError("; ".join(issue.message for issue in chunk_validation.errors))
             snapshot = self._build_snapshot(run_id, request, document, chunks, chunk_validation)
             self.repository.save_snapshot(snapshot)
-            return self._finish_report(
-                EvaluationReport(
-                    run_id=run_id,
-                    mode=request.mode,
-                    status="complete",
-                    dataset_size=len(dataset.cases),
-                    evaluated_cases=0,
-                    validation=chunk_validation.model_dump(mode="json"),
-                    aggregates={},
-                    errors=[],
-                    artifact_ids={"index_snapshot": snapshot.snapshot_fingerprint},
-                    baseline_eligible=False,
-                )
+            return EvaluationReport(
+                run_id=run_id,
+                mode=request.mode,
+                status="complete",
+                dataset_size=len(dataset.cases),
+                evaluated_cases=0,
+                validation=chunk_validation.model_dump(mode="json"),
+                aggregates={},
+                errors=[],
+                artifact_ids={"index_snapshot": snapshot.snapshot_fingerprint},
+                baseline_eligible=False,
             )
         except Exception as exc:
-            return self._finish_report(
-                EvaluationReport(
-                    run_id=run_id,
-                    mode=request.mode,
-                    status="failed",
-                    dataset_size=len(dataset.cases),
-                    evaluated_cases=0,
-                    validation=validation.model_dump(mode="json"),
-                    aggregates={},
-                    errors=[f"{type(exc).__name__}: {exc}"],
-                    artifact_ids={},
-                    baseline_eligible=False,
-                )
+            return EvaluationReport(
+                run_id=run_id,
+                mode=request.mode,
+                status="failed",
+                dataset_size=len(dataset.cases),
+                evaluated_cases=0,
+                validation=validation.model_dump(mode="json"),
+                aggregates={},
+                errors=[f"{type(exc).__name__}: {exc}"],
+                artifact_ids={},
+                baseline_eligible=False,
             )
 
     def _retrieval_report(
@@ -3659,34 +3672,32 @@ Add generation replay exactly against saved ranked hits, followed by the composi
             and len(dataset.cases) == 100
             and len(selected) == 100
         )
-        return self._finish_report(
-            EvaluationReport(
-                run_id=run_id,
-                mode=EvaluationMode.E2E,
-                status=status,
-                dataset_size=len(dataset.cases),
-                evaluated_cases=len(selected),
-                validation=validation.model_dump(mode="json"),
-                aggregates={
-                    "retrieval": retrieval_report.aggregates,
-                    "generation": generation_report.aggregates,
-                },
-                target_comparison={
-                    "retrieval": retrieval_report.target_comparison,
-                    "generation": generation_report.target_comparison,
-                },
-                case_scores={
-                    case_id: retrieval_report.case_scores.get(case_id, {})
-                    | generation_report.case_scores.get(case_id, {})
-                    for case_id in (
-                        retrieval_report.case_scores.keys()
-                        | generation_report.case_scores.keys()
-                    )
-                },
-                errors=errors,
-                artifact_ids=retrieval_report.artifact_ids | generation_report.artifact_ids,
-                baseline_eligible=baseline_eligible,
-            )
+        return EvaluationReport(
+            run_id=run_id,
+            mode=EvaluationMode.E2E,
+            status=status,
+            dataset_size=len(dataset.cases),
+            evaluated_cases=len(selected),
+            validation=validation.model_dump(mode="json"),
+            aggregates={
+                "retrieval": retrieval_report.aggregates,
+                "generation": generation_report.aggregates,
+            },
+            target_comparison={
+                "retrieval": retrieval_report.target_comparison,
+                "generation": generation_report.target_comparison,
+            },
+            case_scores={
+                case_id: retrieval_report.case_scores.get(case_id, {})
+                | generation_report.case_scores.get(case_id, {})
+                for case_id in (
+                    retrieval_report.case_scores.keys()
+                    | generation_report.case_scores.keys()
+                )
+            },
+            errors=errors,
+            artifact_ids=retrieval_report.artifact_ids | generation_report.artifact_ids,
+            baseline_eligible=baseline_eligible,
         )
 ```
 
