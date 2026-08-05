@@ -1,5 +1,5 @@
-import time
 import pytest
+
 from providers.key_pool import ApiKeyLease, ApiKeyPool, ApiKeysExhausted
 
 

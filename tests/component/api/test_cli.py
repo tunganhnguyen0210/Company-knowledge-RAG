@@ -5,17 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 import cli
-
-
-class RecordingTracer:
-    def __init__(self, error: Exception | None = None) -> None:
-        self.flush_calls = 0
-        self.error = error
-
-    def flush(self) -> None:
-        self.flush_calls += 1
-        if self.error is not None:
-            raise self.error
+from tests.support.tracing import RecordingTracer
 
 
 class RecordingIngestion:

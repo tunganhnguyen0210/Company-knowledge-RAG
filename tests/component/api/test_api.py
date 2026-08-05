@@ -1,26 +1,10 @@
 from pathlib import Path
-from typing import Any
 
 from fastapi.testclient import TestClient
 
 from api.app import create_app
-from generation.service import GroundedAnswer
-from providers.base import GenerationRequest, ProviderError, StructuredResult
-from providers.probe import ProbeResult
 from settings import Settings
-
-
-class AnswerProvider:
-    name = "stub"
-    model = "stub-model"
-
-    def generate_structured(
-        self, request: GenerationRequest, response_model: type[Any]
-    ) -> StructuredResult[Any]:
-        if response_model is ProbeResult:
-            return StructuredResult(ProbeResult(status="ready"), "stub", "stub-model")
-        answer = GroundedAnswer(answer="Nhân viên được nghỉ 15 ngày [C1].", citations=[1])
-        return StructuredResult(answer, "stub", "stub-model")
+from tests.support.providers import AnswerProvider, UnreachableProvider
 
 
 def _client(tmp_path: Path) -> TestClient:
@@ -73,12 +57,6 @@ def test_ready_reports_provider_and_store_state(tmp_path: Path) -> None:
 
 
 def test_ready_fails_when_the_live_probe_cannot_reach_the_model(tmp_path: Path) -> None:
-    class UnreachableProvider(AnswerProvider):
-        def generate_structured(
-            self, request: GenerationRequest, response_model: type[Any]
-        ) -> StructuredResult[Any]:
-            raise ProviderError("Error code: 404 - no allowed providers", transient=False)
-
     settings = Settings(
         gemini_api_key="unused",
         registry_path=tmp_path / "registry.json",

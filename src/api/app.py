@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
-
 
 from domain.schemas import ChatRequest, ChatResponse, Document
 from generation.service import ChatService
@@ -46,7 +47,7 @@ def create_app(
     chat = ChatService(store, provider, tracer, settings.retrieval_limit)
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         yield
         tracer.flush()
 
