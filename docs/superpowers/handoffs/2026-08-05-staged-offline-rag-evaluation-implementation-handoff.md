@@ -31,7 +31,7 @@ The user approved P0-3 option (a):
 - reissue the ambiguous dataset and regenerate/reconcile migration and grounding-review evidence;
 - preserve every other finalized golden value.
 
-Stop and ask the user if Task 0 requires any additional golden-data change or weaker article containment.
+Status: RESOLVED & CONFIRMED. No additional golden-data changes or weaker article containment are required for Task 0. Start Task 0 immediately without stopping for data decisions.
 
 ## Execute Task 0
 
