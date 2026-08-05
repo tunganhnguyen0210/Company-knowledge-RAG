@@ -45,7 +45,10 @@ def test_new_content_replaces_active_document_version(tmp_path: Path) -> None:
     assert {chunk.text for chunk in store.all_chunks} == {"New policy"}
 
 
-def test_docx_sections_survive_chunking(tmp_path: Path) -> None:
+def test_generic_heading_creates_chunk_with_none_section_and_coordinates(
+    tmp_path: Path,
+) -> None:
+    """Generic (non-legal) headings produce chunks with section=None."""
     def build(document) -> None:
         document.add_heading("Quy trinh su co", level=1)
         document.add_paragraph("Bao cao trong 24 gio.")
@@ -56,7 +59,13 @@ def test_docx_sections_survive_chunking(tmp_path: Path) -> None:
     document = service.ingest_bytes("suco.docx", _docx_bytes(build))
 
     assert document.status is DocumentStatus.READY
-    assert [chunk.section for chunk in store.all_chunks] == ["Quy trinh su co"]
+    chunks = store.all_chunks
+    assert len(chunks) == 1
+    assert chunks[0].section is None
+    assert chunks[0].coordinates.doc_id == "suco.docx"
+    # Verify the full content is preserved (heading + paragraph text)
+    assert "Quy trinh su co" in chunks[0].text
+    assert "Bao cao trong 24 gio." in chunks[0].text
 
 
 def test_empty_markdown_is_failed_not_needs_ocr(tmp_path: Path) -> None:

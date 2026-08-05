@@ -1,14 +1,14 @@
 """Golden-set regression evaluation."""
 
 from .golden import (
+    TYPE_FILES,
+    TYPE_PREFIXES,
     Difficulty,
     GoldenCase,
     GoldenContext,
     GoldenDataset,
     GoldenMetadata,
     GoldenType,
-    TYPE_FILES,
-    TYPE_PREFIXES,
     load_golden_dataset,
     select_cases,
 )
