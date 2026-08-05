@@ -70,3 +70,18 @@ def test_golden_case_parses_negative_abstention_case() -> None:
     assert case.category == "negative"
     assert case.expected_sources == set()
     assert case.expected_answer == "Không tìm thấy thông tin phù hợp trong tài liệu được phép truy cập."
+
+
+def test_golden_case_uses_type_and_metadata_for_evaluation_defaults() -> None:
+    case = GoldenCase.model_validate(
+        {
+            "question": "Thuế GTGT là bao nhiêu?",
+            "type": "unanswerable",
+            "expected_answer": "Không có thông tin trong tài liệu.",
+            "gold_metadata": {"doc_id": "01_2021_ND-CP_283247.md"},
+        }
+    )
+
+    assert case.category == "unanswerable"
+    assert case.should_abstain is True
+    assert case.expected_sources == set()

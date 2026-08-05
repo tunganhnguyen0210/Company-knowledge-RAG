@@ -5,13 +5,15 @@ import re
 from pathlib import Path
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator, model_validator
 
 from generation.service import ABSTENTION, ChatService
 
 
 class GoldenCase(BaseModel):
     question: str
+    type: str = "direct_lookup"
+    gold_metadata: dict[str, Any] = Field(default_factory=dict)
     expected_sources: set[str] = Field(
         default_factory=set,
         validation_alias=AliasChoices("expected_sources", "source", "sources"),
@@ -32,6 +34,19 @@ class GoldenCase(BaseModel):
         if isinstance(v, (list, tuple, set)):
             return {item.strip() for item in v if isinstance(item, str) and item.strip()}
         return set()
+
+    @model_validator(mode="after")
+    def _apply_type_aware_defaults(self) -> "GoldenCase":
+        if self.category == "lookup":
+            self.category = self.type
+        if self.type == "unanswerable":
+            self.should_abstain = True
+            self.expected_sources = set()
+        elif not self.expected_sources:
+            doc_id = self.gold_metadata.get("doc_id")
+            if isinstance(doc_id, str) and doc_id.strip():
+                self.expected_sources = {doc_id.strip()}
+        return self
 
 
 class CaseScores(BaseModel):

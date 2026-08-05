@@ -8,7 +8,7 @@ from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
 from domain.schemas import Chunk, Document, DocumentStatus
-from ingestion.chunker import chunk_document
+from ingestion.chunker import DEFAULT_MAX_CHARS, chunk_document
 from ingestion.enrichment import ChunkEnricher
 from ingestion.parser import parse_document
 from observability.tracing import Tracer
@@ -16,7 +16,7 @@ from retrieval.base import ChunkStore
 from settings import Settings, TraceMode
 from storage.registry import DocumentRegistry
 
-CHUNK_MAX_CHARS = 1200
+CHUNK_MAX_CHARS = DEFAULT_MAX_CHARS
 
 
 class IngestionService:
@@ -214,4 +214,5 @@ def _chunk_trace_payload(chunk: Chunk) -> dict[str, Any]:
         "source_name": chunk.source_name,
         "mime_type": chunk.mime_type,
         "text": chunk.text,
+        "retrieval_text": chunk.retrieval_text,
     }

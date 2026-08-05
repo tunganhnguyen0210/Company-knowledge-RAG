@@ -1,7 +1,7 @@
 from domain.schemas import Chunk, DocumentStatus
 from generation.service import ABSTENTION, ChatService, GroundedAnswer
 from observability.tracing import Tracer
-from prompts.answer_v2 import PROMPT_VERSION
+from prompts.answer import PROMPT_VERSION
 from providers.base import GenerationRequest, StructuredResult
 from retrieval.memory_store import MemoryChunkStore
 from settings import Settings, TraceMode

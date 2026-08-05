@@ -40,4 +40,14 @@ def reciprocal_rank_fusion(
 
 
 def _tokens(text: str) -> list[str]:
-    return re.findall(r"\w+", text.casefold())
+    """Index syllables plus adjacent pairs.
+
+    Vietnamese writes a word as separate syllables, so a syllable-only tokenizer turns
+    "liên thông" into two commonplace tokens and BM25 stops distinguishing the chunk
+    that defines the term from every other chunk in the same decree. Pairing adjacent
+    syllables restores the word as a searchable unit; most Vietnamese words are one or
+    two syllables, so bigrams cover the bulk of them.
+    """
+    syllables = re.findall(r"\w+", text.casefold())
+    pairs = zip(syllables[:-1], syllables[1:], strict=True)
+    return syllables + [f"{first}_{second}" for first, second in pairs]

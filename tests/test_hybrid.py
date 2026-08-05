@@ -1,5 +1,5 @@
 from domain.schemas import Chunk, DocumentStatus, SearchHit
-from retrieval.hybrid import filter_by_min_score, reciprocal_rank_fusion
+from retrieval.hybrid import filter_by_min_score, lexical_rank, reciprocal_rank_fusion
 
 
 def _hit(chunk_id: str, score: float) -> SearchHit:
@@ -32,3 +32,27 @@ def test_dense_relevance_gate_removes_weak_candidates() -> None:
     results = filter_by_min_score([_hit("weak", 0.2), _hit("strong", 0.8)], 0.35)
 
     assert [hit.chunk.id for hit in results] == ["strong"]
+
+
+def test_bm25_matches_a_multi_syllable_vietnamese_term_over_its_parts() -> None:
+    def chunk(chunk_id: str, text: str) -> Chunk:
+        return Chunk(
+            id=chunk_id,
+            document_id="doc",
+            version=1,
+            text=text,
+            content_hash=chunk_id,
+            source_name="nd.docx",
+            mime_type="text/markdown",
+            status=DocumentStatus.READY,
+        )
+
+    chunks = [
+        chunk("noise-1", "Thủ tục đăng ký doanh nghiệp thực hiện tại Phòng Đăng ký kinh doanh."),
+        chunk("target", "Việc liên thông thủ tục đăng ký thành lập doanh nghiệp và bảo hiểm xã hội."),
+        chunk("noise-2", "Hồ sơ đăng ký doanh nghiệp gồm các giấy tờ theo quy định."),
+    ]
+
+    ranked = lexical_rank("liên thông thủ tục hành chính", chunks, limit=3)
+
+    assert ranked[0].chunk.id == "target"

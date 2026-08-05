@@ -38,7 +38,7 @@ flowchart TD
 - **Reciprocal Rank Fusion**: Combines dense and lexical ranks using RRF scoring:
   $$\text{Score}(d) = \sum_{m \in \{\text{dense}, \text{lexical}\}} \frac{1}{60 + \text{rank}_m(d)}$$
 
-### 2. Prompt Construction & System Safeguards (`src/prompts/answer_v2.py`)
+### 2. Prompt Construction & System Safeguards (`src/prompts/answer.py`)
 - Retained context chunks are rendered inside strict untrusted data blocks (`<context>` tags) in system prompts.
 - The prompt explicitly instructs the LLM to format every factual claim with citation tags (`[C1]`, `[C2]`) referencing the index of the corresponding context chunk, and to repeat those indexes in the structured `citations` field.
 

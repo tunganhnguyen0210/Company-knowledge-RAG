@@ -43,6 +43,7 @@ class Tracer:
             "prompt",
             "question",
             "response",
+            "retrieval_text",
             "system_instruction",
             "text",
             "user_prompt",

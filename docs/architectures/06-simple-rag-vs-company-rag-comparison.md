@@ -69,7 +69,7 @@ flowchart TD
     end
 
     subgraph C_P3["Phase 3: Generation and LLM Routing"]
-        C_GateScore -->|Hits Pass| C_Prompt["Context Prompt Construction (answer_v2.py)"]
+        C_GateScore -->|Hits Pass| C_Prompt["Context Prompt Construction (answer.py)"]
         C_Prompt --> C_Router["LLM Provider Router (Primary/Fallback)"]
         C_Router --> C_Trace["Langfuse Observability Tracing"]
     end
@@ -104,7 +104,7 @@ flowchart TD
 ### Phase 3: Generation & Routing Pipeline
 - **Baseline**: Passes context chunks into a basic `PromptTemplate` and generates text using a single local model (`Qwen2.5-3B-Instruct`).
 - **Current Pipeline**:
-  - **Prompt Formatting**: Renders context chunks with explicit citation markers `[C{index}] source={chunk.source_name} version={chunk.version}` inside [`answer_v2.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/prompts/answer_v2.py).
+  - **Prompt Formatting**: Renders context chunks with explicit citation markers `[C{index}] source={chunk.source_name} version={chunk.version}` inside [`answer.py`](src/prompts/answer.py).
   - **Provider Failover Router**: Dispatches prompts through a multi-provider **Router** ([`router.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/providers/router.py)) supporting primary (Gemini) and fallback providers (OpenRouter, OpenAI) with automatic retry failover.
   - **Structured Generation**: Utilizes Instructor structured output generation (`generate_structured`) enforcing the Pydantic `GroundedAnswer` schema.
 

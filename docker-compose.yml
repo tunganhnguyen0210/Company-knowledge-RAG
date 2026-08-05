@@ -6,18 +6,18 @@ services:
         required: false
     environment:
       ENVIRONMENT: production
-      QDRANT_URL: http://qdrant:6333
     ports:
       - "8000:8000"
     volumes:
       - rag_data:/app/data
-    depends_on:
-      qdrant:
-        condition: service_healthy
     restart: unless-stopped
 
+  # Local Qdrant is opt-in: `docker compose --profile local-qdrant up -d`.
+  # Without the profile nothing here starts, and QDRANT_URL from .env decides
+  # which cluster the API talks to.
   qdrant:
-    image: qdrant/qdrant:v1.15.4
+    image: qdrant/qdrant:v1.18.3
+    profiles: ["local-qdrant"]
     environment:
       QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
     ports:

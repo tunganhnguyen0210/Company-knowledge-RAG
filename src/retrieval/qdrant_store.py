@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 from threading import Lock
+from typing import Any
 
 from qdrant_client import QdrantClient, models
 
@@ -12,6 +13,10 @@ from retrieval.hybrid import (
     lexical_rank,
     reciprocal_rank_fusion,
 )
+
+QDRANT_TIMEOUT_SECONDS = 60
+UPSERT_BATCH_SIZE = 25
+SCROLL_PAGE_SIZE = 256
 
 
 class QdrantChunkStore:
@@ -26,7 +31,11 @@ class QdrantChunkStore:
         min_dense_score: float = 0.35,
         reranker: Any | None = None,
     ) -> None:
-        self.client = QdrantClient(url=url, api_key=api_key or None, timeout=10)
+        self.client = QdrantClient(
+            url=url,
+            api_key=api_key or None,
+            timeout=QDRANT_TIMEOUT_SECONDS,
+        )
         self.collection = collection
         self.vector_size = vector_size
         self.embedder = embedder
@@ -96,8 +105,15 @@ class QdrantChunkStore:
             models.PointStruct(id=_point_id(chunk.id), vector=vector, payload=chunk.model_dump(mode="json"))
             for chunk, vector in zip(chunks, vectors, strict=True)
         ]
-        self.client.upsert(self.collection, points=points, wait=True)
-        active_version = chunks[0].version
+        for start in range(0, len(points), UPSERT_BATCH_SIZE):
+            self.client.upsert(
+                self.collection,
+                points=points[start : start + UPSERT_BATCH_SIZE],
+                wait=True,
+            )
+        # Sweeping by "not the active version" is not enough: a forced reindex keeps the
+        # version, so a run that produces fewer chunks would leave the surplus positions
+        # of the previous run behind. Anything not just written is stale by definition.
         self.client.delete(
             self.collection,
             points_selector=models.FilterSelector(
@@ -108,12 +124,7 @@ class QdrantChunkStore:
                             match=models.MatchValue(value=document_id),
                         )
                     ],
-                    must_not=[
-                        models.FieldCondition(
-                            key="version",
-                            match=models.MatchValue(value=active_version),
-                        )
-                    ],
+                    must_not=[models.HasIdCondition(has_id=[point.id for point in points])],
                 )
             ),
             wait=True,
@@ -154,6 +165,33 @@ class QdrantChunkStore:
         if self.reranker and fused:
             return self.reranker.rerank(query, fused, top_n=limit)
         return fused[:limit]
+
+    def list_chunks(self, document_id: str) -> list[Chunk]:
+        """Read back every stored chunk of a document, ordered as the chunker emitted them."""
+        self.ensure_collection()
+        document_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="document_id",
+                    match=models.MatchValue(value=document_id),
+                )
+            ]
+        )
+        chunks: list[Chunk] = []
+        offset: Any = None
+        while True:
+            records, offset = self.client.scroll(
+                collection_name=self.collection,
+                scroll_filter=document_filter,
+                limit=SCROLL_PAGE_SIZE,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            chunks.extend(Chunk.model_validate(record.payload) for record in records)
+            if offset is None:
+                break
+        return sorted(chunks, key=lambda chunk: chunk.position)
 
     def ready(self) -> bool:
         try:

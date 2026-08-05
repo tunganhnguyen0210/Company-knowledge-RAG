@@ -127,7 +127,7 @@ def test_full_ingestion_trace_contains_lifecycle_data(tmp_path: Path) -> None:
     chunking = tracer.updated("chunking")
     assert chunking["document_id"] == document.id
     assert chunking["version"] == 1
-    assert chunking["max_chars"] == 1200
+    assert chunking["max_chars"] == 2500
     assert chunking["chunk_count"] == 1
     assert chunking["latency_ms"] >= 0
     assert chunking["chunks"] == [
@@ -141,6 +141,7 @@ def test_full_ingestion_trace_contains_lifecycle_data(tmp_path: Path) -> None:
             "source_name": "policy.md",
             "mime_type": "text/markdown",
             "text": "Nhan vien duoc nghi 15 ngay.",
+            "retrieval_text": "policy.md — Leave\n\nNhan vien duoc nghi 15 ngay.",
         }
     ]
 

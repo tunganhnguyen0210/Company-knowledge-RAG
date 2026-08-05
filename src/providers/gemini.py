@@ -218,7 +218,12 @@ class GeminiEmbeddingProvider:
 
             response = self._get_client(lease.api_key).models.embed_content(
                 model=self.model,
-                contents=texts,
+                # Gemini Embedding 2 aggregates a list of strings into one vector.
+                # Separate Content objects preserve a one-vector-per-chunk response.
+                contents=[
+                    types.Content(parts=[types.Part.from_text(text=text)])
+                    for text in texts
+                ],
                 config=types.EmbedContentConfig(
                     task_type=task_type,
                     output_dimensionality=self.output_dimension,

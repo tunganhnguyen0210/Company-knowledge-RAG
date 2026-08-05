@@ -43,9 +43,9 @@ The table below outlines the core technical decisions, underlying engineering ra
 
 ### Phase 3: Generation & LLM Routing (Runtime)
 - **3.1 Prompt Context Isolation**:
-  - *Key Decision*: Context formatting with citation tags in system prompt (`answer_v2.py`).
+  - *Key Decision*: Context formatting with citation tags in system prompt (`answer.py`).
   - *Rationale*: Protects against prompt injection and enforces explicit document grounding.
-  - *Primary File*: [`src/prompts/answer_v2.py`](src/prompts/answer_v2.py)
+  - *Primary File*: [`src/prompts/answer.py`](src/prompts/answer.py)
 - **3.2 Provider Failover Router**:
   - *Key Decision*: Multi-provider LLM Router (Gemini, OpenRouter, OpenAI) with automatic retry fallback.
   - *Rationale*: Prevents service downtime caused by third-party provider outages or rate limits.

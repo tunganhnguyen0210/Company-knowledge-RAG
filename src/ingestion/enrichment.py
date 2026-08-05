@@ -58,7 +58,10 @@ class LLMChunkEnricher:
             ChunkEnrichment,
         )
         enrichment = result.value
-        retrieval_text = f"{enrichment.context}\n\n{chunk.text}" if enrichment.context else chunk.text
+        # The chunker may already have prefixed a structural breadcrumb; enrichment adds
+        # to that context instead of replacing it.
+        base = chunk.retrieval_text or chunk.text
+        retrieval_text = f"{enrichment.context}\n\n{base}" if enrichment.context else base
         return chunk.model_copy(
             update={
                 "retrieval_text": retrieval_text,

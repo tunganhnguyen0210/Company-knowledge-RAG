@@ -1,20 +1,35 @@
 from __future__ import annotations
 
 import json
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from statistics import median
+from typing import Any
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 
-
-from domain.schemas import ChatRequest, ChatResponse, Document
+from domain.schemas import (
+    ChatRequest,
+    ChatResponse,
+    Chunk,
+    ChunkPage,
+    ChunkPreview,
+    ChunkStats,
+    Document,
+    DocumentStatus,
+    RankedHit,
+    SearchRequest,
+    SearchResponse,
+)
 from generation.service import ChatService
+from ingestion.chunker import chunk_document
 from ingestion.enrichment import LLMChunkEnricher
-from ingestion.parser import UnsupportedDocumentError
-from ingestion.service import IngestionService
+from ingestion.parser import UnsupportedDocumentError, parse_document
+from ingestion.service import CHUNK_MAX_CHARS, IngestionService
 from observability.tracing import Tracer
 from providers.base import GenerationProvider, ProviderError
 from providers.gemini import GeminiEmbeddingProvider, GeminiProvider
@@ -119,6 +134,55 @@ def create_app(
         except (json.JSONDecodeError, ValueError) as exc:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "metadata must be an object") from exc
 
+    @app.post(
+        "/v1/documents/preview-chunks",
+        response_model=ChunkPreview,
+        tags=["inspection"],
+        summary="Parse and chunk a file without indexing it",
+    )
+    async def preview_chunks(
+        file: UploadFile = File(...),
+        max_chars: int = Form(CHUNK_MAX_CHARS),
+    ) -> ChunkPreview:
+        """Dry run of the ingest pipeline: shows exactly what every chunk would contain.
+
+        Nothing is embedded, indexed or written to the registry, so it is safe to call
+        repeatedly while tuning `max_chars`.
+        """
+        content = await file.read(settings.max_upload_bytes + 1)
+        if len(content) > settings.max_upload_bytes:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File is too large")
+        if not 100 <= max_chars <= 10_000:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "max_chars must be 100..10000")
+        source_name = Path(file.filename or "upload").name
+        try:
+            text, mime_type = parse_document(source_name, content)
+        except UnsupportedDocumentError as exc:
+            raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, str(exc)) from exc
+        document_status = DocumentStatus.READY if text.strip() else DocumentStatus.FAILED
+        preview_document = Document(
+            id="preview",
+            version=0,
+            content_hash="preview",
+            source_name=source_name,
+            mime_type=mime_type,
+            status=document_status,
+        )
+        chunks = chunk_document(preview_document, text, max_chars=max_chars)
+        return ChunkPreview(
+            source_name=source_name,
+            mime_type=mime_type,
+            status=document_status,
+            parsed_characters=len(text),
+            max_chars=max_chars,
+            stats=_chunk_stats(chunks, max_chars),
+            chunks=chunks,
+        )
+
+    @app.get("/v1/documents", response_model=list[Document], tags=["inspection"])
+    def list_documents() -> list[Document]:
+        return registry.list()
+
     @app.get("/v1/documents/{document_id}", response_model=Document)
     def get_document(document_id: str) -> Document:
         document = registry.get(document_id)
@@ -143,6 +207,57 @@ def create_app(
             force=True,
         )
 
+    @app.get(
+        "/v1/documents/{document_id}/chunks",
+        response_model=ChunkPage,
+        tags=["inspection"],
+        summary="Read back the chunks stored for a document",
+    )
+    def list_document_chunks(
+        document_id: str,
+        offset: int = Query(0, ge=0),
+        limit: int = Query(20, ge=1, le=200),
+    ) -> ChunkPage:
+        document = registry.get(document_id)
+        if document is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+        chunks = store.list_chunks(document_id)
+        return ChunkPage(
+            document_id=document_id,
+            source_name=document.source_name,
+            version=document.version,
+            total=len(chunks),
+            offset=offset,
+            limit=limit,
+            chunks=chunks[offset : offset + limit],
+        )
+
+    @app.post(
+        "/v1/search",
+        response_model=SearchResponse,
+        tags=["inspection"],
+        summary="Run retrieval only and return the chunks with their scores",
+    )
+    def search(body: SearchRequest) -> SearchResponse:
+        """Same retrieval path /v1/chat uses, minus the LLM call.
+
+        Use it to check whether the right chunks come back before blaming the answer.
+        """
+        limit = body.limit or settings.retrieval_limit
+        started = time.perf_counter()
+        hits = store.search(body.query, limit=limit)
+        latency_ms = (time.perf_counter() - started) * 1000
+        return SearchResponse(
+            query=body.query,
+            limit=limit,
+            result_count=len(hits),
+            latency_ms=latency_ms,
+            hits=[
+                RankedHit(rank=rank, score=hit.score, chunk=hit.chunk)
+                for rank, hit in enumerate(hits, start=1)
+            ],
+        )
+
     @app.post("/v1/chat", response_model=ChatResponse)
     def ask(body: ChatRequest) -> ChatResponse:
         try:
@@ -151,6 +266,32 @@ def create_app(
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
 
     return app
+
+
+def _chunk_stats(chunks: list[Chunk], max_chars: int) -> ChunkStats:
+    lengths = [len(chunk.text) for chunk in chunks]
+    if not lengths:
+        return ChunkStats(
+            chunk_count=0,
+            total_chars=0,
+            min_chars=0,
+            median_chars=0,
+            max_chars=0,
+            sections_detected=0,
+            chunks_without_section=0,
+            chunks_at_max_chars=0,
+        )
+    return ChunkStats(
+        chunk_count=len(chunks),
+        total_chars=sum(lengths),
+        min_chars=min(lengths),
+        median_chars=int(median(lengths)),
+        max_chars=max(lengths),
+        sections_detected=len({chunk.section for chunk in chunks if chunk.section}),
+        chunks_without_section=sum(1 for chunk in chunks if chunk.section is None),
+        # A chunk sitting exactly on the cap was cut by character count, not by structure.
+        chunks_at_max_chars=sum(1 for length in lengths if length == max_chars),
+    )
 
 
 def _build_provider(settings: Settings) -> GenerationProvider:

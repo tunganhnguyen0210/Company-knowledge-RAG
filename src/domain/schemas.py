@@ -46,6 +46,60 @@ class SearchHit(BaseModel):
     score: float
 
 
+class ChunkPage(BaseModel):
+    """A slice of the chunks stored for one document, ordered by position."""
+
+    document_id: str
+    source_name: str
+    version: int
+    total: int
+    offset: int
+    limit: int
+    chunks: list[Chunk]
+
+
+class ChunkStats(BaseModel):
+    chunk_count: int
+    total_chars: int
+    min_chars: int
+    median_chars: int
+    max_chars: int
+    sections_detected: int
+    chunks_without_section: int
+    chunks_at_max_chars: int
+
+
+class ChunkPreview(BaseModel):
+    """Result of parse + chunk without embedding, indexing or touching the registry."""
+
+    source_name: str
+    mime_type: str
+    status: DocumentStatus
+    parsed_characters: int
+    max_chars: int
+    stats: ChunkStats
+    chunks: list[Chunk]
+
+
+class RankedHit(BaseModel):
+    rank: int
+    score: float
+    chunk: Chunk
+
+
+class SearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=4000)
+    limit: int | None = Field(default=None, ge=1, le=50)
+
+
+class SearchResponse(BaseModel):
+    query: str
+    limit: int
+    result_count: int
+    latency_ms: float
+    hits: list[RankedHit]
+
+
 class Citation(BaseModel):
     id: str
     document_id: str
@@ -53,6 +107,7 @@ class Citation(BaseModel):
     source_name: str
     version: int
     excerpt: str
+    section: str | None = None
 
 
 class RetrievalInfo(BaseModel):

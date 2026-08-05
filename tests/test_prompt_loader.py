@@ -4,10 +4,10 @@ from prompts.loader import load_prompt, render_user_template
 
 
 def test_load_prompt_reads_packaged_yaml_definition() -> None:
-    prompt = load_prompt("answer_v2.yaml")
+    prompt = load_prompt("answer.yaml")
 
     assert prompt.id == "answer"
-    assert prompt.version == "v2"
+    assert prompt.version == "v4"
     assert "CONTEXT" in prompt.user_template
 
 

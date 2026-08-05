@@ -11,7 +11,7 @@ from domain.schemas import (
     RetrievalInfo,
 )
 from observability.tracing import Tracer
-from prompts.answer_v2 import PROMPT_VERSION, render_answer_prompt
+from prompts.answer import PROMPT_VERSION, render_answer_prompt
 from providers.base import GenerationProvider, GenerationRequest
 from retrieval.base import ChunkStore
 
@@ -121,6 +121,7 @@ class ChatService:
                     source_name=chunks[index - 1].source_name,
                     version=chunks[index - 1].version,
                     excerpt=chunks[index - 1].text[:300],
+                    section=chunks[index - 1].section,
                 )
                 for index in cited_indexes
             ]

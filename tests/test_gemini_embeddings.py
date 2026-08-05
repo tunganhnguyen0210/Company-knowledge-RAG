@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from google.genai import types
 
 from providers.base import ProviderError
 from providers.gemini import DOCUMENT_TASK, QUERY_TASK, GeminiEmbeddingProvider
@@ -71,6 +72,20 @@ def test_documents_are_split_into_batches_and_renormalized() -> None:
     assert len(vectors) == 25
     # Truncated Matryoshka vectors are unusable for cosine search until renormalized.
     assert vectors[0] == pytest.approx([0.6, 0.8, 0.0])
+
+
+def test_documents_are_sent_as_separate_content_objects() -> None:
+    def handler(**kwargs: Any) -> Any:
+        contents = kwargs["contents"]
+        assert all(isinstance(content, types.Content) for content in contents)
+        assert [content.parts[0].text for content in contents] == ["first", "second"]
+        response = MagicMock()
+        response.embeddings = [_embedding([1.0, 0.0, 0.0]) for _ in contents]
+        return response
+
+    vectors = _provider(handler).embed_documents(["first", "second"])
+
+    assert len(vectors) == 2
 
 
 def test_short_response_is_rejected_instead_of_misaligning_chunks() -> None:

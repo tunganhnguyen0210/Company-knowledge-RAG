@@ -108,3 +108,108 @@ def test_ready_fails_when_provider_reports_not_ready(tmp_path: Path) -> None:
     response = client.get("/ready")
 
     assert response.status_code == 503
+
+
+SECTIONED_MARKDOWN = (
+    b"# Chuong I\n\n"
+    b"Quy dinh chung cua tai lieu.\n\n"
+    b"## Dieu 1. Nghi phep\n\n"
+    b"Nhan vien duoc nghi phep 15 ngay mot nam.\n\n"
+    b"## Dieu 2. Cong tac phi\n\n"
+    b"Cong tac phi duoc thanh toan trong 30 ngay.\n"
+)
+
+
+def test_preview_chunks_returns_every_chunk_without_indexing(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+
+    response = client.post(
+        "/v1/documents/preview-chunks",
+        files={"file": ("policy.md", SECTIONED_MARKDOWN, "text/markdown")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["stats"]["chunk_count"] == len(body["chunks"])
+    assert [chunk["section"] for chunk in body["chunks"]] == [
+        "Chuong I",
+        "Dieu 1. Nghi phep",
+        "Dieu 2. Cong tac phi",
+    ]
+    assert "15 ngay" in body["chunks"][1]["text"]
+    # A dry run must not leave the document behind.
+    assert client.get("/v1/documents").json() == []
+
+
+def test_preview_chunks_reports_splits_forced_by_the_character_cap(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+
+    response = client.post(
+        "/v1/documents/preview-chunks",
+        files={"file": ("long.md", ("a" * 900).encode("utf-8"), "text/markdown")},
+        data={"max_chars": "300"},
+    )
+
+    body = response.json()
+    assert body["stats"]["chunk_count"] == 3
+    assert body["stats"]["chunks_at_max_chars"] == 3
+    assert body["stats"]["chunks_without_section"] == 3
+
+
+def test_preview_chunks_rejects_an_unsupported_extension(tmp_path: Path) -> None:
+    response = _client(tmp_path).post(
+        "/v1/documents/preview-chunks",
+        files={"file": ("data.csv", b"a,b", "text/csv")},
+    )
+
+    assert response.status_code == 415
+
+
+def test_document_chunks_endpoint_pages_stored_chunks(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    document_id = client.post(
+        "/v1/documents",
+        files={"file": ("policy.md", SECTIONED_MARKDOWN, "text/markdown")},
+    ).json()["id"]
+
+    response = client.get(f"/v1/documents/{document_id}/chunks", params={"offset": 1, "limit": 1})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 3
+    assert len(body["chunks"]) == 1
+    assert body["chunks"][0]["position"] == 1
+    assert body["chunks"][0]["section"] == "Dieu 1. Nghi phep"
+
+
+def test_document_chunks_endpoint_404s_for_an_unknown_document(tmp_path: Path) -> None:
+    response = _client(tmp_path).get("/v1/documents/missing/chunks")
+
+    assert response.status_code == 404
+
+
+def test_search_endpoint_returns_ranked_chunks_without_calling_the_model(tmp_path: Path) -> None:
+    class ExplodingProvider(AnswerProvider):
+        def generate_structured(
+            self, request: GenerationRequest, response_model: type[Any]
+        ) -> StructuredResult[Any]:
+            raise AssertionError("retrieval preview must not call the model")
+
+    settings = Settings(
+        gemini_api_key="unused",
+        registry_path=tmp_path / "registry.json",
+        upload_dir=tmp_path / "uploads",
+    )
+    client = TestClient(create_app(settings=settings, provider=ExplodingProvider()))
+    client.post(
+        "/v1/documents",
+        files={"file": ("policy.md", SECTIONED_MARKDOWN, "text/markdown")},
+    )
+
+    response = client.post("/v1/search", json={"query": "nghi phep", "limit": 2})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["result_count"] == 2
+    assert [hit["rank"] for hit in body["hits"]] == [1, 2]
+    assert "15 ngay" in body["hits"][0]["chunk"]["text"]

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import os
 from enum import StrEnum
-from hashlib import sha256
 from pathlib import Path
 
 from pydantic import AliasChoices, Field, model_validator
@@ -61,7 +59,8 @@ class Settings(BaseSettings):
     qdrant_api_key: str = ""
     qdrant_collection: str = "company_knowledge"
     vector_size: int = Field(
-        default=1024,
+        # Native width of gemini-embedding-2; anything smaller is a Matryoshka cut.
+        default=3072,
         validation_alias=AliasChoices("vector_size", "embedding_dimensions"),
     )
     upload_dir: Path = Path("data/uploads")
@@ -88,11 +87,34 @@ class Settings(BaseSettings):
         return self
 
     def build_gemini_key_pool(self, environment: dict[str, str] | None = None) -> GeminiKeyPool:
-        env = dict(os.environ if environment is None else environment)
+        env = dict(self._key_environment() if environment is None else environment)
         if self.gemini_api_key and "GEMINI_API_KEY" not in env:
             env["GEMINI_API_KEY"] = self.gemini_api_key
 
         return GeminiKeyPool.from_environment(
             env, cooldown_seconds=self.gemini_key_cooldown_seconds
         )
+
+    def _key_environment(self) -> dict[str, str]:
+        """Merge the .env file into os.environ for the key pool.
+
+        Fallback keys use open-ended names (GEMINI_API_FALLBACK_KEY2, …KEY3) that no
+        field can declare, so pydantic-settings drops them and the pool would see only
+        the primary key. Real environment variables still win over the file.
+        """
+        from dotenv import dotenv_values
+
+        env_file = self.model_config.get("env_file")
+        if not env_file:
+            return dict(os.environ)
+        if isinstance(env_file, (str, os.PathLike)):
+            paths = [os.fspath(env_file)]
+        else:
+            paths = [os.fspath(item) for item in env_file]
+        from_file: dict[str, str] = {}
+        for path in paths:
+            from_file.update(
+                {name: value for name, value in dotenv_values(path).items() if value}
+            )
+        return {**from_file, **os.environ}
 
