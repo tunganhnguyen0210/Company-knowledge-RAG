@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 
 
 def make_chunk(
@@ -13,6 +13,7 @@ def make_chunk(
     section: str | None = None,
     position: int = 0,
     status: DocumentStatus = DocumentStatus.READY,
+    coordinates: SourceCoordinates | None = None,
 ) -> Chunk:
     return Chunk(
         id=chunk_id,
@@ -25,4 +26,5 @@ def make_chunk(
         section=section,
         position=position,
         status=status,
+        coordinates=coordinates or SourceCoordinates(doc_id="policy.md"),
     )

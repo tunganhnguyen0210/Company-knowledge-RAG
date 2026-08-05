@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus, SearchHit
+from domain.schemas import Chunk, DocumentStatus, SearchHit, SourceCoordinates
 from retrieval.hybrid import filter_by_min_score, reciprocal_rank_fusion
 
 
@@ -13,6 +13,7 @@ def _hit(chunk_id: str, score: float) -> SearchHit:
             source_name=f"{chunk_id}.md",
             mime_type="text/markdown",
             status=DocumentStatus.READY,
+            coordinates=SourceCoordinates(doc_id="policy.md"),
         ),
         score=score,
     )

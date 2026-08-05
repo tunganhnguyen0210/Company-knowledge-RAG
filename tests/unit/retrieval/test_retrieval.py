@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from retrieval.memory_store import MemoryChunkStore
 
 
@@ -12,6 +12,7 @@ def _chunk(chunk_id: str, text: str) -> Chunk:
         source_name=f"{chunk_id}.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
+        coordinates=SourceCoordinates(doc_id="policy.md"),
     )
 
 
@@ -43,6 +44,7 @@ def test_search_excludes_non_ready_chunks() -> None:
                 source_name="proc.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.PROCESSING,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )

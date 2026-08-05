@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from generation.service import ABSTENTION, ChatService
 from observability.tracing import Tracer
 from retrieval.memory_store import MemoryChunkStore
@@ -20,6 +20,7 @@ def test_generation_abstains_when_model_returns_no_valid_citation() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )
@@ -50,6 +51,7 @@ def test_generation_rejects_zero_citation_index() -> None:
                 source_name="policy.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )

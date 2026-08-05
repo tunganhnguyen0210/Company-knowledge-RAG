@@ -24,6 +24,12 @@ class Document(BaseModel):
     metadata: dict[str, str] = Field(default_factory=dict)
 
 
+class SourceCoordinates(BaseModel):
+    doc_id: str = Field(min_length=1)
+    chapter: str | None = None
+    article: str | None = None
+
+
 class Chunk(BaseModel):
     id: str
     document_id: str
@@ -33,6 +39,7 @@ class Chunk(BaseModel):
     source_name: str
     mime_type: str
     status: DocumentStatus
+    coordinates: SourceCoordinates
     section: str | None = None
     position: int = 0
     retrieval_text: str | None = None

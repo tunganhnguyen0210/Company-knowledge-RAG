@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from ingestion.enrichment import (
     MAX_HYPOTHESIS_QUESTIONS,
     ChunkEnrichment,
@@ -33,6 +33,7 @@ def _chunk() -> Chunk:
         source_name="leave.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
+        coordinates=SourceCoordinates(doc_id="policy.md"),
     )
 
 

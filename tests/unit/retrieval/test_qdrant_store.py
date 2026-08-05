@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from retrieval.qdrant_store import QdrantChunkStore, _point_id
 
 
@@ -43,6 +43,7 @@ def test_embedding_failure_does_not_delete_active_document(monkeypatch: pytest.M
         source_name="policy.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
+        coordinates=SourceCoordinates(doc_id="policy.md"),
     )
 
     with pytest.raises(RuntimeError, match="embedding unavailable"):

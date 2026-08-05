@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import re
 from hashlib import sha256
 
 from domain.schemas import Chunk, Document
+from ingestion.structure import extract_legal_sections
 
 
 def chunk_document(document: Document, text: str, max_chars: int = 1200) -> list[Chunk]:
-    sections = _sections(text)
+    canonical_doc_id = document.metadata.get("canonical_doc_id", document.source_name)
     output: list[Chunk] = []
-    for section, body in sections:
-        for piece in _split(body, max_chars):
+    for legal_section in extract_legal_sections(text, canonical_doc_id):
+        for piece in _split(legal_section.text, max_chars):
             position = len(output)
             chunk_hash = sha256(piece.encode("utf-8")).hexdigest()
             output.append(
@@ -23,45 +23,31 @@ def chunk_document(document: Document, text: str, max_chars: int = 1200) -> list
                     source_name=document.source_name,
                     mime_type=document.mime_type,
                     status=document.status,
-                    section=section,
+                    section=legal_section.heading,
                     position=position,
+                    coordinates=legal_section.coordinates,
                 )
             )
     return output
 
 
-def _sections(text: str) -> list[tuple[str | None, str]]:
-    matches = list(re.finditer(r"(?m)^#{1,6}\s+(.+)$", text))
-    if not matches:
-        return [(None, text.strip())] if text.strip() else []
-    sections: list[tuple[str | None, str]] = []
-    prefix = text[: matches[0].start()].strip()
-    if prefix:
-        sections.append((None, prefix))
-    for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-        body = text[match.end() : end].strip()
-        if body:
-            sections.append((match.group(1).strip(), body))
-    return sections
-
-
 def _split(text: str, max_chars: int) -> list[str]:
-    paragraphs = [part.strip() for part in re.split(r"\n{2,}", text) if part.strip()]
+    """Return contiguous slices whose concatenation exactly equals text.strip()."""
+    source = text.strip()
+    if not source:
+        return []
     pieces: list[str] = []
-    current = ""
-    for paragraph in paragraphs:
-        if current and len(current) + len(paragraph) + 2 > max_chars:
-            pieces.append(current)
-            current = ""
-        if len(paragraph) > max_chars:
-            if current:
-                pieces.append(current)
-                current = ""
-            pieces.extend(paragraph[start : start + max_chars] for start in range(0, len(paragraph), max_chars))
-        else:
-            current = f"{current}\n\n{paragraph}" if current else paragraph
-    if current:
-        pieces.append(current)
+    cursor = 0
+    while len(source) - cursor > max_chars:
+        window = source[cursor : cursor + max_chars]
+        minimum = max_chars // 2
+        split_at = max_chars
+        for separator in ("\n\n", "\n", " "):
+            candidate = window.rfind(separator)
+            if candidate >= minimum:
+                split_at = candidate + len(separator)
+                break
+        pieces.append(source[cursor : cursor + split_at])
+        cursor += split_at
+    pieces.append(source[cursor:])
     return pieces
-

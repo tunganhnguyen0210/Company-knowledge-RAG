@@ -1,6 +1,6 @@
 import importlib
 
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from prompts import answer_v2
 from prompts.answer_v2 import PROMPT_VERSION, render_answer_prompt
 from prompts.loader import PromptDefinition
@@ -16,6 +16,7 @@ def test_prompt_marks_context_as_untrusted_and_assigns_citation_ids() -> None:
         source_name="policy.md",
         mime_type="text/markdown",
         status=DocumentStatus.READY,
+        coordinates=SourceCoordinates(doc_id="policy.md"),
     )
 
     prompt = render_answer_prompt("Chính sách là gì?", [chunk])

@@ -1,4 +1,4 @@
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from generation.service import ChatService
 from retrieval.memory_store import MemoryChunkStore
 from settings import Settings, TraceMode
@@ -40,6 +40,7 @@ def test_trace_metadata_is_updated_before_span_closes() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )
@@ -64,6 +65,7 @@ def test_metadata_only_traces_redact_retrieval_text_and_final_answer() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )

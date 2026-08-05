@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from domain.schemas import Chunk, SearchHit
+from domain.schemas import Chunk, SearchHit, SourceCoordinates
 from providers.base import ProviderError
 from providers.jina import JinaEmbeddingProvider, JinaReranker
 
@@ -85,11 +85,13 @@ def test_jina_reranker_rerank(mock_post):
 
     chunk1 = Chunk(
         id="c1", document_id="d1", chunk_index=0, text="doc 1",
-        version=1, content_hash="hash1", source_name="doc1.txt", mime_type="text/plain", status="ready"
+        version=1, content_hash="hash1", source_name="doc1.txt", mime_type="text/plain", status="ready",
+        coordinates=SourceCoordinates(doc_id="policy.md"),
     )
     chunk2 = Chunk(
         id="c2", document_id="d1", chunk_index=1, text="doc 2",
-        version=1, content_hash="hash2", source_name="doc2.txt", mime_type="text/plain", status="ready"
+        version=1, content_hash="hash2", source_name="doc2.txt", mime_type="text/plain", status="ready",
+        coordinates=SourceCoordinates(doc_id="policy.md"),
     )
     hits = [SearchHit(chunk=chunk1, score=0.5), SearchHit(chunk=chunk2, score=0.6)]
 

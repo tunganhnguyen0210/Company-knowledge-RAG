@@ -1,6 +1,6 @@
 import pytest
 
-from domain.schemas import Chunk, DocumentStatus
+from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from generation.service import ChatService
 from prompts.answer_v2 import PROMPT_VERSION
 from retrieval.memory_store import MemoryChunkStore
@@ -27,6 +27,7 @@ def test_traces_ranked_retrieval_hits_and_citation_gated_final_answer() -> None:
                 status=DocumentStatus.READY,
                 section="Annual leave",
                 position=4,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )
@@ -44,6 +45,7 @@ def test_traces_ranked_retrieval_hits_and_citation_gated_final_answer() -> None:
                 status=DocumentStatus.READY,
                 section="Requests",
                 position=9,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
             )
         ],
     )
