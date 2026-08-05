@@ -1,0 +1,8 @@
+name: test_reorganization_holdout
+tier: 1
+description: Verify test suite reorganization and quality checks
+steps:
+  - command: uv run ruff check .
+    expected_exit: 0
+  - command: uv run pytest -m "not integration" -q
+    expected_exit: 0

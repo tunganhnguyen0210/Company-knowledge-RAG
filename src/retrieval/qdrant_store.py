@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 from threading import Lock
+from typing import Any
 
 from qdrant_client import QdrantClient, models
 
@@ -152,7 +153,8 @@ class QdrantChunkStore:
         rrf_limit = max(limit * 4, 20) if self.reranker else limit
         fused = reciprocal_rank_fusion(dense, lexical, rrf_limit)
         if self.reranker and fused:
-            return self.reranker.rerank(query, fused, top_n=limit)
+            reranked: list[SearchHit] = self.reranker.rerank(query, fused, top_n=limit)
+            return reranked
         return fused[:limit]
 
     def ready(self) -> bool:

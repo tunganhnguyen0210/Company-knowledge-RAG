@@ -50,9 +50,14 @@ include = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
-addopts = "-q"
-markers = ["integration: requires external infrastructure"]
+pythonpath = ["src", "."]
+addopts = "-q --basetemp=.pytest_tmp"
+markers = [
+  "unit: isolated deterministic test",
+  "component: multiple internal components with fake external dependencies",
+  "integration: requires external infrastructure",
+  "smoke: critical MVP workflow",
+]
 
 [tool.ruff]
 line-length = 120

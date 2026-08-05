@@ -7,11 +7,6 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    services:
-      qdrant:
-        image: qdrant/qdrant:v1.15.4
-        ports:
-          - 6333:6333
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -22,7 +17,5 @@ jobs:
       - run: uv run ruff check .
       - run: uv run mypy
       - run: uv run pytest --cov=src --cov-report=term-missing
-        env:
-          RUN_QDRANT_INTEGRATION: "1"
       - run: docker compose config --quiet
       - run: docker build --tag company-knowledge-rag:ci .

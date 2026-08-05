@@ -1,9 +1,11 @@
-import pytest
 import httpx
-from domain.schemas import Chunk, SearchHit
-from providers.base import ProviderError
+import pytest
+
+from domain.schemas import SearchHit
+from providers.embedding import normalize_embedding
 from providers.jina import JinaEmbeddingProvider, JinaReranker
 from providers.key_pool import ApiKeyPool
+from tests.support.builders import make_chunk
 
 
 def test_jina_embedding_rotates_on_429(monkeypatch):
@@ -34,7 +36,8 @@ def test_jina_embedding_rotates_on_429(monkeypatch):
     monkeypatch.setattr(httpx.Client, "post", lambda self, url, headers, json: mock_post(url, headers, json))
 
     res = provider.embed_query("test query")
-    assert res == [0.1, 0.2]
+    expected = normalize_embedding([0.1, 0.2])
+    assert res == pytest.approx(expected)
     assert used_keys == ["key-1", "key-2"]
 
 
@@ -65,7 +68,7 @@ def test_jina_reranker_rotates_on_429(monkeypatch):
 
     monkeypatch.setattr(httpx.Client, "post", lambda self, url, headers, json: mock_post(url, headers, json))
 
-    hit = SearchHit(chunk=Chunk(doc_id="d1", chunk_id="c1", text="hello"), score=0.5)
+    hit = SearchHit(chunk=make_chunk(chunk_id="c1", document_id="d1", text="hello"), score=0.5)
     reranked = reranker.rerank("query", [hit], top_n=1)
     assert len(reranked) == 1
     assert reranked[0].score == 0.95
