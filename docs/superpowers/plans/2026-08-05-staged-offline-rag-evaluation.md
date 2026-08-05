@@ -767,19 +767,33 @@ rtk git commit -m "feat: extract legal chunk coordinates"
 ### Task 3: Coordinate Persistence and Index Snapshot Reads
 
 **Files:**
+- Modify: `src/ingestion/structure.py`
 - Modify: `src/ingestion/service.py`
 - Modify: `src/retrieval/base.py`
 - Modify: `src/retrieval/memory_store.py`
 - Modify: `src/retrieval/qdrant_store.py`
+- Modify: `tests/unit/ingestion/test_structure.py`
 - Modify: `tests/unit/ingestion/test_service.py`
 - Modify: `tests/unit/retrieval/test_qdrant_store.py`
 - Modify: `tests/unit/retrieval/test_retrieval.py`
 
 **Interfaces:**
 - Consumes: chunks with `SourceCoordinates` from Task 2.
-- Produces: `ChunkStore.list_document_chunks(document_id, version)` and flat indexed coordinate payloads for preflight/snapshot validation.
+- Produces: minimal generic Markdown heading sections, `ChunkStore.list_document_chunks(document_id, version)`, flat indexed coordinate payloads for preflight/snapshot validation, and an explicit re-index diagnostic for legacy Qdrant payloads.
 
 - [ ] **Step 1: Write failing store-inspection and payload tests**
+
+```python
+# append to tests/unit/ingestion/test_structure.py
+def test_generic_markdown_headings_remain_sections_without_legal_coordinates() -> None:
+    sections = extract_legal_sections("# Leave\nEmployees may request leave.\n\n## Approval\nManagers approve it.", "policy.md")
+
+    assert [section.heading for section in sections] == ["Leave", "Approval"]
+    assert [section.coordinates for section in sections] == [
+        SourceCoordinates(doc_id="policy.md"),
+        SourceCoordinates(doc_id="policy.md"),
+    ]
+```
 
 ```python
 # append to tests/unit/retrieval/test_retrieval.py
@@ -814,7 +828,7 @@ def test_list_document_chunks_filters_version() -> None:
 
 ```python
 # append to tests/unit/retrieval/test_qdrant_store.py
-from retrieval.qdrant_store import _chunk_payload
+from retrieval.qdrant_store import _chunk_from_payload, _chunk_payload
 
 
 def test_chunk_payload_flattens_source_coordinates() -> None:
@@ -835,6 +849,22 @@ def test_chunk_payload_flattens_source_coordinates() -> None:
     assert payload["doc_id"] == "law.md"
     assert payload["chapter"] == "Chương I"
     assert payload["article"] == "Điều 1"
+
+
+def test_legacy_payload_requires_corpus_reindex() -> None:
+    legacy_payload = {
+        "id": "chunk",
+        "document_id": "doc",
+        "version": 1,
+        "text": "legacy",
+        "content_hash": "hash",
+        "source_name": "law.docx",
+        "mime_type": "application/docx",
+        "status": "ready",
+    }
+
+    with pytest.raises(RuntimeError, match="re-index the corpus"):
+        _chunk_from_payload(legacy_payload)
 ```
 
 - [ ] **Step 2: Run the focused tests and verify the new interface is absent**
@@ -845,7 +875,8 @@ Run:
 rtk proxy uv run pytest -p no:cacheprovider tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py -q
 ```
 
-Expected: FAIL for missing `list_document_chunks` and `_chunk_payload`.
+Expected: FAIL for missing generic heading sections, `list_document_chunks`,
+`_chunk_payload`, and `_chunk_from_payload`.
 
 - [ ] **Step 3: Extend the store interface and memory adapter**
 
@@ -890,11 +921,34 @@ def _chunk_payload(chunk: Chunk) -> dict[str, object]:
     payload = chunk.model_dump(mode="json")
     payload.update(chunk.coordinates.model_dump())
     return payload
+
+
+def _chunk_from_payload(payload: dict[str, object] | None) -> Chunk:
+    try:
+        return Chunk.model_validate(payload)
+    except ValidationError as exc:
+        if isinstance(payload, dict) and "coordinates" not in payload:
+            raise RuntimeError(
+                "Qdrant chunk payload lacks required source coordinates; re-index the corpus"
+            ) from exc
+        raise
 ```
+
+Before the Qdrant changes, add `GENERIC_HEADING_RE` in
+`src/ingestion/structure.py`. When no legal heading matches exist, split ATX
+Markdown headings (`#` through `######`) into `LegalSection` values whose heading
+is the stripped heading text and whose coordinates are
+`SourceCoordinates(doc_id=doc_id)`. Preserve the existing single-section fallback
+when neither legal nor generic headings exist. Do not apply the generic fallback
+inside documents that contain legal headings.
 
 Change `ensure_collection()` to create keyword payload indexes for
 `document_id`, `status`, `doc_id`, `chapter`, and `article`, plus the existing integer
 index for `version`. Change each `PointStruct` construction to pass `payload=_chunk_payload(chunk)`.
+Change every Qdrant payload reconstruction in `search()` and
+`list_document_chunks()` to call `_chunk_from_payload(...)`, so pre-coordinate
+collections fail with the approved re-index instruction instead of a raw Pydantic
+error. Do not delete, mutate, or guess coordinates for legacy points.
 
 Implement paginated inspection:
 
@@ -949,8 +1003,8 @@ Update `_chunk_trace_payload` to include `doc_id`, `chapter`, and `article`; kee
 Run:
 
 ```powershell
-rtk proxy uv run pytest -p no:cacheprovider tests/unit/ingestion/test_service.py tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py -q
-rtk ruff check src/ingestion/service.py src/retrieval tests/unit/ingestion/test_service.py tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py
+rtk proxy uv run pytest -p no:cacheprovider tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_service.py tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py -q
+rtk ruff check src/ingestion/structure.py src/ingestion/service.py src/retrieval tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_service.py tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py
 ```
 
 Expected: all selected tests PASS.
@@ -958,7 +1012,7 @@ Expected: all selected tests PASS.
 Commit:
 
 ```powershell
-rtk git add src/ingestion/service.py src/retrieval/base.py src/retrieval/memory_store.py src/retrieval/qdrant_store.py tests/unit/ingestion/test_service.py tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py
+rtk git add src/ingestion/structure.py src/ingestion/service.py src/retrieval/base.py src/retrieval/memory_store.py src/retrieval/qdrant_store.py tests/unit/ingestion/test_structure.py tests/unit/ingestion/test_service.py tests/unit/retrieval/test_retrieval.py tests/unit/retrieval/test_qdrant_store.py
 rtk git commit -m "feat: persist and inspect chunk coordinates"
 ```
 

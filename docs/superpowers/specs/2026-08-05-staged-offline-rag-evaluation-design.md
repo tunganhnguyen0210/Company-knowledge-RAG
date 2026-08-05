@@ -154,6 +154,12 @@ chapter. Every split chunk inherits the same coordinates as its parent article.
 Non-article preamble text may have null chapter/article values but must not be used to
 satisfy answerable golden evidence.
 
+For ordinary Markdown-like documents that contain no legal `Chương`/`Điều`
+headings, the extractor keeps a minimal general-purpose fallback: ATX headings
+(`#` through `######`) delimit sections and populate the existing `section` field.
+Those chunks retain deterministic `doc_id`, while `chapter` and `article` remain
+null. Legal extraction stays authoritative whenever legal headings are present.
+
 `auto_metadata`, summaries, contextual prefixes, and hypothetical questions remain
 optional retrieval enrichment. They are stored separately and cannot modify
 `SourceCoordinates`. Embeddings may use enriched `retrieval_text`; grounding,
@@ -401,6 +407,9 @@ trace payloads its contract.
   access.
 - Ingestion failures do not delete the previously ready indexed version.
 - Missing/incompatible indexes fail preflight with a recovery command.
+- Qdrant points written before required source coordinates existed are not
+  backfilled or guessed. Reads fail with an explicit instruction to re-index the
+  corpus; dev/staging operators may wipe the collection and rerun ingestion.
 - Per-case RAG failures are recorded while remaining cases continue; the run is
   incomplete and exits unsuccessfully.
 - Ragas scores below threshold do not fail. Missing/crashed requested Ragas
