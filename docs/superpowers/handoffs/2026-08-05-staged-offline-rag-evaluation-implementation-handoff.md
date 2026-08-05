@@ -44,10 +44,10 @@ rtk read .superpowers\sdd\progress.md
 
 1. Refresh codebase-memory for this exact worktree; the old index points at a removed temporary path.
 2. Use `superpowers:subagent-driven-development`; extract only Task 0 with its `task-brief` helper.
-3. Dispatch one `gpt-5.6-terra` implementer at `high` reasoning. Do not run parallel implementers.
+3. Dispatch one fresh implementation subagent with enough capability for the task. Do not run parallel implementers.
 4. Require TDD and the test-evidence rules in `AGENTS.md` and `tests/README.md`. Run a plan-required test after relevant edits, reuse its fresh passing result while the covered surface is unchanged, and expand only for concrete unproven risk. Keep the single final verification required by Task 11 unless that exact command already passed on the identical final tree. No live services.
 5. Record the task base before dispatch, commit explicit paths, generate the review package from that base, and update `.superpowers/sdd/progress.md` only after fresh verification.
-6. User-approved SDD review override: a quick supervisor review satisfies the task-review gate for mechanical diffs. Dispatch an independent Terra-High reviewer only for golden authority, replay lineage, immutable artifacts, dependency compatibility, or another cross-task contract. Task 0 changes golden authority, so it requires the independent reviewer.
+6. User-approved SDD review override: a quick supervisor review satisfies the task-review gate for mechanical diffs. Dispatch an independent reviewer only for golden authority, replay lineage, immutable artifacts, dependency compatibility, or another cross-task contract. Task 0 changes golden authority, so it requires the independent reviewer.
 
 ## Constraints Worth Keeping in Working Memory
 
