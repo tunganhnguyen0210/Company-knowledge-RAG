@@ -14,7 +14,9 @@ def test_generation_abstains_when_no_chunks_retrieved() -> None:
         retrieval_limit=5,
     )
 
-    response = service.answer("Nghỉ phép?")
+    execution = service.execute("Nghỉ phép?")
+    response = execution.to_chat_response()
 
+    assert execution.generation is None
     assert response.answer == ABSTENTION
     assert response.citations == []

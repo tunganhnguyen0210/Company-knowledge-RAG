@@ -5,10 +5,12 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from domain.schemas import (
-    ChatResponse,
-    Citation,
-    RetrievalInfo,
+from domain.schemas import ChatResponse, Citation, SearchHit
+from generation.execution import (
+    GenerationExecution,
+    RagExecution,
+    RankedHit,
+    RetrievalExecution,
 )
 from observability.tracing import Tracer
 from prompts.answer_v2 import PROMPT_VERSION, render_answer_prompt
@@ -41,62 +43,75 @@ class ChatService:
         self.retrieval_limit = retrieval_limit
 
     def answer(self, question: str) -> ChatResponse:
-        request_id = str(uuid4())
-        with self.tracer.span(
-            "rag-request",
-            self.tracer.safe_payload(
-                {"request_id": request_id, "question": question}
-            ),
-        ):
-            return self._answer(question, request_id)
+        return self.execute(question).to_chat_response()
 
-    def _answer(self, question: str, request_id: str) -> ChatResponse:
+    def retrieve(
+        self,
+        question: str,
+        request_id: str | None = None,
+    ) -> RetrievalExecution:
+        current_request_id = request_id or str(uuid4())
         started = time.perf_counter()
         with self.tracer.span(
             "retrieval",
             self.tracer.safe_payload(
-                {"request_id": request_id, "question": question}
+                {"request_id": current_request_id, "question": question}
             ),
-        ) as retrieval_observation:
+        ) as observation:
             hits = self.store.search(question, limit=self.retrieval_limit)
             latency_ms = (time.perf_counter() - started) * 1000
+            ranked = [
+                RankedHit(rank=rank, hit=hit)
+                for rank, hit in enumerate(hits, start=1)
+            ]
             self.tracer.update(
-                retrieval_observation,
+                observation,
                 {
                     "result_count": len(hits),
                     "latency_ms": latency_ms,
                     "top_k": [
                         {
-                            "rank": rank,
-                            "score": hit.score,
-                            "chunk_id": hit.chunk.id,
-                            "document_id": hit.chunk.document_id,
-                            "version": hit.chunk.version,
-                            "source_name": hit.chunk.source_name,
-                            "section": hit.chunk.section,
-                            "position": hit.chunk.position,
-                            "content_hash": hit.chunk.content_hash,
-                            "text": hit.chunk.text,
+                            "rank": item.rank,
+                            "score": item.hit.score,
+                            **item.hit.chunk.model_dump(mode="json"),
                         }
-                        for rank, hit in enumerate(hits, start=1)
+                        for item in ranked
                     ],
                 },
             )
-        if not hits:
-            return ChatResponse(
+        return RetrievalExecution(
+            question=question,
+            request_id=current_request_id,
+            hits=ranked,
+            latency_ms=latency_ms,
+        )
+
+    def generate_from_hits(
+        self,
+        question: str,
+        hits: list[SearchHit],
+        request_id: str | None = None,
+    ) -> GenerationExecution:
+        current_request_id = request_id or str(uuid4())
+        started = time.perf_counter()
+        chunks = [hit.chunk for hit in hits]
+        if not chunks:
+            return GenerationExecution(
                 answer=ABSTENTION,
                 citations=[],
-                retrieval=RetrievalInfo(result_count=0, latency_ms=latency_ms),
-                request_id=request_id,
+                structured_response={"answer": ABSTENTION, "citations": []},
+                provider=None,
+                model=None,
+                prompt_version=PROMPT_VERSION,
+                usage={},
+                latency_ms=0.0,
             )
-
-        chunks = [hit.chunk for hit in hits]
         prompt = render_answer_prompt(question, chunks)
         with self.tracer.span(
             "generation",
             self.tracer.safe_payload(
                 {
-                    "request_id": request_id,
+                    "request_id": current_request_id,
                     "question": question,
                     "context": [chunk.text for chunk in chunks],
                     "prompt_version": PROMPT_VERSION,
@@ -104,12 +119,11 @@ class ChatService:
                     "user_prompt": prompt.user_prompt,
                 }
             ),
-        ) as generation_observation:
+        ) as observation:
             result = self.provider.generate_structured(
                 GenerationRequest(prompt.system_instruction, prompt.user_prompt),
                 GroundedAnswer,
             )
-            # The model may still cite a chunk it was never shown; the range check is authoritative.
             cited_indexes = sorted(
                 {index for index in result.value.citations if 1 <= index <= len(chunks)}
             )
@@ -126,7 +140,7 @@ class ChatService:
             ]
             answer = result.value.answer if citations else ABSTENTION
             self.tracer.update(
-                generation_observation,
+                observation,
                 {
                     "provider": result.provider,
                     "model": result.model,
@@ -136,11 +150,41 @@ class ChatService:
                     "answer": answer,
                 },
             )
-        return ChatResponse(
+        return GenerationExecution(
             answer=answer,
             citations=citations,
-            retrieval=RetrievalInfo(result_count=len(hits), latency_ms=latency_ms),
-            request_id=request_id,
+            structured_response=result.value.model_dump(mode="json"),
             provider=result.provider,
             model=result.model,
+            prompt_version=PROMPT_VERSION,
+            usage=result.usage,
+            latency_ms=(time.perf_counter() - started) * 1000,
         )
+
+    def execute(
+        self,
+        question: str,
+        retrieval: RetrievalExecution | None = None,
+    ) -> RagExecution:
+        request_id = retrieval.request_id if retrieval is not None else str(uuid4())
+        with self.tracer.span(
+            "rag-request",
+            self.tracer.safe_payload(
+                {"request_id": request_id, "question": question}
+            ),
+        ):
+            retrieved = retrieval or self.retrieve(question, request_id)
+            generated = (
+                self.generate_from_hits(
+                    question,
+                    [item.hit for item in retrieved.hits],
+                    request_id,
+                )
+                if retrieved.hits
+                else None
+            )
+            return RagExecution(
+                request_id=request_id,
+                retrieval=retrieved,
+                generation=generated,
+            )
