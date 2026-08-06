@@ -19,3 +19,4 @@ docs/research
 .pytest_tmp/
 .codebase-memory
 specs/
+reports/rag_evaluation/
