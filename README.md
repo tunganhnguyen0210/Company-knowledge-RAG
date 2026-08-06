@@ -95,8 +95,12 @@ Client → FastAPI → Dense + BM25 Search → RRF Fusion → Grounded Answer �
   ```
 - **Chạy đánh giá trên Bộ dữ liệu chuẩn (Golden-Set Evaluation)**:
   ```bash
-  uv run company-rag-evaluate --dataset evaluation/golden_set.json
+  rag-eval validate
   ```
+
+The staged evaluator, including the seven operator commands, replay contract,
+and artifact layout, is documented in
+[Quality Evaluation & Operations](docs/architectures/05-observability-evaluation-and-operations.md#staged-offline-rag-evaluation).
 
 ### Ví dụ API
 

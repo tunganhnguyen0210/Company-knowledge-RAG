@@ -46,13 +46,64 @@ The system actively traces two primary workflows: the **Query & Generation Pipel
 
 ## Automated Quality Evaluation Suite
 
-### CLI Evaluator (`src/evaluation/runner.py`)
-Run via CLI command:
-```bash
-company-rag-evaluate
+### Staged offline RAG evaluation
+
+The `rag-eval` CLI is the operator interface for the finalized five-file golden
+set. Begin with local validation; it reads the canonical source and audit
+evidence without building runtime providers or making network calls.
+
+```powershell
+rag-eval validate
+rag-eval ingest --source data/raw/01_2021_ND-CP_283247.docx
+rag-eval retrieval --type multi_hop --limit 10
+rag-eval generation --from-run <retrieval-run-id>
+rag-eval e2e --limit 10
+rag-eval e2e --limit 10 --ragas
+rag-eval e2e --ingest data/raw/01_2021_ND-CP_283247.docx --limit 10
 ```
 
-The evaluator executes golden test cases (defined in JSON test suites) and computes five core metrics:
+`data/raw/01_2021_ND-CP_283247.docx` is the raw ingestion identity. Its
+parsed counterpart, `data/extracted/01_2021_ND-CP_283247.md`, is the canonical
+identity used for deterministic evidence checks. Every answerable golden
+context must be an exact canonical substring inside its declared
+`doc_id`/chapter/article coordinates. The validator extracts those legal
+sections; only a minimal generic Markdown fallback is used when the document
+does not expose a legal article structure. It also content-validates
+`evaluation/id_migration_map.json` and
+`evaluation/golden_set_grounding_review.json` rather than trusting their
+presence.
+
+Ingestion is deliberately opt-in. An unchanged raw source is hash-skipped;
+`--force-reingest` requires an explicit `--source` or `--ingest` path. A
+retrieval or e2e run without ingestion preflights the existing index for ready,
+coordinate-compatible chunks. If legacy Qdrant points fail that preflight,
+recover by re-indexing the raw DOCX with the second command above.
+
+For retrieval and e2e, the precedence is: an explicit `--golden-file` or
+`--type` first defines the population (they are mutually exclusive), then
+`--case-id` narrows that population, then `--limit` chooses a deterministic
+round-robin sample across the remaining types. Without a file or type, all five
+golden files are selected. Generation accepts only `--from-run`: it inherits
+the saved retrieval selection and canonical source, and rejects incompatible
+dataset or artifact fingerprints.
+
+Each invocation writes a new UUID directory below `reports/rag_evaluation/`.
+It contains a write-once `manifest.json` (arguments, source/configuration
+fingerprints, dependency versions, and lineage) and `report.json`; index runs
+also write `index_snapshot.json`, retrieval writes `retrieval.jsonl`, and
+generation writes `generation.jsonl`. These ignored artifacts preserve
+provenance without embedding credentials.
+
+`--ragas` is opt-in and report-only: it scores captured retrieval/generation
+evidence and does not rerun the application pipeline. A requested Ragas failure
+makes the run incomplete. A score below `0.85` is reported, not an implicit
+release gate. Baseline eligibility is stricter: only a complete, full,
+unfiltered 100-case e2e run against the default golden directory and canonical
+source, with content-valid audit evidence, can set `baseline_eligible=true`.
+Validation, ingestion, retrieval-only, generation-only, and limited e2e runs
+are never baseline eligible.
+
+The evaluator computes deterministic metrics before optional Ragas reporting:
 
 | Evaluation Metric | Description | Success Target |
 | --- | --- | --- |

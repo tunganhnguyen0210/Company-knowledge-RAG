@@ -62,7 +62,7 @@ The table below outlines the core technical decisions, underlying engineering ra
   - *Key Decision*: Langfuse span tracing with configurable privacy modes (`off`, `metadata-only`, `full`).
   - *Primary File*: [`src/observability/tracing.py`](src/observability/tracing.py)
 - **5.2 Golden Set Evaluation**:
-  - *Key Decision*: Automated CLI runner (`company-rag-evaluate`) against `evaluation/golden_set.json` to catch silent retrieval regressions.
+  - *Key Decision*: Staged `rag-eval` validation, retrieval, replay generation, and e2e runner over the five-file golden set to catch silent retrieval regressions.
   - *Primary File*: [`src/evaluation/runner.py`](src/evaluation/runner.py)
 
 ---
@@ -75,7 +75,7 @@ graph TB
         HTTP["HTTP API Client / Desktop UI"]
         CLI_Serve["CLI Server Launcher (company-rag-serve)"]
         CLI_Ingest["CLI Ingestion Tool (company-rag-ingest)"]
-        CLI_Eval["CLI Golden-Set Evaluator (company-rag-evaluate)"]
+        CLI_Eval["CLI Golden-Set Evaluator (rag-eval)"]
     end
 
     subgraph Backend["FastAPI Core & Services"]
@@ -130,4 +130,4 @@ graph TB
 | **Vector & Lexical Store** | Handles vector embedding, Qdrant indexing, status filtering, and BM25 scoring. | [`src/retrieval/qdrant_store.py`](src/retrieval/qdrant_store.py) | `QdrantChunkStore`, `MemoryChunkStore` |
 | **Generation Engine** | Constructs prompts, handles provider failovers, calls LLMs, and verifies citations. | [`src/generation/service.py`](src/generation/service.py) | `ChatService.answer()` |
 | **Observability** | Emits structured telemetry spans (request, retrieval, generation) to Langfuse. | [`src/observability/tracing.py`](src/observability/tracing.py) | `Tracer`, `TraceMode` |
-| **Quality Evaluation & CLI** | CLI utilities and automated golden-set runner for serving, ingestion, and benchmark testing. | [`src/cli.py`](src/cli.py), [`src/evaluation/runner.py`](src/evaluation/runner.py) | `company-rag-serve`, `company-rag-ingest`, `company-rag-evaluate` |
+| **Quality Evaluation & CLI** | CLI utilities and staged golden-set runner for serving, ingestion, and benchmark testing. | [`src/cli.py`](src/cli.py), [`src/evaluation/runner.py`](src/evaluation/runner.py) | `company-rag-serve`, `company-rag-ingest`, `rag-eval` |

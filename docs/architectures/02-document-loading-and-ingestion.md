@@ -41,6 +41,22 @@ flowchart LR
 - If a document with the same source filename and hash exists, ingestion returns the existing document without reprocessing unless `force=True`.
 - If the content hash changes, the document version increments (e.g. `v1` -> `v2`), and prior chunk versions are safely pruned from Qdrant.
 
+### Evaluation ingestion and coordinate recovery
+
+The staged evaluator keeps the raw DOCX and the canonical Markdown source as
+separate identities. `data/raw/01_2021_ND-CP_283247.docx` is the opt-in
+ingestion input; `data/extracted/01_2021_ND-CP_283247.md` is the stable source
+used to validate golden excerpts and their legal `doc_id`, chapter, and article
+coordinates. Running `rag-eval ingest --source data/raw/01_2021_ND-CP_283247.docx`
+is idempotent for unchanged bytes; `--force-reingest` is permitted only when a
+source is supplied.
+
+Legacy Qdrant points that lack compatible canonical coordinates cannot be used
+for staged retrieval. Re-index them from the retained raw DOCX with that command,
+then use the staged evaluator's preflight instead of treating old payloads as
+equivalent. See the [evaluation operations contract](05-observability-evaluation-and-operations.md#staged-offline-rag-evaluation)
+for the exact recovery and verification sequence.
+
 ### 2. Document Parsing (`src/ingestion/parser.py`)
 - Supports `.md`, `.txt`, `.pdf`, and `.docx` formats.
 - Extracted text is normalized to UTF-8. PDF files without extractable text are tagged with `status = DocumentStatus.NEEDS_OCR`.

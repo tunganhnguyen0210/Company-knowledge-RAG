@@ -57,3 +57,13 @@ flowchart TD
 - Validates that `1 <= n <= len(chunks)` and maps each index to a `Citation` object containing source file name, document ID, version, and excerpt.
 - If no citations are parsed or all citations map to invalid indices, the service overrides the answer with the standard abstention string:
   > *"Không tìm thấy thông tin phù hợp trong tài liệu được phép truy cập."*
+
+## Staged evaluation replay
+
+`rag-eval retrieval` saves the captured retrieval evidence before any generation
+phase. `rag-eval generation --from-run <retrieval-run-id>` reloads that evidence
+and inherits the retrieval run's golden directory, file scope, and canonical
+source; it rejects incompatible dataset or artifact fingerprints rather than
+silently selecting a new population. The detailed selection precedence,
+write-once artifact paths, and report-only Ragas option are in the
+[evaluation operations contract](05-observability-evaluation-and-operations.md#staged-offline-rag-evaluation).

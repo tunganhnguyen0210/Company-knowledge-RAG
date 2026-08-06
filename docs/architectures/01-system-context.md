@@ -25,7 +25,7 @@ Its operational architecture relies on:
 | **Vector & Lexical Store** | Handles vector embedding, Qdrant indexing, status filtering, and BM25 scoring. | [`src/retrieval/qdrant_store.py`](../../src/retrieval/qdrant_store.py) | `QdrantChunkStore`, `MemoryChunkStore` |
 | **Generation Engine** | Constructs prompts, handles provider failovers, calls LLMs, and verifies citations. | [`src/generation/service.py`](../../src/generation/service.py) | `ChatService.answer()` |
 | **Observability** | Emits structured telemetry spans (request, retrieval, generation) to Langfuse. | [`src/observability/tracing.py`](../../src/observability/tracing.py) | `Tracer`, `TraceMode` |
-| **Quality Evaluation** | Automated golden-set runner for testing retrieval, citations, abstention, and latency. | [`src/evaluation/runner.py`](../../src/evaluation/runner.py) | `company-rag-evaluate` |
+| **Quality Evaluation** | Staged golden-set validation, retrieval, generation replay, and end-to-end evaluation. | [`src/evaluation/runner.py`](../../src/evaluation/runner.py) | `rag-eval` |
 
 ## Runtime Topology
 
@@ -34,7 +34,7 @@ flowchart TB
     subgraph Clients["Clients & Entry Points"]
         WebClient["Web Client / Desktop UI"]
         CLI_Ingest["CLI: company-rag-ingest"]
-        CLI_Eval["CLI: company-rag-evaluate"]
+        CLI_Eval["CLI: rag-eval"]
     end
 
     subgraph ServiceBoundary["FastAPI App Boundary (app.py)"]
@@ -82,7 +82,7 @@ flowchart TB
 ### Command-Line Interface (CLI) Tools
 - **`company-rag-serve`**: Launches the FastAPI application via Uvicorn server (`src/cli.py`).
 - **`company-rag-ingest`**: Batch loads local Markdown/Text/PDF/DOCX files or directories through the core `IngestionService`.
-- **`company-rag-evaluate`**: Runs the regression suite against [`evaluation/golden_set.json`](../../evaluation/golden_set.json) and outputs a detailed benchmark report.
+- **`rag-eval`**: Runs the staged evaluator. Start with `rag-eval validate`; the [operations contract](05-observability-evaluation-and-operations.md#staged-offline-rag-evaluation) defines selection, replay, artifacts, and the optional external run.
 
 ## Deployment Architecture
 
