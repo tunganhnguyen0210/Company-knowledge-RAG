@@ -14,7 +14,7 @@ Tài liệu này định nghĩa cấu trúc, quy mô, quy tắc định danh và
     {
       "golden_truth_context": "<exact source excerpt>",
       "golden_metadata": {
-        "doc_id": "01_2021_ND-CP_283247.md",
+        "doc_id": "01_2021_ND-CP_283247.docx",
         "chapter": "<Chương I..IX>",
         "article": "<Điều 1..101>"
       }
@@ -34,8 +34,36 @@ Tài liệu này định nghĩa cấu trúc, quy mô, quy tắc định danh và
 | `expected_answer` | string | Câu trả lời chuẩn, không vượt quá bằng chứng của nguồn |
 | `golden_truth_contexts` | array | Tối thiểu 1 phần tử với câu trả lời được; bắt buộc `[]` với `unanswerable` |
 | `golden_truth_context` | string | Đoạn trích nguyên văn, liên tục, truy vết được trong nguồn |
-| `golden_metadata` | object | Chỉ gồm `doc_id`, `chapter`, `article` và phải khớp vị trí thật |
+| `golden_metadata` | object | Định nghĩa chi tiết vị trí nguồn (gồm `doc_id`, `chapter`, `article`) |
 | `difficulty` | string | `easy`, `medium`, hoặc `hard` |
+
+### 2.1. Định nghĩa các giá trị trong `golden_metadata`
+
+Đối tượng `golden_metadata` chứa vị trí chính xác của đoạn trích ngữ cảnh trong tài liệu nguồn:
+
+* **`doc_id` (string):** Mã định danh file tài liệu chuẩn.
+  - *Giá trị hợp lệ:* `01_2021_ND-CP_283247.docx` (file nạp hệ thống) hoặc `01_2021_ND-CP_283247.md` (bản văn bản quy chuẩn).
+  - *Quy tắc:* Phải khớp chính xác với mã định danh file được đăng ký trong Document Registry (`data/registry.json`).
+* **`chapter` (string):** Tên Chương chứa đoạn trích dẫn.
+  - *Định dạng:* `"Chương <Số La Mã>"` (Ví dụ: `"Chương I"`, `"Chương II"`, ..., `"Chương IX"`).
+  - *Giá trị:* Phải khớp với Chương thực tế chứa Điều tương ứng trong Nghị định.
+* **`article` (string):** Tên Điều cụ thể chứa trích dẫn.
+  - *Định dạng:* `"Điều <Số tự nhiên>"` (Ví dụ: `"Điều 1"`, `"Điều 6"`, ..., `"Điều 101"`).
+  - *Giá trị:* Phải ghi đúng số Điều cụ thể mà ngữ cảnh được trích xuất.
+
+### 2.2. Định nghĩa các mức độ khó (`difficulty`)
+
+Trường `difficulty` xác định mức độ phức tạp truy xuất và suy luận của câu hỏi:
+
+* **`easy` (Dễ):**
+  - Câu hỏi tra cứu đơn điểm (`direct_lookup`), từ khóa rõ ràng, tường minh.
+  - Đáp án nằm trọn vẹn trong 1 đoạn văn hoặc 1 Điều duy nhất. Không yêu cầu suy luận phức tạp hay biến đổi từ vựng.
+* **`medium` (Trung bình):**
+  - Câu hỏi yêu cầu kết hợp thông tin từ 2–3 Điều/Đoạn văn khác nhau (`multi_hop`).
+  - Sử dụng từ ngữ diễn đạt khác (paraphrasing), từ đồng nghĩa hoặc câu hỏi tình huống thực tế cấp độ cơ bản.
+* **`hard` (Khó):**
+  - Câu hỏi chứa bẫy giả định sai (`adversarial`), câu hỏi mơ hồ thiếu điều kiện (`ambiguous`), hoặc câu hỏi nằm ngoài phạm vi tri thức (`unanswerable`).
+  - Yêu cầu suy luận nhiều bước, phân tích điều kiện ngoại lệ hoặc tổng hợp kiến thức liên Chương/Điều phức tạp.
 
 ## 3. Năm loại câu hỏi
 
