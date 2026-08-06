@@ -29,6 +29,28 @@ class GroundedAnswer(BaseModel):
     )
 
 
+def _ranked_hit_trace_record(item: RankedHit) -> dict[str, object]:
+    chunk = item.hit.chunk
+    coordinates = chunk.coordinates
+    return {
+        "rank": item.rank,
+        "score": item.hit.score,
+        "text": chunk.text,
+        "chunk_id": chunk.id,
+        "document_id": chunk.document_id,
+        "version": chunk.version,
+        "source_name": chunk.source_name,
+        "mime_type": chunk.mime_type,
+        "status": chunk.status.value,
+        "section": chunk.section,
+        "position": chunk.position,
+        "content_hash": chunk.content_hash,
+        "doc_id": coordinates.doc_id,
+        "chapter": coordinates.chapter,
+        "article": coordinates.article,
+    }
+
+
 class ChatService:
     def __init__(
         self,
@@ -69,26 +91,7 @@ class ChatService:
                 {
                     "result_count": len(hits),
                     "latency_ms": latency_ms,
-                    "top_k": [
-                        {
-                            "rank": item.rank,
-                            "score": item.hit.score,
-                            "text": item.hit.chunk.text,
-                            "chunk_id": item.hit.chunk.id,
-                            "document_id": item.hit.chunk.document_id,
-                            "version": item.hit.chunk.version,
-                            "source_name": item.hit.chunk.source_name,
-                            "mime_type": item.hit.chunk.mime_type,
-                            "status": item.hit.chunk.status.value,
-                            "section": item.hit.chunk.section,
-                            "position": item.hit.chunk.position,
-                            "content_hash": item.hit.chunk.content_hash,
-                            "doc_id": item.hit.chunk.coordinates.doc_id,
-                            "chapter": item.hit.chunk.coordinates.chapter,
-                            "article": item.hit.chunk.coordinates.article,
-                        }
-                        for item in ranked
-                    ],
+                    "top_k": [_ranked_hit_trace_record(item) for item in ranked],
                 },
             )
         return RetrievalExecution(
