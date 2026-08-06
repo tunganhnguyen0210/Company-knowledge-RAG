@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 
 import uvicorn
 
 from api.app import create_app
-from evaluation.runner import run_golden_set
 from settings import Settings
 
 
@@ -47,16 +45,4 @@ def ingest() -> None:
         raise
     else:
         app.state.tracer.flush()
-
-
-def evaluate() -> None:
-    parser = argparse.ArgumentParser(description="Run golden-set regression evaluation")
-    parser.add_argument("--dataset", type=Path, default=Path("evaluation/golden_set.json"))
-    parser.add_argument("--output", type=Path, default=Path("reports/golden_report.json"))
-    args = parser.parse_args()
-    app = create_app(Settings())
-    report = run_golden_set(app.state.chat, args.dataset)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps(report["aggregate"], ensure_ascii=False, indent=2))
 
