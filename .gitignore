@@ -14,7 +14,6 @@ qdrant_storage/
 .wgm
 .tokensave
 .codex
-docs/references
 docs/research
 .pytest_tmp/
 .codebase-memory
