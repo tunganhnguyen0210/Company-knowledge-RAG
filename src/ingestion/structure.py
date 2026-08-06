@@ -25,10 +25,10 @@ def extract_legal_sections(text: str, doc_id: str) -> list[LegalSection]:
     if not matches:
         generic_matches = list(GENERIC_HEADING_RE.finditer(text))
         if generic_matches:
-            output: list[LegalSection] = []
+            generic_sections: list[LegalSection] = []
             prefix = text[: generic_matches[0].start()].strip()
             if prefix:
-                output.append(
+                generic_sections.append(
                     LegalSection(
                         heading=None,
                         text=prefix,
@@ -39,14 +39,14 @@ def extract_legal_sections(text: str, doc_id: str) -> list[LegalSection]:
                 end = generic_matches[index + 1].start() if index + 1 < len(generic_matches) else len(text)
                 section_text = text[match.start() : end].strip()
                 if section_text:
-                    output.append(
+                    generic_sections.append(
                         LegalSection(
                             heading=match.group(1).strip(),
                             text=section_text,
                             coordinates=SourceCoordinates(doc_id=doc_id),
                         )
                     )
-            return output
+            return generic_sections
         stripped = text.strip()
         if not stripped:
             return []

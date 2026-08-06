@@ -185,8 +185,8 @@ def validate_golden_dataset(
     if chunks is not None:
         chunk_text: dict[tuple[str, str | None, str | None], str] = {}
         for chunk in sorted(chunks, key=lambda item: item.position):
-            key = (chunk.coordinates.doc_id, chunk.coordinates.chapter, chunk.coordinates.article)
-            chunk_text[key] = f"{chunk_text.get(key, '')}{chunk.text}"
+            chunk_key = (chunk.coordinates.doc_id, chunk.coordinates.chapter, chunk.coordinates.article)
+            chunk_text[chunk_key] = f"{chunk_text.get(chunk_key, '')}{chunk.text}"
         for case in dataset.cases:
             for context in case.golden_truth_contexts:
                 metadata = context.golden_metadata

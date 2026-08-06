@@ -312,6 +312,11 @@ class EvaluationRunner:
             if document is None or document.status is not DocumentStatus.READY
             else self.store.list_document_chunks(document.id, document.version)
         )
+        if document is None:
+            raise RuntimeError(
+                "Index is missing or incompatible. Run:\n"
+                "rag-eval ingest --source data/raw/01_2021_ND-CP_283247.docx"
+            )
         canonical_ids = {chunk.coordinates.doc_id for chunk in chunks}
         coordinates_valid = all(
             chunk.coordinates.article is None
@@ -329,8 +334,7 @@ class EvaluationRunner:
             and len({chunk.position for chunk in chunks}) == len(chunks)
         )
         if (
-            document is None
-            or not chunks
+            not chunks
             or canonical_ids != {request.canonical_source.name}
             or not coordinates_valid
             or not payloads_valid

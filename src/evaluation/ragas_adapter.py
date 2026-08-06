@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 
 from openai import AsyncOpenAI
-from ragas.embeddings.base import embedding_factory
+from ragas.embeddings.base import BaseRagasEmbedding, embedding_factory
 from ragas.llms import llm_factory
 from ragas.metrics.collections import (
     AnswerRelevancy,
@@ -46,6 +46,8 @@ class RagasJudge:
             model=settings.ragas_embedding_model,
             client=client,
         )
+        if not isinstance(embeddings, BaseRagasEmbedding):
+            raise TypeError("Ragas embedding factory returned a legacy embedding interface")
         return cls(
             ContextPrecision(llm=llm),
             ContextRecall(llm=llm),

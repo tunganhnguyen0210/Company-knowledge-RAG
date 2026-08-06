@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import ValidationError
 from qdrant_client import QdrantClient, models
+from qdrant_client.grpc import PointId
 
 from domain.schemas import Chunk, SearchHit
 from providers.base import EmbeddingProvider
@@ -195,7 +196,7 @@ class QdrantChunkStore:
                 )
             )
         output: list[Chunk] = []
-        offset: object | None = None
+        offset: models.ExtendedPointId | PointId | None = None
         while True:
             records, next_offset = self.client.scroll(
                 collection_name=self.collection,

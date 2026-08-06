@@ -75,7 +75,7 @@ def aggregate_scores(rows: list[dict[str, float | None]]) -> dict[str, float]:
     return {
         key: mean(values)
         for key in keys
-        if (values := [float(row[key]) for row in rows if row.get(key) is not None])
+        if (values := [float(value) for row in rows if (value := row.get(key)) is not None])
     }
 
 
@@ -89,7 +89,7 @@ def percentile_95(values: list[float]) -> float:
 def _aggregate_segment(rows: list[dict[str, float | None]]) -> dict[str, float]:
     output = aggregate_scores(rows)
     for key in sorted({name for row in rows for name in row if name.endswith("latency_ms")}):
-        values = [float(row[key]) for row in rows if row.get(key) is not None]
+        values = [float(value) for row in rows if (value := row.get(key)) is not None]
         if values:
             output[f"{key}_p95"] = percentile_95(values)
     return output
