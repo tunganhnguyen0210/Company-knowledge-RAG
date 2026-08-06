@@ -2,7 +2,7 @@
   "schema_version": 1,
   "canonical_doc_id": "01_2021_ND-CP_283247.md",
   "canonical_sha256": "edc31bb8c9a06bd45cf46cb658aa70fdcf2e099cdeb2e394e612dbb286c1e16a",
-  "dataset_sha256": "8bc779d3e0fc3d67d93614bf6e2bfd088ebb4cbe64275ab359901b2fbab70e34",
+  "dataset_sha256": "d3ed91dd047ab5f1f050fde2d1258960663bf864960b54e338b0231244acd05c",
   "validated_cases": 100,
   "validated_contexts": 130,
   "cases": [
@@ -960,7 +960,7 @@
     },
     {
       "case_id": "AMB-014",
-      "status": "failed",
+      "status": "passed",
       "contexts": [
         {
           "context_index": 0,
@@ -970,9 +970,9 @@
         },
         {
           "context_index": 1,
-          "context_sha256": "e694105ea404f00ccdaf5c63ff03f9793fa6a0a60c963acac1f8cdc727b29939",
+          "context_sha256": "ad9d73bf615236d4d8326bc3de934805c25e80fff5b515c3d9625ae792e6779a",
           "exact_source": true,
-          "coordinate_match": false
+          "coordinate_match": true
         },
         {
           "context_index": 2,
@@ -1068,7 +1068,7 @@
     },
     {
       "case_id": "AMB-019",
-      "status": "failed",
+      "status": "passed",
       "contexts": [
         {
           "context_index": 0,
@@ -1078,9 +1078,9 @@
         },
         {
           "context_index": 1,
-          "context_sha256": "c7c534c95bf71c5c07de48c14abbb67f8cc879d67f58277733314b3e552a3965",
+          "context_sha256": "4bdac239c1394ea920bb80a1cef78fa5e018d160dcf284a472c2a9872e79dc66",
           "exact_source": true,
-          "coordinate_match": false
+          "coordinate_match": true
         },
         {
           "context_index": 2,
