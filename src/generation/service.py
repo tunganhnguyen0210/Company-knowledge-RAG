@@ -73,6 +73,7 @@ class ChatService:
                         {
                             "rank": item.rank,
                             "score": item.hit.score,
+                            "text": item.hit.chunk.text,
                             "chunk_id": item.hit.chunk.id,
                             "document_id": item.hit.chunk.document_id,
                             "version": item.hit.chunk.version,

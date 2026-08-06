@@ -116,3 +116,37 @@ def test_metadata_only_traces_redact_retrieval_content_and_final_answer() -> Non
     generation = tracer.observation("generation")
     assert "answer" not in generation.updates[0]
     assert response.citations[0].id == "C1"
+
+
+def test_full_traces_include_raw_retrieval_text() -> None:
+    raw_text = "Leave policy permits fifteen days."
+    store = MemoryChunkStore()
+    store.replace_document(
+        "doc",
+        [
+            Chunk(
+                id="chunk",
+                document_id="doc",
+                version=1,
+                text=raw_text,
+                content_hash="hash",
+                source_name="leave.md",
+                mime_type="text/markdown",
+                status=DocumentStatus.READY,
+                coordinates=SourceCoordinates(doc_id="policy.md"),
+            )
+        ],
+    )
+    tracer = RecordingTracer(TraceMode.FULL)
+    service = ChatService(store, CitedProvider(), tracer, retrieval_limit=5)  # type: ignore[arg-type]
+
+    service.answer("Leave policy?")
+
+    top_hit = tracer.observation("retrieval").updates[0]["top_k"][0]
+    assert top_hit["text"] == raw_text
+    assert not {
+        "retrieval_text",
+        "summary",
+        "hypothesis_questions",
+        "auto_metadata",
+    }.intersection(top_hit)
