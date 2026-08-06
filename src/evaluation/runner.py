@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import platform
 import subprocess
+from collections.abc import Sequence
 from hashlib import sha256
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
@@ -60,6 +61,53 @@ class SemanticJudge(Protocol):
         raise NotImplementedError
 
 
+_CaseArtifact = RetrievalCaseArtifact | GenerationCaseArtifact
+_SemanticScores = dict[str, dict[str, float | None]]
+
+
+def _merged_case_scores(
+    cases: Sequence[_CaseArtifact],
+    semantic_scores: _SemanticScores,
+) -> dict[str, dict[str, float | None]]:
+    return {
+        case.case_id: case.deterministic_scores
+        | semantic_scores.get(case.case_id, {})
+        for case in cases
+    }
+
+
+def _failed_report(
+    *,
+    run_id: str,
+    mode: EvaluationMode,
+    dataset_size: int,
+    errors: list[str],
+    validation: GoldenValidationReport | None = None,
+) -> EvaluationReport:
+    report_validation = (
+        validation
+        if validation is not None
+        else GoldenValidationReport(
+            errors=[],
+            warnings=[],
+            validated_cases=0,
+            full_conformance=False,
+        )
+    )
+    return EvaluationReport(
+        run_id=run_id,
+        mode=mode,
+        status="failed",
+        dataset_size=dataset_size,
+        evaluated_cases=0,
+        validation=report_validation.model_dump(mode="json"),
+        aggregates={},
+        errors=errors,
+        artifact_ids={},
+        baseline_eligible=False,
+    )
+
+
 class EvaluationRunner:
     def __init__(
         self,
@@ -84,39 +132,7 @@ class EvaluationRunner:
         run_id = uuid4().hex
         manifest: RunManifest | None = None
         try:
-            replay_source = (
-                self.repository.load_retrieval(request.from_run)
-                if request.mode is EvaluationMode.GENERATION
-                and request.from_run is not None
-                else None
-            )
-            effective_request = request
-            if replay_source is not None:
-                replay_files = [Path(path) for path in replay_source.dataset_source_files]
-                effective_request = request.model_copy(
-                    update={
-                        "golden_dir": replay_source.golden_dir,
-                        "golden_files": (
-                            replay_files if replay_source.dataset_scope == "partial" else []
-                        ),
-                        "canonical_source": replay_source.canonical_source,
-                    }
-                )
-                dataset = load_golden_dataset(
-                    replay_source.golden_dir,
-                    files=(
-                        replay_files if replay_source.dataset_scope == "partial" else None
-                    ),
-                )
-                if dataset.source_files != replay_source.dataset_source_files:
-                    raise ValueError(
-                        "retrieval artifact golden source-file selection is incompatible"
-                    )
-            else:
-                dataset = load_golden_dataset(
-                    request.golden_dir,
-                    files=request.golden_files or None,
-                )
+            effective_request, dataset = self._resolve_dataset(request)
             manifest = self._build_manifest(effective_request, dataset, run_id)
             validation = validate_golden_dataset(
                 dataset,
@@ -125,17 +141,12 @@ class EvaluationRunner:
                 audit_root=effective_request.golden_dir.parent,
             )
             if validation.errors:
-                report = EvaluationReport(
+                report = _failed_report(
                     run_id=run_id,
                     mode=request.mode,
-                    status="failed",
                     dataset_size=len(dataset.cases),
-                    evaluated_cases=0,
-                    validation=validation.model_dump(mode="json"),
-                    aggregates={},
                     errors=[issue.message for issue in validation.errors],
-                    artifact_ids={},
-                    baseline_eligible=False,
+                    validation=validation,
                 )
             else:
                 selected = (
@@ -154,59 +165,88 @@ class EvaluationRunner:
                     )
                 )
                 try:
-                    if effective_request.mode is EvaluationMode.VALIDATE:
-                        report = self._run_validate(
-                            effective_request, dataset, validation, run_id
-                        )
-                    elif effective_request.mode is EvaluationMode.INGEST:
-                        report = self._run_ingest(
-                            effective_request, dataset, validation, run_id
-                        )
-                    elif effective_request.mode is EvaluationMode.RETRIEVAL:
-                        report = self._retrieval_report(
-                            effective_request, dataset, selected, validation, run_id
-                        )
-                    elif effective_request.mode is EvaluationMode.GENERATION:
-                        report = self._generation_report(
-                            effective_request, dataset, validation, run_id
-                        )
-                    else:
-                        report = self._run_e2e(
-                            effective_request, dataset, selected, validation, run_id
-                        )
+                    report = self._dispatch_mode(
+                        effective_request,
+                        dataset,
+                        selected,
+                        validation,
+                        run_id,
+                    )
                 except Exception as exc:
-                    report = EvaluationReport(
+                    report = _failed_report(
                         run_id=run_id,
                         mode=request.mode,
-                        status="failed",
                         dataset_size=len(dataset.cases),
-                        evaluated_cases=0,
-                        validation=validation.model_dump(mode="json"),
-                        aggregates={},
                         errors=[f"{type(exc).__name__}: {exc}"],
-                        artifact_ids={},
-                        baseline_eligible=False,
+                        validation=validation,
                     )
             return self._finish_report(report, manifest)
         except Exception as exc:
-            failed_report = EvaluationReport(
+            failed_report = _failed_report(
                 run_id=run_id,
                 mode=request.mode,
-                status="failed",
                 dataset_size=0,
-                evaluated_cases=0,
-                validation=GoldenValidationReport(
-                    errors=[],
-                    warnings=[],
-                    validated_cases=0,
-                    full_conformance=False,
-                ).model_dump(mode="json"),
-                aggregates={},
                 errors=[f"{type(exc).__name__}: {exc}"],
-                artifact_ids={},
-                baseline_eligible=False,
             )
             return self._finish_report(failed_report, manifest)
+
+    def _resolve_dataset(
+        self,
+        request: EvaluationRequest,
+    ) -> tuple[EvaluationRequest, GoldenDataset]:
+        if request.mode is not EvaluationMode.GENERATION or request.from_run is None:
+            dataset = load_golden_dataset(
+                request.golden_dir,
+                files=request.golden_files or None,
+            )
+            return request, dataset
+
+        replay_source = self.repository.load_retrieval(request.from_run)
+        replay_files = [Path(path) for path in replay_source.dataset_source_files]
+        selected_files = (
+            replay_files if replay_source.dataset_scope == "partial" else None
+        )
+        effective_request = request.model_copy(
+            update={
+                "golden_dir": replay_source.golden_dir,
+                "golden_files": replay_files if selected_files is not None else [],
+                "canonical_source": replay_source.canonical_source,
+            }
+        )
+        dataset = load_golden_dataset(
+            replay_source.golden_dir,
+            files=selected_files,
+        )
+        if dataset.source_files != replay_source.dataset_source_files:
+            raise ValueError(
+                "retrieval artifact golden source-file selection is incompatible"
+            )
+        return effective_request, dataset
+
+    def _dispatch_mode(
+        self,
+        request: EvaluationRequest,
+        dataset: GoldenDataset,
+        selected: list[GoldenCase],
+        validation: GoldenValidationReport,
+        run_id: str,
+    ) -> EvaluationReport:
+        if request.mode is EvaluationMode.VALIDATE:
+            return self._run_validate(request, dataset, validation, run_id)
+        elif request.mode is EvaluationMode.INGEST:
+            return self._run_ingest(request, dataset, validation, run_id)
+        elif request.mode is EvaluationMode.RETRIEVAL:
+            return self._retrieval_report(
+                request,
+                dataset,
+                selected,
+                validation,
+                run_id,
+            )
+        elif request.mode is EvaluationMode.GENERATION:
+            return self._generation_report(request, dataset, validation, run_id)
+        else:
+            return self._run_e2e(request, dataset, selected, validation, run_id)
 
     def _finish_report(
         self,
@@ -526,7 +566,7 @@ class EvaluationRunner:
         retrieval = draft.model_copy(
             update={"run_fingerprint": artifact_fingerprint(draft)}
         )
-        semantic_scores: dict[str, dict[str, float | None]] = {}
+        semantic_scores: _SemanticScores = {}
         if request.run_ragas:
             if self.semantic_judge is None:
                 errors.append("Ragas requested but semantic judge is unavailable")
@@ -543,19 +583,15 @@ class EvaluationRunner:
         successful_ids = {
             item.case_id for item in retrieval.cases if item.retrieval is not None
         }
+        case_scores = _merged_case_scores(retrieval.cases, semantic_scores)
         aggregates = segment_aggregates(
             [case for case in selected if case.id in successful_ids],
             [
-                item.deterministic_scores | semantic_scores.get(item.case_id, {})
+                case_scores[item.case_id]
                 for item in retrieval.cases
                 if item.retrieval is not None
             ],
         )
-        case_scores = {
-            item.case_id: item.deterministic_scores
-            | semantic_scores.get(item.case_id, {})
-            for item in retrieval.cases
-        }
         return EvaluationReport(
             run_id=run_id,
             mode=request.mode,
@@ -662,7 +698,7 @@ class EvaluationRunner:
         generation = draft.model_copy(
             update={"run_fingerprint": artifact_fingerprint(draft)}
         )
-        semantic_scores: dict[str, dict[str, float | None]] = {}
+        semantic_scores: _SemanticScores = {}
         if request.run_ragas:
             if self.semantic_judge is None:
                 errors.append("Ragas requested but semantic judge is unavailable")
@@ -680,19 +716,15 @@ class EvaluationRunner:
             for item in generation.cases
             if item.generation is not None
         }
+        case_scores = _merged_case_scores(generation.cases, semantic_scores)
         aggregates = segment_aggregates(
             [case for case in dataset.cases if case.id in successful_ids],
             [
-                item.deterministic_scores | semantic_scores.get(item.case_id, {})
+                case_scores[item.case_id]
                 for item in generation.cases
                 if item.generation is not None
             ],
         )
-        case_scores = {
-            item.case_id: item.deterministic_scores
-            | semantic_scores.get(item.case_id, {})
-            for item in generation.cases
-        }
         status = "complete" if not errors else "incomplete"
         return EvaluationReport(
             run_id=run_id,
