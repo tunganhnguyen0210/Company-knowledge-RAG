@@ -10,6 +10,9 @@ from domain.schemas import SearchHit
 from evaluation.golden import Difficulty, GoldenCase, GoldenType
 from generation.service import ABSTENTION
 
+_SourceCoordinate = tuple[str, str | None, str | None]
+_MetricRow = dict[str, float | None]
+
 
 def _normalized(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
@@ -18,28 +21,33 @@ def _normalized(text: str) -> str:
 def score_retrieval_case(case: GoldenCase, hits: list[SearchHit]) -> dict[str, float | None]:
     if not case.golden_truth_contexts:
         return {"coordinate_recall": None, "evidence_recall": None}
-    required_coordinates = {
-        (item.golden_metadata.doc_id, item.golden_metadata.chapter, item.golden_metadata.article)
-        for item in case.golden_truth_contexts
-    }
-    retrieved_coordinates = {
-        (hit.chunk.coordinates.doc_id, hit.chunk.coordinates.chapter, hit.chunk.coordinates.article)
-        for hit in hits
-    }
-    grouped: dict[tuple[str, str | None, str | None], list[tuple[int, str]]] = defaultdict(list)
+
+    required_coordinates: set[_SourceCoordinate] = set()
+    for context in case.golden_truth_contexts:
+        metadata = context.golden_metadata
+        required_coordinates.add((metadata.doc_id, metadata.chapter, metadata.article))
+
+    retrieved_coordinates: set[_SourceCoordinate] = set()
+    grouped: dict[_SourceCoordinate, list[tuple[int, str]]] = defaultdict(list)
     for hit in hits:
-        key = (
-            hit.chunk.coordinates.doc_id,
-            hit.chunk.coordinates.chapter,
-            hit.chunk.coordinates.article,
+        coordinates = hit.chunk.coordinates
+        coordinate = (
+            coordinates.doc_id,
+            coordinates.chapter,
+            coordinates.article,
         )
-        grouped[key].append((hit.chunk.position, hit.chunk.text))
+        retrieved_coordinates.add(coordinate)
+        grouped[coordinate].append((hit.chunk.position, hit.chunk.text))
+
     recovered = 0
-    for item in case.golden_truth_contexts:
-        metadata = item.golden_metadata
-        key = (metadata.doc_id, metadata.chapter, metadata.article)
-        text = "".join(value for _, value in sorted(grouped.get(key, [])))
-        recovered += _normalized(item.golden_truth_context) in _normalized(text)
+    for context in case.golden_truth_contexts:
+        metadata = context.golden_metadata
+        coordinate = (metadata.doc_id, metadata.chapter, metadata.article)
+        recovered_text = "".join(
+            text for _, text in sorted(grouped.get(coordinate, []))
+        )
+        recovered += _normalized(context.golden_truth_context) in _normalized(recovered_text)
+
     return {
         "coordinate_recall": len(required_coordinates & retrieved_coordinates) / len(required_coordinates),
         "evidence_recall": recovered / len(case.golden_truth_contexts),
@@ -70,13 +78,23 @@ def score_generation_case(
     }
 
 
-def aggregate_scores(rows: list[dict[str, float | None]]) -> dict[str, float]:
+def _non_null_metric_values(rows: list[_MetricRow], key: str) -> list[float]:
+    values: list[float] = []
+    for row in rows:
+        value = row.get(key)
+        if value is not None:
+            values.append(float(value))
+    return values
+
+
+def aggregate_scores(rows: list[_MetricRow]) -> dict[str, float]:
     keys = sorted({key for row in rows for key in row})
-    return {
-        key: mean(values)
-        for key in keys
-        if (values := [float(value) for row in rows if (value := row.get(key)) is not None])
-    }
+    output: dict[str, float] = {}
+    for key in keys:
+        values = _non_null_metric_values(rows, key)
+        if values:
+            output[key] = mean(values)
+    return output
 
 
 def percentile_95(values: list[float]) -> float:
@@ -86,10 +104,10 @@ def percentile_95(values: list[float]) -> float:
     return ordered[max(ceil(0.95 * len(ordered)) - 1, 0)]
 
 
-def _aggregate_segment(rows: list[dict[str, float | None]]) -> dict[str, float]:
+def _aggregate_segment(rows: list[_MetricRow]) -> dict[str, float]:
     output = aggregate_scores(rows)
     for key in sorted({name for row in rows for name in row if name.endswith("latency_ms")}):
-        values = [float(value) for row in rows if (value := row.get(key)) is not None]
+        values = _non_null_metric_values(rows, key)
         if values:
             output[f"{key}_p95"] = percentile_95(values)
     return output
@@ -97,7 +115,7 @@ def _aggregate_segment(rows: list[dict[str, float | None]]) -> dict[str, float]:
 
 def segment_aggregates(
     cases: list[GoldenCase],
-    rows: list[dict[str, float | None]],
+    rows: list[_MetricRow],
 ) -> dict[str, Any]:
     if len(cases) != len(rows):
         raise ValueError("cases and score rows must have equal length")
