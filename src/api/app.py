@@ -235,6 +235,7 @@ def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
         settings.lexical_candidate_limit,
         settings.min_dense_score,
         reranker=reranker,
+        rerank_candidate_limit=settings.rerank_candidate_limit,
     )
 
 

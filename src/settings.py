@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
     jina_api_key: str = ""
+    jina_api_fallback_key: str = ""
+    jina_api_fallback_key2: str = ""
     embedding_model: str = "jina-embeddings-v5-omni-small"
     reranker_model: str = ""
     openrouter_api_key: str = ""
@@ -76,6 +78,7 @@ class Settings(BaseSettings):
     registry_path: Path = Path("data/registry.json")
     max_upload_bytes: int = 20 * 1024 * 1024
     retrieval_limit: int = 5
+    rerank_candidate_limit: int = Field(default=50, ge=5)
     lexical_candidate_limit: int = 500
     min_dense_score: float = 0.35
     enable_enrichment: bool = False
@@ -106,6 +109,13 @@ class Settings(BaseSettings):
 
         if single_key_val and primary_env_var not in env:
             env[primary_env_var] = single_key_val
+
+        for suffix in ("", "2"):
+            fallback_attr = f"{prefix.lower()}_api_fallback_key{suffix}"
+            fallback_env_var = f"{prefix_upper}_API_FALLBACK_KEY{suffix}"
+            fallback_value = getattr(self, fallback_attr, "")
+            if fallback_value and fallback_env_var not in env:
+                env[fallback_env_var] = fallback_value
 
         cooldown = self.key_cooldown_seconds
         return ApiKeyPool.from_environment(

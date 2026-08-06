@@ -137,6 +137,7 @@ def _runtime_configuration(settings: Settings) -> dict[str, object]:
         "embedding_model": settings.embedding_model,
         "reranker_model": settings.reranker_model,
         "retrieval_limit": settings.retrieval_limit,
+        "rerank_candidate_limit": settings.rerank_candidate_limit,
         "lexical_candidate_limit": settings.lexical_candidate_limit,
         "min_dense_score": settings.min_dense_score,
         "enable_enrichment": settings.enable_enrichment,
