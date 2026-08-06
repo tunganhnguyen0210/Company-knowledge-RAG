@@ -41,6 +41,46 @@ TYPE_PREFIXES = {
     GoldenType.AMBIGUOUS: "AMB",
     GoldenType.ADVERSARIAL: "ADV",
 }
+_EXPECTED_ID_MIGRATION: dict[str, object] = {
+    "schema_version": 1,
+    "migration_commit": "f97292a",
+    "old_to_new": {
+        "1": "DL-001",
+        "5": "DL-002",
+        "7": "DL-003",
+        "9": "DL-004",
+        "13": "DL-005",
+        "17": "DL-006",
+        "21": "DL-007",
+        "25": "DL-008",
+        "29": "DL-009",
+        "33": "DL-010",
+        "37": "DL-011",
+        "41": "DL-012",
+        "45": "DL-013",
+        "49": "DL-014",
+        "53": "DL-015",
+        "57": "DL-016",
+        "61": "DL-017",
+        "65": None,
+        "69": "DL-018",
+        "73": "DL-019",
+        "77": "DL-020",
+    },
+    "retired": [
+        {
+            "old_id": "65",
+            "status": "retired",
+            "reason": (
+                "The question asks for a number of days while Article 35 defines "
+                "the filing-time event, so it is not a sound direct lookup."
+            ),
+        }
+    ],
+}
+
+_SourceCoordinate = tuple[str, str | None, str | None]
+_ArticleText = dict[_SourceCoordinate, str]
 
 
 class GoldenMetadata(BaseModel):
@@ -141,27 +181,30 @@ def _normalized(text: str) -> str:
     return re.sub(r"\s+", " ", without_markers).strip()
 
 
-def validate_golden_dataset(
-    dataset: GoldenDataset,
-    canonical_path: Path,
-    chunks: list[Chunk] | None,
-    audit_root: Path,
-) -> GoldenValidationReport:
-    canonical = canonical_path.read_text(encoding="utf-8")
-    doc_id = canonical_path.name
+def _canonical_article_text(canonical: str, doc_id: str) -> _ArticleText:
     sections = extract_legal_sections(canonical, doc_id)
-    article_text = {
-        (section.coordinates.doc_id, section.coordinates.chapter, section.coordinates.article): section.text
+    return {
+        (
+            section.coordinates.doc_id,
+            section.coordinates.chapter,
+            section.coordinates.article,
+        ): section.text
         for section in sections
         if section.coordinates.article is not None
     }
+
+
+def _context_validation_errors(
+    dataset: GoldenDataset,
+    canonical: str,
+    article_text: _ArticleText,
+) -> list[ValidationIssue]:
     errors: list[ValidationIssue] = []
-    warnings: list[ValidationIssue] = []
     for case in dataset.cases:
         for context in case.golden_truth_contexts:
             evidence = context.golden_truth_context
             metadata = context.golden_metadata
-            key = (metadata.doc_id, metadata.chapter, metadata.article)
+            coordinate = (metadata.doc_id, metadata.chapter, metadata.article)
             if evidence not in canonical:
                 errors.append(
                     ValidationIssue(
@@ -170,7 +213,7 @@ def validate_golden_dataset(
                         case_id=case.id,
                     )
                 )
-            elif evidence not in article_text.get(key, ""):
+            elif evidence not in article_text.get(coordinate, ""):
                 errors.append(
                     ValidationIssue(
                         code="context_coordinate_mismatch",
@@ -186,147 +229,167 @@ def validate_golden_dataset(
                         case_id=case.id,
                     )
                 )
-    if chunks is not None:
-        chunk_text: dict[tuple[str, str | None, str | None], str] = {}
-        for chunk in sorted(chunks, key=lambda item: item.position):
-            chunk_key = (chunk.coordinates.doc_id, chunk.coordinates.chapter, chunk.coordinates.article)
-            chunk_text[chunk_key] = f"{chunk_text.get(chunk_key, '')}{chunk.text}"
-        for case in dataset.cases:
-            for context in case.golden_truth_contexts:
-                metadata = context.golden_metadata
-                key = (metadata.doc_id, metadata.chapter, metadata.article)
-                if _normalized(context.golden_truth_context) not in _normalized(
-                    chunk_text.get(key, "")
-                ):
-                    errors.append(
-                        ValidationIssue(
-                            code="context_not_recoverable_from_chunks",
-                            message="context is not recoverable from ordered article chunks",
-                            case_id=case.id,
-                        )
+    return errors
+
+
+def _ordered_chunk_text(chunks: list[Chunk]) -> _ArticleText:
+    chunk_text: _ArticleText = {}
+    for chunk in sorted(chunks, key=lambda item: item.position):
+        coordinates = chunk.coordinates
+        coordinate = (coordinates.doc_id, coordinates.chapter, coordinates.article)
+        chunk_text[coordinate] = f"{chunk_text.get(coordinate, '')}{chunk.text}"
+    return chunk_text
+
+
+def _chunk_recovery_errors(
+    dataset: GoldenDataset,
+    chunks: list[Chunk],
+) -> list[ValidationIssue]:
+    chunk_text = _ordered_chunk_text(chunks)
+    errors: list[ValidationIssue] = []
+    for case in dataset.cases:
+        for context in case.golden_truth_contexts:
+            metadata = context.golden_metadata
+            coordinate = (metadata.doc_id, metadata.chapter, metadata.article)
+            if _normalized(context.golden_truth_context) not in _normalized(
+                chunk_text.get(coordinate, "")
+            ):
+                errors.append(
+                    ValidationIssue(
+                        code="context_not_recoverable_from_chunks",
+                        message="context is not recoverable from ordered article chunks",
+                        case_id=case.id,
                     )
-    migration_path = audit_root / "id_migration_map.json"
-    review_path = audit_root / "golden_set_grounding_review.json"
-    expected_migration = {
-        "schema_version": 1,
-        "migration_commit": "f97292a",
-        "old_to_new": {
-            "1": "DL-001",
-            "5": "DL-002",
-            "7": "DL-003",
-            "9": "DL-004",
-            "13": "DL-005",
-            "17": "DL-006",
-            "21": "DL-007",
-            "25": "DL-008",
-            "29": "DL-009",
-            "33": "DL-010",
-            "37": "DL-011",
-            "41": "DL-012",
-            "45": "DL-013",
-            "49": "DL-014",
-            "53": "DL-015",
-            "57": "DL-016",
-            "61": "DL-017",
-            "65": None,
-            "69": "DL-018",
-            "73": "DL-019",
-            "77": "DL-020",
-        },
-        "retired": [
-            {
-                "old_id": "65",
-                "status": "retired",
-                "reason": (
-                    "The question asks for a number of days while Article 35 defines "
-                    "the filing-time event, so it is not a sound direct lookup."
-                ),
-            }
-        ],
-    }
-    if not migration_path.exists():
-        warnings.append(
-            ValidationIssue(
-                code="missing_id_migration_map",
-                message=f"missing audit artifact: {migration_path.name}",
-            )
-        )
-    else:
-        migration = json.loads(migration_path.read_text(encoding="utf-8"))
-        if migration != expected_migration:
-            warnings.append(
-                ValidationIssue(
-                    code="invalid_id_migration_map",
-                    message=(
-                        "ID migration evidence does not match the issued direct-lookup namespace"
-                    ),
                 )
-            )
-    if not review_path.exists():
-        warnings.append(
-            ValidationIssue(
-                code="missing_grounding_review",
-                message=f"missing audit artifact: {review_path.name}",
-            )
+    return errors
+
+
+def _migration_map_warning(path: Path) -> ValidationIssue | None:
+    if not path.exists():
+        return ValidationIssue(
+            code="missing_id_migration_map",
+            message=f"missing audit artifact: {path.name}",
         )
-    else:
-        review = json.loads(review_path.read_text(encoding="utf-8"))
-        dataset_bytes = json.dumps(
-            [case.model_dump(mode="json") for case in dataset.cases],
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode()
-        expected_cases = []
-        for case in dataset.cases:
-            expected_contexts = []
-            for context_index, context in enumerate(case.golden_truth_contexts):
-                evidence = context.golden_truth_context
-                metadata = context.golden_metadata
-                key = (metadata.doc_id, metadata.chapter, metadata.article)
-                expected_contexts.append(
-                    {
-                        "context_index": context_index,
-                        "context_sha256": sha256(evidence.encode("utf-8")).hexdigest(),
-                        "exact_source": evidence in canonical,
-                        "coordinate_match": evidence in article_text.get(key, ""),
-                    }
-                )
-            expected_cases.append(
+    migration = json.loads(path.read_text(encoding="utf-8"))
+    if migration != _EXPECTED_ID_MIGRATION:
+        return ValidationIssue(
+            code="invalid_id_migration_map",
+            message="ID migration evidence does not match the issued direct-lookup namespace",
+        )
+    return None
+
+
+def _expected_grounding_review(
+    dataset: GoldenDataset,
+    canonical: str,
+    canonical_doc_id: str,
+    article_text: _ArticleText,
+) -> dict[str, object]:
+    dataset_bytes = json.dumps(
+        [case.model_dump(mode="json") for case in dataset.cases],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    expected_cases: list[dict[str, object]] = []
+    for case in dataset.cases:
+        expected_contexts: list[dict[str, object]] = []
+        for context_index, context in enumerate(case.golden_truth_contexts):
+            evidence = context.golden_truth_context
+            metadata = context.golden_metadata
+            coordinate = (metadata.doc_id, metadata.chapter, metadata.article)
+            expected_contexts.append(
                 {
-                    "case_id": case.id,
-                    "status": (
-                        "passed"
-                        if all(
-                            item["exact_source"] and item["coordinate_match"]
-                            for item in expected_contexts
-                        )
-                        else "failed"
-                    ),
-                    "contexts": expected_contexts,
+                    "context_index": context_index,
+                    "context_sha256": sha256(evidence.encode("utf-8")).hexdigest(),
+                    "exact_source": evidence in canonical,
+                    "coordinate_match": evidence in article_text.get(coordinate, ""),
                 }
             )
-        expected_review = {
-            "schema_version": 1,
-            "canonical_doc_id": canonical_path.name,
-            "canonical_sha256": sha256(canonical.encode("utf-8")).hexdigest(),
-            "dataset_sha256": sha256(dataset_bytes).hexdigest(),
-            "validated_cases": len(dataset.cases),
-            "validated_contexts": sum(
-                len(case.golden_truth_contexts) for case in dataset.cases
+        expected_cases.append(
+            {
+                "case_id": case.id,
+                "status": (
+                    "passed"
+                    if all(
+                        context["exact_source"] and context["coordinate_match"]
+                        for context in expected_contexts
+                    )
+                    else "failed"
+                ),
+                "contexts": expected_contexts,
+            }
+        )
+    return {
+        "schema_version": 1,
+        "canonical_doc_id": canonical_doc_id,
+        "canonical_sha256": sha256(canonical.encode("utf-8")).hexdigest(),
+        "dataset_sha256": sha256(dataset_bytes).hexdigest(),
+        "validated_cases": len(dataset.cases),
+        "validated_contexts": sum(
+            len(case.golden_truth_contexts) for case in dataset.cases
+        ),
+        "cases": expected_cases,
+    }
+
+
+def _grounding_review_warning(
+    path: Path,
+    dataset: GoldenDataset,
+    canonical: str,
+    canonical_doc_id: str,
+    article_text: _ArticleText,
+) -> ValidationIssue | None:
+    if not path.exists():
+        return ValidationIssue(
+            code="missing_grounding_review",
+            message=f"missing audit artifact: {path.name}",
+        )
+    review = json.loads(path.read_text(encoding="utf-8"))
+    expected_review = _expected_grounding_review(
+        dataset,
+        canonical,
+        canonical_doc_id,
+        article_text,
+    )
+    if review != expected_review:
+        return ValidationIssue(
+            code="invalid_grounding_review",
+            message=(
+                "grounding review evidence does not match the current canonical source "
+                "and dataset"
             ),
-            "cases": expected_cases,
-        }
-        if review != expected_review:
-            warnings.append(
-                ValidationIssue(
-                    code="invalid_grounding_review",
-                    message=(
-                        "grounding review evidence does not match the current canonical source "
-                        "and dataset"
-                    ),
-                )
-            )
+        )
+    return None
+
+
+def validate_golden_dataset(
+    dataset: GoldenDataset,
+    canonical_path: Path,
+    chunks: list[Chunk] | None,
+    audit_root: Path,
+) -> GoldenValidationReport:
+    canonical = canonical_path.read_text(encoding="utf-8")
+    article_text = _canonical_article_text(canonical, canonical_path.name)
+    errors = _context_validation_errors(dataset, canonical, article_text)
+    if chunks is not None:
+        errors.extend(_chunk_recovery_errors(dataset, chunks))
+
+    warnings: list[ValidationIssue] = []
+    migration_warning = _migration_map_warning(audit_root / "id_migration_map.json")
+    if migration_warning is not None:
+        warnings.append(migration_warning)
+
+    review_warning = _grounding_review_warning(
+        audit_root / "golden_set_grounding_review.json",
+        dataset,
+        canonical,
+        canonical_path.name,
+        article_text,
+    )
+    if review_warning is not None:
+        warnings.append(review_warning)
+
     return GoldenValidationReport(
         errors=errors,
         warnings=warnings,
