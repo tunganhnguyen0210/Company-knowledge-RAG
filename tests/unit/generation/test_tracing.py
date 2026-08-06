@@ -51,7 +51,7 @@ def test_trace_metadata_is_updated_before_span_closes() -> None:
     assert response.citations[0].source_name == "leave.md"
 
 
-def test_metadata_only_traces_redact_retrieval_text_and_final_answer() -> None:
+def test_metadata_only_traces_redact_retrieval_content_and_final_answer() -> None:
     store = MemoryChunkStore()
     store.replace_document(
         "doc",
@@ -65,7 +65,15 @@ def test_metadata_only_traces_redact_retrieval_text_and_final_answer() -> None:
                 source_name="leave.md",
                 mime_type="text/markdown",
                 status=DocumentStatus.READY,
-                coordinates=SourceCoordinates(doc_id="policy.md"),
+                coordinates=SourceCoordinates(
+                    doc_id="policy.md",
+                    chapter="Leave",
+                    article="15 days",
+                ),
+                retrieval_text="Retrieval-only leave policy text.",
+                summary="Summary of leave policy.",
+                hypothesis_questions=["How many leave days?"],
+                auto_metadata={"topic": "leave"},
             )
         ],
     )
@@ -81,7 +89,30 @@ def test_metadata_only_traces_redact_retrieval_text_and_final_answer() -> None:
     response = service.answer("Leave policy?")
 
     retrieval = tracer.observation("retrieval")
-    assert "text" not in retrieval.updates[0]["top_k"][0]
+    top_hit = retrieval.updates[0]["top_k"][0]
+    assert not {
+        "text",
+        "retrieval_text",
+        "summary",
+        "hypothesis_questions",
+        "auto_metadata",
+    }.intersection(top_hit)
+    assert top_hit == {
+        "rank": 1,
+        "score": 1.0,
+        "chunk_id": "chunk",
+        "document_id": "doc",
+        "version": 1,
+        "source_name": "leave.md",
+        "mime_type": "text/markdown",
+        "status": "ready",
+        "section": None,
+        "position": 0,
+        "content_hash": "hash",
+        "doc_id": "policy.md",
+        "chapter": "Leave",
+        "article": "15 days",
+    }
     generation = tracer.observation("generation")
     assert "answer" not in generation.updates[0]
     assert response.citations[0].id == "C1"

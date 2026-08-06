@@ -73,7 +73,18 @@ class ChatService:
                         {
                             "rank": item.rank,
                             "score": item.hit.score,
-                            **item.hit.chunk.model_dump(mode="json"),
+                            "chunk_id": item.hit.chunk.id,
+                            "document_id": item.hit.chunk.document_id,
+                            "version": item.hit.chunk.version,
+                            "source_name": item.hit.chunk.source_name,
+                            "mime_type": item.hit.chunk.mime_type,
+                            "status": item.hit.chunk.status.value,
+                            "section": item.hit.chunk.section,
+                            "position": item.hit.chunk.position,
+                            "content_hash": item.hit.chunk.content_hash,
+                            "doc_id": item.hit.chunk.coordinates.doc_id,
+                            "chapter": item.hit.chunk.coordinates.chapter,
+                            "article": item.hit.chunk.coordinates.article,
                         }
                         for item in ranked
                     ],
