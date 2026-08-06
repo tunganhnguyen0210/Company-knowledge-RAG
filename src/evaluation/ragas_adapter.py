@@ -13,7 +13,23 @@ from ragas.metrics.collections import (
     Faithfulness,
 )
 
-from evaluation.artifacts import GenerationRun, RetrievalRun, SemanticScoreBatch
+from evaluation.artifacts import (
+    GenerationCaseArtifact,
+    GenerationRun,
+    RetrievalCaseArtifact,
+    RetrievalRun,
+    SemanticScoreBatch,
+)
+
+_MetricCall = tuple[str, Any, dict[str, object]]
+_CaseScore = tuple[str, dict[str, float | None], list[str]]
+
+
+def _semantic_score_batch(results: list[_CaseScore]) -> SemanticScoreBatch:
+    return SemanticScoreBatch(
+        scores={case_id: values for case_id, values, _ in results},
+        errors={case_id: errors for case_id, _, errors in results if errors},
+    )
 
 
 class RagasJudge:
@@ -88,12 +104,26 @@ class RagasJudge:
         result = await metric.ascore(**kwargs)
         return float(result.value)
 
+    async def _score_metric_calls(
+        self,
+        calls: tuple[_MetricCall, ...],
+    ) -> tuple[dict[str, float | None], list[str]]:
+        values: dict[str, float | None] = {}
+        errors: list[str] = []
+        for name, metric, kwargs in calls:
+            try:
+                values[name] = await self._metric_value(metric, **kwargs)
+            except Exception as exc:
+                values[name] = None
+                errors.append(f"{name}: {type(exc).__name__}")
+        return values, errors
+
     async def _score_retrieval(self, run: RetrievalRun) -> SemanticScoreBatch:
         semaphore = asyncio.Semaphore(self.max_concurrency)
 
         async def score_case(
-            case: Any,
-        ) -> tuple[str, dict[str, float | None], list[str]]:
+            case: RetrievalCaseArtifact,
+        ) -> _CaseScore:
             if case.retrieval is None:
                 return (
                     case.case_id,
@@ -101,30 +131,21 @@ class RagasJudge:
                     ["retrieval missing"],
                 )
             contexts = [item.hit.chunk.text for item in case.retrieval.hits]
-            values: dict[str, float | None] = {}
-            errors: list[str] = []
+            kwargs: dict[str, object] = {
+                "user_input": case.retrieval.question,
+                "reference": case.expected_answer,
+                "retrieved_contexts": contexts,
+            }
             async with semaphore:
-                for name, metric in (
-                    ("context_precision", self.context_precision),
-                    ("context_recall", self.context_recall),
-                ):
-                    try:
-                        values[name] = await self._metric_value(
-                            metric,
-                            user_input=case.retrieval.question,
-                            reference=case.expected_answer,
-                            retrieved_contexts=contexts,
-                        )
-                    except Exception as exc:
-                        values[name] = None
-                        errors.append(f"{name}: {type(exc).__name__}")
+                calls: tuple[_MetricCall, ...] = (
+                    ("context_precision", self.context_precision, kwargs),
+                    ("context_recall", self.context_recall, kwargs),
+                )
+                values, errors = await self._score_metric_calls(calls)
             return case.case_id, values, errors
 
         results = await asyncio.gather(*(score_case(case) for case in run.cases))
-        return SemanticScoreBatch(
-            scores={case_id: values for case_id, values, _ in results},
-            errors={case_id: errors for case_id, _, errors in results if errors},
-        )
+        return _semantic_score_batch(results)
 
     async def _score_generation(
         self,
@@ -135,8 +156,8 @@ class RagasJudge:
         semaphore = asyncio.Semaphore(self.max_concurrency)
 
         async def score_case(
-            case: Any,
-        ) -> tuple[str, dict[str, float | None], list[str]]:
+            case: GenerationCaseArtifact,
+        ) -> _CaseScore:
             source = retrieval_by_id[case.case_id]
             if source.retrieval is None:
                 return (
@@ -145,8 +166,6 @@ class RagasJudge:
                     ["retrieval missing"],
                 )
             contexts = [item.hit.chunk.text for item in source.retrieval.hits]
-            values: dict[str, float | None] = {}
-            errors: list[str] = []
             if case.generation is None:
                 return (
                     case.case_id,
@@ -154,7 +173,7 @@ class RagasJudge:
                     ["generation missing"],
                 )
             async with semaphore:
-                calls = (
+                calls: tuple[_MetricCall, ...] = (
                     (
                         "faithfulness",
                         self.faithfulness,
@@ -173,18 +192,10 @@ class RagasJudge:
                         },
                     ),
                 )
-                for name, metric, kwargs in calls:
-                    try:
-                        values[name] = await self._metric_value(metric, **kwargs)
-                    except Exception as exc:
-                        values[name] = None
-                        errors.append(f"{name}: {type(exc).__name__}")
+                values, errors = await self._score_metric_calls(calls)
             return case.case_id, values, errors
 
         results = await asyncio.gather(
             *(score_case(case) for case in generation.cases)
         )
-        return SemanticScoreBatch(
-            scores={case_id: values for case_id, values, _ in results},
-            errors={case_id: errors for case_id, _, errors in results if errors},
-        )
+        return _semantic_score_batch(results)
