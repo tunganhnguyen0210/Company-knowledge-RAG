@@ -1,3 +1,5 @@
+import json
+import os
 from pathlib import Path
 
 import pytest
@@ -26,6 +28,38 @@ def test_local_repository_round_trips_retrieval_run(tmp_path: Path) -> None:
     repository.save_retrieval(run)
 
     assert repository.load_retrieval("retrieval-1") == run
+
+
+def test_local_repository_preserves_exact_jsonl_record_bytes(tmp_path: Path) -> None:
+    repository = LocalRunRepository(tmp_path)
+    retrieval = make_retrieval_run(run_id="jsonl")
+    generation = make_generation_run(retrieval=retrieval).model_copy(
+        update={"run_id": "jsonl"}
+    )
+
+    for run, save in (
+        (retrieval, repository.save_retrieval),
+        (generation, repository.save_generation),
+    ):
+        path = save(run)
+        records = [
+            {
+                "record_type": "header",
+                "value": run.model_dump(mode="json", exclude={"cases"}),
+            },
+            *(
+                {"record_type": "case", "value": case.model_dump(mode="json")}
+                for case in run.cases
+            ),
+        ]
+        expected = (
+            os.linesep.join(
+                json.dumps(record, ensure_ascii=False) for record in records
+            )
+            + os.linesep
+        ).encode("utf-8")
+
+        assert path.read_bytes() == expected
 
 
 def test_baseline_candidate_requires_authoritative_dataset_and_canonical_paths() -> None:

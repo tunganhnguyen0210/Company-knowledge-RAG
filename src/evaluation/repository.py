@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from pydantic import BaseModel
 
@@ -55,6 +55,15 @@ def _json(model: BaseModel) -> str:
     return json.dumps(model.model_dump(mode="json"), ensure_ascii=False, indent=2)
 
 
+def _jsonl_body(
+    header: dict[str, Any],
+    cases: list[dict[str, Any]],
+) -> str:
+    records: list[dict[str, Any]] = [{"record_type": "header", "value": header}]
+    records.extend({"record_type": "case", "value": case} for case in cases)
+    return "\n".join(json.dumps(record, ensure_ascii=False) for record in records) + "\n"
+
+
 class LocalRunRepository:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -77,12 +86,8 @@ class LocalRunRepository:
 
     def save_retrieval(self, run: RetrievalRun) -> Path:
         header = run.model_dump(mode="json", exclude={"cases"})
-        records = [{"record_type": "header", "value": header}]
-        records.extend(
-            {"record_type": "case", "value": case.model_dump(mode="json")}
-            for case in run.cases
-        )
-        body = "\n".join(json.dumps(item, ensure_ascii=False) for item in records) + "\n"
+        cases = [case.model_dump(mode="json") for case in run.cases]
+        body = _jsonl_body(header, cases)
         return _atomic_write(self._path(run.run_id, "retrieval.jsonl"), body)
 
     def load_retrieval(self, run_id: str) -> RetrievalRun:
@@ -104,12 +109,8 @@ class LocalRunRepository:
 
     def save_generation(self, run: GenerationRun) -> Path:
         header = run.model_dump(mode="json", exclude={"cases"})
-        records = [{"record_type": "header", "value": header}]
-        records.extend(
-            {"record_type": "case", "value": case.model_dump(mode="json")}
-            for case in run.cases
-        )
-        body = "\n".join(json.dumps(item, ensure_ascii=False) for item in records) + "\n"
+        cases = [case.model_dump(mode="json") for case in run.cases]
+        body = _jsonl_body(header, cases)
         return _atomic_write(self._path(run.run_id, "generation.jsonl"), body)
 
     def save_report(self, report: EvaluationReport) -> Path:
