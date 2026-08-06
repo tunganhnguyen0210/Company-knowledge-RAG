@@ -52,8 +52,12 @@ is idempotent for unchanged bytes; `--force-reingest` is permitted only when a
 source is supplied.
 
 Legacy Qdrant points that lack compatible canonical coordinates cannot be used
-for staged retrieval. Re-index them from the retained raw DOCX with that command,
-then use the staged evaluator's preflight instead of treating old payloads as
+for staged retrieval. After wiping the local or dev collection, re-index from
+the retained raw DOCX with
+`rag-eval ingest --source data/raw/01_2021_ND-CP_283247.docx --force-reingest`.
+The force flag is required when the registry still records the same source
+bytes; otherwise idempotent ingestion skips the empty replacement index. Then
+use the staged evaluator's preflight instead of treating old payloads as
 equivalent. See the [evaluation operations contract](05-observability-evaluation-and-operations.md#staged-offline-rag-evaluation)
 for the exact recovery and verification sequence.
 

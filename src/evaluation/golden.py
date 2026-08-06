@@ -99,7 +99,11 @@ class GoldenValidationReport(BaseModel):
 
 
 def load_golden_dataset(directory: Path, files: list[Path] | None = None) -> GoldenDataset:
-    selected = files or [directory / TYPE_FILES[item] for item in GoldenType]
+    selected = (
+        files
+        if files is not None
+        else [directory / TYPE_FILES[item] for item in GoldenType]
+    )
     cases: list[GoldenCase] = []
     for path in selected:
         raw = json.loads(path.read_text(encoding="utf-8"))

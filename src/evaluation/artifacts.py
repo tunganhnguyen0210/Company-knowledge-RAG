@@ -5,10 +5,9 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
-from pydantic.main import IncEx
 
 from domain.schemas import Chunk
 from evaluation.golden import GoldenType
@@ -23,21 +22,18 @@ def fingerprint(value: BaseModel | dict[str, Any] | list[Any]) -> str:
     return sha256(encoded).hexdigest()
 
 
-VOLATILE_ARTIFACT_FIELDS: IncEx = cast(
-    IncEx,
-    {
-        "run_id": True,
-        "created_at": True,
-        "snapshot_fingerprint": True,
-        "run_fingerprint": True,
-        "cases": {
-            "__all__": {
-                "retrieval": {"latency_ms", "request_id"},
-                "generation": {"latency_ms", "usage"},
-            }
-        },
+VOLATILE_ARTIFACT_FIELDS: dict[str, Any] = {
+    "run_id": True,
+    "created_at": True,
+    "snapshot_fingerprint": True,
+    "run_fingerprint": True,
+    "cases": {
+        "__all__": {
+            "retrieval": {"latency_ms", "request_id"},
+            "generation": {"latency_ms", "usage"},
+        }
     },
-)
+}
 
 
 def artifact_fingerprint(value: BaseModel) -> str:

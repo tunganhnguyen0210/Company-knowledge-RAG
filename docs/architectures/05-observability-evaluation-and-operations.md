@@ -19,8 +19,13 @@ The system captures structured telemetry across three nested span levels:
 ### Trace Modes & Privacy Rules
 Configured via `TRACE_MODE` in `settings.py`:
 - **`off`**: Disables all tracing telemetry.
-- **`metadata-only`** *(Default)*: Sends request IDs, timestamps, latency, token usage, and hit counts to Langfuse, but redacts raw query text and document content to protect data privacy.
-- **`full`**: Captures complete prompt text, context chunks, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
+- **`metadata-only`** *(Default)*: Sends request IDs, timestamps, latency, token usage, hit counts, chunk identity, and source coordinates to Langfuse, but redacts raw query text, document content, prompts, and answers.
+- **`full`**: Captures complete prompt text, context chunks, raw chunk `text`, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
+
+Retrieval enrichment fields (`retrieval_text`, `summary`,
+`hypothesis_questions`, and `auto_metadata`) are never copied into retrieval
+trace payloads in either mode. They improve indexing and ranking, but are not
+trace evidence.
 
 ### Active Traced Pipelines & Payload Schema
 
@@ -31,7 +36,7 @@ The system actively traces two primary workflows: the **Query & Generation Pipel
 | Span Name | Type | Input Payload / Initial Metadata | Output / Execution Updates |
 | --- | --- | --- | --- |
 | **`rag-request`** | Parent Trace | `request_id`, `question` | Total end-to-end request latency and final `ChatResponse` |
-| **`retrieval`** | Child Span | `request_id`, `question` | `result_count`, `latency_ms`, and `top_k` chunk hits (`rank`, `score`, `chunk_id`, `document_id`, `version`, `source_name`, `section`, `position`, `content_hash`, `text`) |
+| **`retrieval`** | Child Span | `request_id`, `question` | `result_count`, `latency_ms`, and `top_k` chunk hits (`rank`, `score`, `chunk_id`, `document_id`, `version`, `source_name`, `mime_type`, `status`, `section`, `position`, `content_hash`, `doc_id`, `chapter`, `article`, plus raw `text` only in full mode) |
 | **`generation`** | Child Span | `request_id`, `question`, `context` (retrieved chunks), `prompt_version`, `system_instruction`, `user_prompt` | `provider`, `model`, `token_usage` (input/output), `response` (structured model dump), `citation_ids` (`[C1]`, `[C2]`), `answer` |
 
 #### 2. Document Ingestion Pipeline (`src/ingestion/service.py`)
@@ -40,7 +45,7 @@ The system actively traces two primary workflows: the **Query & Generation Pipel
 | --- | --- | --- | --- |
 | **`ingestion`** | Parent Trace | `source_name` (filename), `file_bytes` | Pipeline status & completion time |
 | **`parse`** | Child Span | `source_name`, `file_bytes` | Extracted text size and document parse latency |
-| **`chunking`** | Child Span | `source_name`, `file_bytes` | Total chunk count created & chunking stats |
+| **`chunking`** | Child Span | `document_id`, `version` | Total chunk count, safe chunk metadata, and `doc_id`/chapter/article coordinates; raw chunk `text` appears only in full mode |
 | **`registry`** | Child Span | `document_id`, `version` | Document metadata registration status |
 | **`indexing`** | Child Span | `document_id`, `version` | Vector embedding generation & Qdrant insertion latency |
 
@@ -77,7 +82,10 @@ Ingestion is deliberately opt-in. An unchanged raw source is hash-skipped;
 `--force-reingest` requires an explicit `--source` or `--ingest` path. A
 retrieval or e2e run without ingestion preflights the existing index for ready,
 coordinate-compatible chunks. If legacy Qdrant points fail that preflight,
-recover by re-indexing the raw DOCX with the second command above.
+wipe the local or dev collection and re-index the raw DOCX with
+`rag-eval ingest --source data/raw/01_2021_ND-CP_283247.docx --force-reingest`.
+Without the force flag, an unchanged source still present in the registry is
+hash-skipped and cannot repopulate the empty collection.
 
 For retrieval and e2e, the precedence is: an explicit `--golden-file` or
 `--type` first defines the population (they are mutually exclusive), then

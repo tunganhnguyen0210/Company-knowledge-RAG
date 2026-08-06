@@ -46,10 +46,13 @@ def test_full_ingestion_trace_contains_lifecycle_data(tmp_path: Path) -> None:
             "document_id": document.id,
             "version": 1,
             "position": 0,
-            "section": None,
+            "section": "Leave",
             "content_hash": "c87af98332a0eb46b36639dfb98967b6d236102a13bf10c86e86daf1722a37dc",
             "source_name": "policy.md",
             "mime_type": "text/markdown",
+            "doc_id": "policy.md",
+            "chapter": None,
+            "article": None,
             "text": "# Leave\n\nNhan vien duoc nghi 15 ngay.",
         }
     ]

@@ -20,6 +20,14 @@ def test_loads_finalized_authoritative_dataset() -> None:
         }
 
 
+def test_explicit_empty_file_selection_stays_empty(tmp_path: Path) -> None:
+    dataset = load_golden_dataset(tmp_path, files=[])
+
+    assert dataset.cases == []
+    assert dataset.source_files == []
+    assert dataset.scope == "partial"
+
+
 def test_unanswerable_rejects_non_empty_contexts() -> None:
     with pytest.raises(ValidationError, match="unanswerable contexts must be empty"):
         GoldenCase.model_validate(
