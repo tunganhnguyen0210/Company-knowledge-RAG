@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     )
     openai_api_key: str = ""
     openai_model: str = "gpt-4.1-mini"
+    ragas_api_key: str = ""
+    ragas_base_url: str = "https://api.openai.com/v1"
+    ragas_model: str = "gpt-4.1-mini"
+    ragas_embedding_model: str = "text-embedding-3-small"
+    ragas_max_concurrency: int = Field(default=2, ge=1, le=16)
     provider_timeout_seconds: float = 30.0
     provider_max_attempts: int = 2
     structured_max_retries: int = STRUCTURED_MAX_RETRIES
