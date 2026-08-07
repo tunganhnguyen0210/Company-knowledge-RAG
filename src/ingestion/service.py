@@ -8,9 +8,10 @@ from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
 from domain.schemas import Chunk, Document, DocumentStatus
-from ingestion.chunker import chunk_document
+from ingestion.chunker import ChunkingConfig, chunk_document
 from ingestion.enrichment import ChunkEnricher
 from ingestion.parser import parse_document
+from ingestion.raptor import RaptorConfig, build_raptor_nodes
 from observability.tracing import Tracer
 from retrieval.base import ChunkStore
 from settings import Settings, TraceMode
@@ -27,12 +28,19 @@ class IngestionService:
         upload_dir: Path | None = None,
         enricher: ChunkEnricher | None = None,
         tracer: Tracer | None = None,
+        *,
+        chunking_config: ChunkingConfig | None = None,
+        raptor_config: RaptorConfig | None = None,
     ) -> None:
         self.registry = registry
         self.store = store
         self.upload_dir = upload_dir
         self.enricher = enricher
         self.tracer = tracer if tracer is not None else Tracer(Settings(_env_file=None, trace_mode=TraceMode.OFF))
+        self.chunking_config = (
+            chunking_config if chunking_config is not None else ChunkingConfig(max_chars=CHUNK_MAX_CHARS)
+        )
+        self.raptor_config = raptor_config if raptor_config is not None else RaptorConfig()
         self._ingest_lock = Lock()
 
     def ingest_bytes(
@@ -125,18 +133,39 @@ class IngestionService:
             "chunking",
             self.tracer.safe_payload({"document_id": document.id, "version": document.version}),
         ) as chunking_observation:
-            chunks = chunk_document(document, text, max_chars=CHUNK_MAX_CHARS) if status is DocumentStatus.READY else []
+            chunks = (
+                chunk_document(document, text, config=self.chunking_config)
+                if status is DocumentStatus.READY
+                else []
+            )
             self.tracer.update(
                 chunking_observation,
                 {
                     "document_id": document.id,
                     "version": document.version,
-                    "max_chars": CHUNK_MAX_CHARS,
+                    "max_chars": self.chunking_config.max_chars,
                     "chunk_count": len(chunks),
                     "latency_ms": (time.perf_counter() - chunking_started) * 1000,
                     "chunks": [_chunk_trace_payload(chunk) for chunk in chunks],
                 },
             )
+        if status is DocumentStatus.READY and self.raptor_config.enabled:
+            raptor_started = time.perf_counter()
+            with self.tracer.span(
+                "raptor",
+                self.tracer.safe_payload({"document_id": document.id, "version": document.version}),
+            ) as raptor_observation:
+                raptor_nodes = build_raptor_nodes(document, chunks, self.raptor_config)
+                chunks = chunks + raptor_nodes
+                self.tracer.update(
+                    raptor_observation,
+                    {
+                        "document_id": document.id,
+                        "version": document.version,
+                        "node_count": len(raptor_nodes),
+                        "latency_ms": (time.perf_counter() - raptor_started) * 1000,
+                    },
+                )
         if self.enricher is not None:
             enrichment_started = time.perf_counter()
             with self.tracer.span(

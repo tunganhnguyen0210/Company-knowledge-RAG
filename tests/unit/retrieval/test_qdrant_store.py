@@ -5,6 +5,7 @@ import pytest
 
 from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from providers.base import ProviderError
+from retrieval.hierarchical import DEFAULT_EXPANSION
 from retrieval.qdrant_store import QdrantChunkStore, _chunk_from_payload, _chunk_payload, _point_id
 from tests.support.builders import make_chunk
 
@@ -141,6 +142,7 @@ def _search_store(*, reranker: object, candidate_limit: int = 7) -> QdrantChunkS
     store.rerank_candidate_limit = candidate_limit
     store.min_dense_score = 0.0
     store.reranker = reranker
+    store.expansion = DEFAULT_EXPANSION
     store.ensure_collection = lambda: None
     return store
 
@@ -193,6 +195,7 @@ def test_rrf_only_search_preserves_expanded_candidate_pool() -> None:
     store.rerank_candidate_limit = 50
     store.min_dense_score = 0.0
     store.reranker = None
+    store.expansion = DEFAULT_EXPANSION
     store.ensure_collection = lambda: None
 
     store.search("policy", limit=2)

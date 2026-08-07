@@ -10,6 +10,7 @@ from qdrant_client.grpc import PointId
 
 from domain.schemas import Chunk, SearchHit
 from providers.base import EmbeddingProvider, ProviderError
+from retrieval.hierarchical import DEFAULT_EXPANSION, ExpansionConfig, expand_with_siblings
 from retrieval.hybrid import (
     filter_by_min_score,
     lexical_rank,
@@ -46,6 +47,7 @@ class QdrantChunkStore:
         min_dense_score: float = 0.35,
         reranker: Any | None = None,
         rerank_candidate_limit: int = 50,
+        expansion: ExpansionConfig = DEFAULT_EXPANSION,
     ) -> None:
         self.client = QdrantClient(url=url, api_key=api_key or None, timeout=10)
         self.collection = collection
@@ -55,6 +57,7 @@ class QdrantChunkStore:
         self.min_dense_score = min_dense_score
         self.reranker = reranker
         self.rerank_candidate_limit = rerank_candidate_limit
+        self.expansion = expansion
         self._init_lock = Lock()
         self._initialized = False
 
@@ -177,12 +180,21 @@ class QdrantChunkStore:
         lexical_chunks = [_chunk_from_payload(record.payload) for record in records]
         lexical = lexical_rank(query, lexical_chunks, candidate_limit)
         fused = reciprocal_rank_fusion(dense, lexical, candidate_limit)
+        top = fused[:limit]
         if self.reranker and fused:
             try:
-                return self.reranker.rerank(query, fused, top_n=limit)
+                top = self.reranker.rerank(query, fused, top_n=limit)
             except ProviderError:
-                return fused[:limit]
-        return fused[:limit]
+                top = fused[:limit]
+        # `lexical_chunks` is the scroll already fetched above for BM25 and holds
+        # every ready chunk in the collection, so sibling expansion needs no
+        # additional round trip.
+        return expand_with_siblings(
+            top,
+            sibling_pool=lexical_chunks,
+            ranking_pool=fused,
+            config=self.expansion,
+        )
 
     def list_document_chunks(
         self,
@@ -219,6 +231,52 @@ class QdrantChunkStore:
                 break
             offset = next_offset
         return sorted(output, key=lambda chunk: chunk.position)
+
+    def list_indexed_documents(self) -> dict[str, int]:
+        """document_id -> chunk count, across the whole collection."""
+        self.ensure_collection()
+        counts: dict[str, int] = {}
+        offset: models.ExtendedPointId | PointId | None = None
+        while True:
+            records, next_offset = self.client.scroll(
+                collection_name=self.collection,
+                limit=256,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for record in records:
+                payload = record.payload or {}
+                document_id = str(payload.get("document_id", ""))
+                if document_id:
+                    counts[document_id] = counts.get(document_id, 0) + 1
+            if next_offset is None:
+                break
+            offset = next_offset
+        return counts
+
+    def purge_documents(self, document_ids: list[str]) -> int:
+        """Delete every chunk of the given documents. Returns chunks removed."""
+        if not document_ids:
+            return 0
+        self.ensure_collection()
+        indexed = self.list_indexed_documents()
+        removed = sum(indexed.get(document_id, 0) for document_id in document_ids)
+        self.client.delete(
+            self.collection,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="document_id",
+                            match=models.MatchAny(any=list(document_ids)),
+                        )
+                    ]
+                )
+            ),
+            wait=True,
+        )
+        return removed
 
     def ready(self) -> bool:
         try:

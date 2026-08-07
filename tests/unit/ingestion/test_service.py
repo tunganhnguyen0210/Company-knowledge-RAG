@@ -4,9 +4,22 @@ from pathlib import Path
 import pytest
 
 from domain.schemas import DocumentStatus
+from ingestion.chunker import ChunkingConfig
+from ingestion.raptor import RaptorConfig
 from ingestion.service import IngestionService
+from providers.base import GenerationRequest, GenerationResult
 from retrieval.memory_store import MemoryChunkStore
 from storage.registry import DocumentRegistry
+
+
+class StubGenerationProvider:
+    name = "stub"
+
+    def generate(self, request: GenerationRequest) -> GenerationResult:
+        return GenerationResult(text="tóm tắt cụm", provider="stub", model="stub-model")
+
+    def generate_structured(self, request, response_model):  # pragma: no cover - unused
+        raise NotImplementedError
 
 
 def _docx_bytes(build) -> bytes:
@@ -163,3 +176,49 @@ def test_ingestion_persists_canonical_legal_coordinates(tmp_path: Path) -> None:
     article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
     assert article_chunks
     assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)
+
+
+def test_parent_child_chunking_config_flows_through_ingestion(tmp_path: Path) -> None:
+    store = MemoryChunkStore()
+    service = IngestionService(
+        DocumentRegistry(tmp_path / "registry.json"),
+        store,
+        chunking_config=ChunkingConfig(max_chars=20, parent_child_enabled=True, parent_max_chars=6000),
+    )
+
+    service.ingest_bytes("policy.md", b"Noi dung chinh sach nghi phep rat dai can duoc cat nho ra.")
+
+    assert store.all_chunks
+    assert all(chunk.parent_text is not None for chunk in store.all_chunks)
+
+
+def test_raptor_disabled_by_default_adds_no_summary_nodes(tmp_path: Path) -> None:
+    store = MemoryChunkStore()
+    service = IngestionService(DocumentRegistry(tmp_path / "registry.json"), store)
+
+    service.ingest_bytes(
+        "policy.md",
+        b"# A\nmot.\n# B\nhai.\n# C\nba.\n# D\nbon.\n# E\nnam.\n# F\nsau.",
+    )
+
+    assert not any(chunk.section and chunk.section.startswith("__raptor_summary_L") for chunk in store.all_chunks)
+
+
+def test_raptor_enabled_appends_summary_nodes(tmp_path: Path) -> None:
+    store = MemoryChunkStore()
+    service = IngestionService(
+        DocumentRegistry(tmp_path / "registry.json"),
+        store,
+        raptor_config=RaptorConfig(enabled=True, cluster_size=2, max_depth=1, provider=StubGenerationProvider()),
+    )
+
+    document = service.ingest_bytes(
+        "policy.md",
+        b"# A\nmot.\n# B\nhai.\n# C\nba.\n# D\nbon.\n# E\nnam.\n# F\nsau.",
+    )
+
+    summary_nodes = [
+        chunk for chunk in store.all_chunks if chunk.section == "__raptor_summary_L1__"
+    ]
+    assert summary_nodes
+    assert all(node.document_id == document.id for node in summary_nodes)

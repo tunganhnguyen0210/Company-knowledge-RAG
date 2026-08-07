@@ -4,7 +4,6 @@ import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -13,11 +12,13 @@ from starlette.concurrency import run_in_threadpool
 
 from domain.schemas import ChatRequest, ChatResponse, Document
 from generation.service import ChatService
+from ingestion.chunker import ChunkingConfig
 from ingestion.enrichment import LLMChunkEnricher
 from ingestion.parser import UnsupportedDocumentError
-from ingestion.service import IngestionService
+from ingestion.raptor import RaptorConfig
+from ingestion.service import CHUNK_MAX_CHARS, IngestionService
 from observability.tracing import Tracer
-from providers.base import GenerationProvider, ProviderError
+from providers.base import EmbeddingProvider, GenerationProvider, ProviderError
 from providers.gemini import GeminiEmbeddingProvider, GeminiProvider
 from providers.jina import JinaEmbeddingProvider, JinaReranker
 from providers.openai import OpenAIProvider
@@ -25,6 +26,7 @@ from providers.openrouter import OpenRouterProvider
 from providers.probe import probe_generation
 from providers.router import ProviderRouter
 from retrieval.base import ChunkStore
+from retrieval.hierarchical import ExpansionConfig
 from retrieval.memory_store import MemoryChunkStore
 from retrieval.qdrant_store import QdrantChunkStore
 from settings import MainProvider, Settings
@@ -37,13 +39,36 @@ def create_app(
     store: ChunkStore | None = None,
 ) -> FastAPI:
     settings = settings or Settings()
+    expansion = _build_expansion_config(settings)
     if store is None:
-        store = MemoryChunkStore() if provider is not None else _build_qdrant_store(settings)
+        store = (
+            MemoryChunkStore(expansion)
+            if provider is not None
+            else _build_qdrant_store(settings, expansion)
+        )
     provider = provider or _build_provider(settings)
     registry = DocumentRegistry(settings.registry_path)
-    enricher = LLMChunkEnricher(provider) if settings.enable_enrichment else None
+    mrl_embedder = _build_mrl_embedder(settings) if settings.enrich_mrl_enabled else None
+    enricher = (
+        LLMChunkEnricher(provider, mrl_embedder=mrl_embedder) if settings.enable_enrichment else None
+    )
     tracer = Tracer(settings)
-    ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
+    chunking_config = _build_chunking_config(settings)
+    raptor_config = RaptorConfig(
+        enabled=settings.raptor_enabled,
+        cluster_size=settings.raptor_cluster_size,
+        max_depth=settings.raptor_max_depth,
+        provider=provider if settings.raptor_enabled else None,
+    )
+    ingestion = IngestionService(
+        registry,
+        store,
+        settings.upload_dir,
+        enricher,
+        tracer,
+        chunking_config=chunking_config,
+        raptor_config=raptor_config,
+    )
     chat = ChatService(store, provider, tracer, settings.retrieval_limit)
 
     @asynccontextmanager
@@ -201,23 +226,60 @@ def _build_fallback_provider(settings: Settings) -> GenerationProvider | None:
     return None
 
 
-def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
+def _build_embedding_provider(settings: Settings, output_dimension: int) -> EmbeddingProvider:
+    """Shared embedder builder so chunking/enrichment (MRL) and Qdrant search
+    use the same provider selection logic, just with a different output size."""
     jina_pool = settings.build_jina_key_pool()
     if jina_pool.key_count > 0 and settings.embedding_model.startswith("jina-"):
-        embedder: Any = JinaEmbeddingProvider(
+        return JinaEmbeddingProvider(
             api_key=jina_pool,
             model=settings.embedding_model,
-            output_dimension=settings.vector_size,
+            output_dimension=output_dimension,
             timeout_seconds=settings.provider_timeout_seconds,
         )
-    else:
-        embedder = GeminiEmbeddingProvider(
-            settings.build_gemini_key_pool(),
-            settings.embedding_model,
-            settings.vector_size,
-            settings.provider_timeout_seconds,
-        )
+    return GeminiEmbeddingProvider(
+        settings.build_gemini_key_pool(),
+        settings.embedding_model,
+        output_dimension,
+        settings.provider_timeout_seconds,
+    )
 
+
+def _build_chunking_config(settings: Settings) -> ChunkingConfig:
+    embedder = (
+        _build_embedding_provider(settings, settings.vector_size)
+        if settings.chunk_semantic_enabled
+        else None
+    )
+    return ChunkingConfig(
+        max_chars=CHUNK_MAX_CHARS,
+        semantic_enabled=settings.chunk_semantic_enabled,
+        semantic_threshold=settings.chunk_semantic_threshold,
+        embedder=embedder,
+        parent_child_enabled=settings.chunk_parent_child_enabled,
+        parent_max_chars=settings.chunk_parent_max_chars,
+    )
+
+
+def _build_mrl_embedder(settings: Settings) -> EmbeddingProvider:
+    return _build_embedding_provider(settings, settings.enrich_mrl_dimensions)
+
+
+def _build_expansion_config(settings: Settings) -> ExpansionConfig:
+    return ExpansionConfig(
+        enabled=settings.hierarchical_expansion_enabled,
+        max_parents=settings.hierarchical_max_parents,
+        char_budget=settings.hierarchical_char_budget,
+        max_parent_chars=settings.hierarchical_max_parent_chars,
+        min_pool_coverage=settings.hierarchical_min_pool_coverage,
+    )
+
+
+def _build_qdrant_store(
+    settings: Settings, expansion: ExpansionConfig | None = None
+) -> QdrantChunkStore:
+    embedder = _build_embedding_provider(settings, settings.vector_size)
+    jina_pool = settings.build_jina_key_pool()
     reranker = None
     if jina_pool.key_count > 0 and settings.reranker_model:
         reranker = JinaReranker(
@@ -236,6 +298,7 @@ def _build_qdrant_store(settings: Settings) -> QdrantChunkStore:
         settings.min_dense_score,
         reranker=reranker,
         rerank_candidate_limit=settings.rerank_candidate_limit,
+        expansion=expansion if expansion is not None else _build_expansion_config(settings),
     )
 
 

@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     environment: str = "development"
     main_provider: MainProvider = MainProvider.GEMINI
     gemini_api_key: str = ""
+    gemini_api_fallback_key: str = ""
+    gemini_api_fallback_key2: str = ""
+    gemini_api_fallback_key3: str = ""
+    gemini_api_fallback_key4: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
     jina_api_key: str = ""
     jina_api_fallback_key: str = ""
@@ -82,6 +86,20 @@ class Settings(BaseSettings):
     lexical_candidate_limit: int = 500
     min_dense_score: float = 0.35
     enable_enrichment: bool = False
+    chunk_semantic_enabled: bool = False
+    chunk_semantic_threshold: float = Field(default=0.85, ge=0.0, le=1.0)
+    chunk_parent_child_enabled: bool = False
+    chunk_parent_max_chars: int = Field(default=6000, ge=1)
+    raptor_enabled: bool = False
+    raptor_cluster_size: int = Field(default=5, ge=2)
+    raptor_max_depth: int = Field(default=1, ge=1, le=3)
+    enrich_mrl_enabled: bool = False
+    enrich_mrl_dimensions: int = Field(default=128, ge=1)
+    hierarchical_expansion_enabled: bool = False
+    hierarchical_max_parents: int = Field(default=3, ge=1)
+    hierarchical_char_budget: int = Field(default=8000, ge=0)
+    hierarchical_max_parent_chars: int = Field(default=8000, ge=1)
+    hierarchical_min_pool_coverage: float = Field(default=0.0, ge=0.0, le=1.0)
     trace_mode: TraceMode = TraceMode.FULL
     allow_sensitive_tracing: bool = True
     langfuse_public_key: str = ""
@@ -110,7 +128,12 @@ class Settings(BaseSettings):
         if single_key_val and primary_env_var not in env:
             env[primary_env_var] = single_key_val
 
-        for suffix in ("", "2"):
+        # Suffixes checked here must match the highest numbered `*_api_fallback_key{N}`
+        # field declared below for any provider (currently Gemini goes up to 4).
+        # Settings uses extra="ignore", so an .env key with no matching field is
+        # silently dropped -- a fallback key sitting in .env does nothing unless a
+        # field for it exists here too.
+        for suffix in ("", "2", "3", "4"):
             fallback_attr = f"{prefix.lower()}_api_fallback_key{suffix}"
             fallback_env_var = f"{prefix_upper}_API_FALLBACK_KEY{suffix}"
             fallback_value = getattr(self, fallback_attr, "")

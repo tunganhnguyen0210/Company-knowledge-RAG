@@ -19,3 +19,10 @@ docs/research
 .codebase-memory
 specs/
 reports/rag_evaluation/
+
+# Dev/eval scratch collections and their registries + upload copies.
+# The prod paths above only cover the exact production names, so parallel
+# Blue-Green builds would otherwise be swept in by `git add -A`.
+data/registry_*.json
+data/uploads_*/
+reports/

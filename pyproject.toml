@@ -28,6 +28,7 @@ dependencies = [
 [project.scripts]
 company-rag-serve = "cli:serve"
 company-rag-ingest = "cli:ingest"
+company-rag-reconcile = "cli:reconcile_index"
 rag-eval = "evaluation.cli:main"
 
 [dependency-groups]

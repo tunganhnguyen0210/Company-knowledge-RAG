@@ -142,6 +142,11 @@ def _runtime_configuration(settings: Settings) -> dict[str, object]:
         "min_dense_score": settings.min_dense_score,
         "enable_enrichment": settings.enable_enrichment,
         "generation_provider": settings.main_provider.value,
+        "hierarchical_expansion_enabled": settings.hierarchical_expansion_enabled,
+        "hierarchical_max_parents": settings.hierarchical_max_parents,
+        "hierarchical_char_budget": settings.hierarchical_char_budget,
+        "hierarchical_max_parent_chars": settings.hierarchical_max_parent_chars,
+        "hierarchical_min_pool_coverage": settings.hierarchical_min_pool_coverage,
     }
 
 

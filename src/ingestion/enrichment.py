@@ -5,7 +5,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field, field_validator
 
 from domain.schemas import Chunk
-from providers.base import GenerationProvider, GenerationRequest
+from providers.base import EmbeddingProvider, GenerationProvider, GenerationRequest
 
 MAX_HYPOTHESIS_QUESTIONS = 5
 
@@ -41,8 +41,14 @@ class ChunkEnricher(Protocol):
 
 
 class LLMChunkEnricher:
-    def __init__(self, provider: GenerationProvider) -> None:
+    def __init__(
+        self,
+        provider: GenerationProvider,
+        *,
+        mrl_embedder: EmbeddingProvider | None = None,
+    ) -> None:
         self.provider = provider
+        self.mrl_embedder = mrl_embedder
 
     def enrich(self, chunk: Chunk) -> Chunk:
         result = self.provider.generate_structured(
@@ -58,12 +64,22 @@ class LLMChunkEnricher:
             ChunkEnrichment,
         )
         enrichment = result.value
-        retrieval_text = f"{enrichment.context}\n\n{chunk.text}" if enrichment.context else chunk.text
-        return chunk.model_copy(
-            update={
-                "retrieval_text": retrieval_text,
-                "summary": enrichment.summary,
-                "hypothesis_questions": enrichment.questions,
-                "auto_metadata": enrichment.metadata_dict(),
-            }
-        )
+        # Contextual Embeddings (Anthropic pattern): prepend a short blurb so the
+        # chunk reads standalone. When Parent-Child chunking populated a section
+        # heading, lead with it too -- cheap extra signal for BM25/dense search
+        # without changing what gets prepended when there's no heading.
+        context_parts = [part for part in (chunk.section, enrichment.context) if part]
+        context_blurb = " — ".join(context_parts)
+        retrieval_text = f"{context_blurb}\n\n{chunk.text}" if context_blurb else chunk.text
+        update: dict[str, object] = {
+            "retrieval_text": retrieval_text,
+            "summary": enrichment.summary,
+            "hypothesis_questions": enrichment.questions,
+            "auto_metadata": enrichment.metadata_dict(),
+        }
+        if self.mrl_embedder is not None:
+            # Matryoshka Representation Learning: store a truncated-dimension
+            # vector alongside the full one. Not consumed by search() yet --
+            # see Chunk.mrl_vector_128 docstring for the retrieval-owner handoff.
+            update["mrl_vector_128"] = self.mrl_embedder.embed_documents([retrieval_text])[0]
+        return chunk.model_copy(update=update)
