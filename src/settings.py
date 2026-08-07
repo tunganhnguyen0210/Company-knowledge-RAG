@@ -82,6 +82,12 @@ class Settings(BaseSettings):
     lexical_candidate_limit: int = 500
     min_dense_score: float = 0.35
     enable_enrichment: bool = False
+    enable_mmr: bool = False
+    mmr_lambda: float = 0.7
+    enable_mrl: bool = False
+    mrl_fast_dim: int = 128
+    query_transform_mode: str = "none"
+    multi_query_n: int = 3
     trace_mode: TraceMode = TraceMode.FULL
     allow_sensitive_tracing: bool = True
     langfuse_public_key: str = ""

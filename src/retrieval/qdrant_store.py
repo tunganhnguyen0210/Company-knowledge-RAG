@@ -10,7 +10,7 @@ from qdrant_client.grpc import PointId
 
 from domain.schemas import Chunk, SearchHit
 from providers.base import EmbeddingProvider, ProviderError
-from retrieval.hybrid import (
+from retrieval.retrieval_method.hybrid import (
     filter_by_min_score,
     lexical_rank,
     reciprocal_rank_fusion,

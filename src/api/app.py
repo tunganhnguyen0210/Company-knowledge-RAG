@@ -44,7 +44,21 @@ def create_app(
     enricher = LLMChunkEnricher(provider) if settings.enable_enrichment else None
     tracer = Tracer(settings)
     ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
-    chat = ChatService(store, provider, tracer, settings.retrieval_limit)
+    from retrieval.retrieval import UnifiedRetriever
+
+    reranker = getattr(store, "reranker", None)
+    retriever = UnifiedRetriever(
+        store=store,
+        provider=provider,
+        reranker=reranker,
+        enable_mmr=settings.enable_mmr,
+        mmr_lambda=settings.mmr_lambda,
+        enable_mrl=settings.enable_mrl,
+        mrl_fast_dim=settings.mrl_fast_dim,
+        query_transform_mode=settings.query_transform_mode,
+        multi_query_n=settings.multi_query_n,
+    )
+    chat = ChatService(retriever, provider, tracer, settings.retrieval_limit)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

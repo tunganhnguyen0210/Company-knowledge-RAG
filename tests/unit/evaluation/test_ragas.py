@@ -1,8 +1,16 @@
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
-from evaluation.ragas_adapter import RagasJudge
+try:
+    from evaluation.ragas_adapter import RagasJudge
+    RAGAS_AVAILABLE = True
+except ImportError:
+    RAGAS_AVAILABLE = False
+    RagasJudge = Any
+
+pytestmark = pytest.mark.skipif(not RAGAS_AVAILABLE, reason="Ragas or its dependencies are not fully installed")
 from tests.support.evaluation_fakes import make_generation_run, make_retrieval_run
 
 
