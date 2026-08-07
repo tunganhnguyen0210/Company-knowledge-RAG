@@ -128,6 +128,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run_compare(baseline_path: Path, candidate_path: Path) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     if not baseline_path.exists():
         print(f"Error: Baseline report file not found: {baseline_path}", file=sys.stderr)
         return 1

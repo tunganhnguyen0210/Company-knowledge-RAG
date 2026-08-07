@@ -47,7 +47,7 @@ class QdrantChunkStore:
         reranker: Any | None = None,
         rerank_candidate_limit: int = 50,
     ) -> None:
-        self.client = QdrantClient(url=url, api_key=api_key or None, timeout=10)
+        self.client = QdrantClient(url=url, api_key=api_key or None, timeout=60)
         self.collection = collection
         self.vector_size = vector_size
         self.embedder = embedder

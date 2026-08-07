@@ -200,12 +200,15 @@ def _context_validation_errors(
     article_text: _ArticleText,
 ) -> list[ValidationIssue]:
     errors: list[ValidationIssue] = []
+    norm_canonical = _normalized(canonical)
+    norm_article_text = {k: _normalized(v) for k, v in article_text.items()}
     for case in dataset.cases:
         for context in case.golden_truth_contexts:
             evidence = context.golden_truth_context
+            norm_evidence = _normalized(evidence)
             metadata = context.golden_metadata
             coordinate = (metadata.doc_id, metadata.chapter, metadata.article)
-            if evidence not in canonical:
+            if norm_evidence not in norm_canonical:
                 errors.append(
                     ValidationIssue(
                         code="context_not_exact_source",
@@ -213,7 +216,7 @@ def _context_validation_errors(
                         case_id=case.id,
                     )
                 )
-            elif evidence not in article_text.get(coordinate, ""):
+            elif norm_evidence not in norm_article_text.get(coordinate, ""):
                 errors.append(
                     ValidationIssue(
                         code="context_coordinate_mismatch",
