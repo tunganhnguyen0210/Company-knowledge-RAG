@@ -1,6 +1,6 @@
 # Lộ Trình Phát Triển RAG: Từ Baseline Đến Advanced & Agentic RAG
 
-> **Phiên bản hiện tại:** `v1.3` | **Cập nhật lần cuối:** 2026-08-05 | **Trạng thái:** 🟢 Active
+> **Phiên bản hiện tại:** `v1.4` | **Cập nhật lần cuối:** 2026-08-06 | **Trạng thái:** 🟢 Active
 
 Tài liệu này định hình lộ trình nâng cấp hệ thống **Company Knowledge RAG** từ kiến trúc **Baseline RAG + Evaluation** hiện tại tiến lên các cấp độ **Advanced RAG**, **GraphRAG**, **Agentic RAG**, và **Production LLMOps**.
 
@@ -10,6 +10,7 @@ Tài liệu này định hình lộ trình nâng cấp hệ thống **Company Kn
 
 | Phiên bản | Ngày | Nội dung thay đổi | Tác giả |
 |---|---|---|---|
+| `v1.4` | 2026-08-06 | Đối chiếu với golden-set eval thật (100/100 case): sửa Mục 1 (embedding model/dim, trạng thái reranker đã có), thêm Mục 1.1 phát hiện từ eval, điền KPI Baseline thật vào Mục 5, sửa tên lệnh CLI `company-rag-evaluate` → `rag-eval`, thêm Ưu Tiên 0 | Team AI |
 | `v1.3` | 2026-08-05 | Bổ sung mục 4.8 System Rate Limiting, Throttling & Cost Control Strategy | Team AI |
 | `v1.2` | 2026-08-05 | Bổ sung mục 4.5 SLA, 4.6 Incident Runbook, 4.7 Schema Versioning & Migration Strategy | Team AI |
 | `v1.1` | 2026-08-05 | Hoàn thiện lộ trình Level 1–5: Action Items, DoD, Rollback Strategy từng cấp | Team AI |
@@ -27,13 +28,29 @@ Dựa trên tài liệu kiến trúc [`RAG-ARCHITECTURE.md`](../RAG-ARCHITECTURE
 | **Multi-Format Ingestion** | Parsing đa định dạng (PDF, DOCX, MD, TXT) + Unicode NFC Text Normalization + Registry Status Tracking (`ready`, `needs_ocr`, `failed`) | [`src/ingestion/parser.py`](../src/ingestion/parser.py)<br>[`src/storage/registry.py`](../src/storage/registry.py) | Xử lý tài liệu đa định dạng sạch, chuẩn hóa văn bản và theo dõi trạng thái index. |
 | **Section-Aware Chunking** | Section-aware Recursive Character Chunking (~1,200 chars, 10–20% overlap) | [`src/ingestion/chunker.py`](../src/ingestion/chunker.py) | Giữ ngữ cảnh tự nhiên theo tiêu đề/đoạn văn, tránh ngắt đứt ý ở ranh giới chunk. |
 | **Contextual Enrichment** | Prepend LLM Document Summaries & Hypothetical Q&A (HyQA) | [`src/ingestion/enrichment.py`](../src/ingestion/enrichment.py) | Bổ sung thông tin ngữ cảnh tổng quan trước khi embed, tăng Recall cho query chủ đề. |
-| **Dense Vector Storage** | Qdrant Vector Store + Embedding Models (Gemini `text-embedding-004`) + Score Thresholding (`min_dense_score`) | [`src/retrieval/qdrant_store.py`](../src/retrieval/qdrant_store.py) | Tìm kiếm ngữ nghĩa (Semantic Search) chính xác với bộ lọc điểm số tối thiểu. |
+| **Dense Vector Storage** | Qdrant Vector Store + Embedding Models (**Jina `jina-embeddings-v5-omni-small`, 1024-d**, fallback Gemini) + Score Thresholding (`min_dense_score`) | [`src/retrieval/qdrant_store.py`](../src/retrieval/qdrant_store.py) | Tìm kiếm ngữ nghĩa (Semantic Search) chính xác với bộ lọc điểm số tối thiểu. *(Đính chính 2026-08-06: bản trước ghi nhầm Gemini `text-embedding-004`/768-d — đó là fallback, không phải embedder mặc định.)* |
 | **Lexical BM25 Search** | In-process BM25 (Rank-BM25) với Tokenization tiếng Việt & tiếng Anh | [`src/retrieval/bm25.py`](../src/retrieval/bm25.py) | Đảm bảo exact-match cho từ khóa, tên riêng, mã số tài liệu mà Vector Search bỏ lỡ. |
 | **Rank Fusion (RRF)** | Reciprocal Rank Fusion (RRF $k=60$) kết hợp Dense + Lexical Ranks | [`src/retrieval/hybrid.py`](../src/retrieval/hybrid.py) | Gộp rank độc lập từ 2 retriever, khắc phục điểm yếu của từng phương pháp. |
+| **Two-Stage Reranking** ⚠️ *code đã có, đang tắt* | Cross-Encoder Reranker (`JinaReranker`, model `jina-reranker-v3.5`) re-score top candidates sau RRF — chỉ bật khi có **cả** Jina key **và** `settings.reranker_model` khác rỗng | [`src/providers/jina.py`](../src/providers/jina.py), gọi từ [`src/retrieval/qdrant_store.py`](../src/retrieval/qdrant_store.py) (`search()`) | **`RERANKER_MODEL` hiện đang trống trong `.env` → reranker KHÔNG chạy**, kể cả trong baseline eval 2026-08-06. Mục "Cross-Encoder Reranking" ở Level 1 bên dưới vì vậy chỉ còn là **bật cấu hình + đo lại**, không phải viết code từ đầu — rẻ hơn nhiều so với ước lượng gốc của roadmap. |
 | **Multi-Provider Router** | Multi-Provider Failover Router (Gemini, OpenRouter, OpenAI) + Auto Retry | [`src/providers/`](../src/providers/) | Tự động chuyển đổi provider LLM khi gặp lỗi API hoặc rate limit, đảm bảo uptime. |
-| **Citation-Gated Guardrails** | Citation Tagging (`[Doc X, Chunk Y]`) + Pydantic/Instructor Structured Output (`GroundedAnswer`) + Auto-Abstention Gate | [`src/generation/generator.py`](../src/generation/generator.py)<br>[`src/prompts/`](../src/prompts/) | Bắt buộc kiểm tra trích dẫn nguồn; tự động từ chối trả lời nếu dữ liệu không đủ (chống hallucination). |
+| **Citation-Gated Guardrails** | Citation Tagging (`[Cn]`) + Pydantic/Instructor Structured Output + Auto-Abstention Gate | [`src/generation/service.py`](../src/generation/service.py) *(đính chính 2026-08-06: không phải `generator.py`)*<br>[`src/prompts/`](../src/prompts/) | Bắt buộc kiểm tra trích dẫn nguồn; tự động từ chối trả lời nếu dữ liệu không đủ (chống hallucination). Xem Mục 1.1 #4 — tag `[Cn]` không phải lúc nào cũng xuất hiện inline dù citation hợp lệ. |
 | **Observability & Tracing** | Langfuse Span Tracing (Telemetry, Latency, Token & Cost Tracking) | [`src/observability/langfuse.py`](../src/observability/langfuse.py)<br>[`docker-compose.langfuse.yml`](../docker-compose.langfuse.yml) | Giám sát toàn bộ pipeline runtime, đo độ trễ từng span và chi phí token. |
-| **Evaluation & Benchmark** | Ground Truth Golden Set Dataset + CLI Evaluator (`company-rag-evaluate`) + LLM-as-a-Judge Rubrics | [`evaluation/GOLDEN_SET_SPEC.md`](../evaluation/GOLDEN_SET_SPEC.md)<br>[`src/evaluation/`](../src/evaluation/)<br>[`src/cli.py`](../src/cli.py) | Đánh giá định kỳ tự động Faithfulness và Precision/Recall chống regression. |
+| **Evaluation & Benchmark** | Ground Truth Golden Set Dataset + CLI Evaluator (`rag-eval`) + LLM-as-a-Judge Rubrics (Ragas, tùy chọn) | [`evaluation/GOLDEN_SET_SPEC.md`](../evaluation/GOLDEN_SET_SPEC.md)<br>[`src/evaluation/`](../src/evaluation/)<br>[`src/cli.py`](../src/cli.py) | Đánh giá định kỳ tự động Faithfulness và Precision/Recall chống regression. *(Đính chính 2026-08-06: lệnh CLI thật là `rag-eval`, không phải `company-rag-evaluate`.)* |
+
+---
+
+## 1.1 Phát Hiện Từ Lần Chạy Golden Set Đầy Đủ (2026-08-06)
+
+Chạy `rag-eval e2e` full 100/100 case lần đầu có giá trị baseline thật cho hệ thống, thay các placeholder "Đo bằng `company-rag-evaluate`" ở Mục 5 cũ. Bốn phát hiện dưới đây **có bằng chứng cụ thể từ case thật**, dùng để bổ sung Ưu Tiên 0 và hiệu chỉnh lại Ưu Tiên 1 ở Mục 5:
+
+| # | Phát hiện | Bằng chứng | Ảnh hưởng tới lộ trình |
+|---|---|---|---|
+| 1 | **Đã sửa** — bug rotation key Jina khiến 34/100 case lỗi trắng khi 1 trong 3 key hết credit (`is_jina_quota_error` chỉ nhận diện `429`/`quota`, không nhận diện 403 `AUTHZ_INSUFFICIENT_BALANCE`) | Case `DL-002`, `MH-003`, `UA-003`... — fix tại [`src/providers/jina.py`](../src/providers/jina.py) | Không thuộc Level nào — là bug reliability tầng Provider, ảnh hưởng cả production. Nên thêm health-check định kỳ cho key pool vào Mục 4.6 (Incident Runbook). |
+| 2 | **Câu hỏi ngắn/mơ hồ bị lạc sang tài liệu khác domain** — Coordinate Recall nhóm `ambiguous` chỉ 72.1%, Evidence Recall 59.2% (thấp nhất trong nhóm có golden context) | Case `AMB-001` ("Ai là người ký tên vào hồ sơ?") — top-5 kết quả lẫn hit từ `dang_ky_ket_hon.md`, `dang_ky_tam_tru.md` (tài liệu vừa ingest thêm, khác domain hoàn toàn với Nghị định 01/2021 của golden set) | **Vấn đề data isolation, không phải kỹ thuật retrieval nâng cao** — cần xử lý *trước* Level 1 (Semantic Chunking không giải quyết được việc này). Xem Ưu Tiên 0 ở Mục 5. |
+| 3 | **Multi-hop + độ khó "hard" yếu nhất hệ thống** — Coordinate Recall nhóm `hard` chỉ 56.4% (n=13), thấp hơn hẳn `easy` (84.9%) và `medium` (95%) | Case `MH-003` (cần gộp ≥2 Điều về lệ phí + thời hạn) — cả coordinate_recall và evidence_recall đều 0% | Củng cố bằng chứng thực tế cho **Query Transformation (Multi-Query Expansion)** ở Level 1 và **GraphRAG multi-hop** ở Level 2 — không còn là nhu cầu giả định, đã có số đo cụ thể để làm baseline so sánh sau khi triển khai. |
+| 4 | **Adversarial: retrieval đúng nhưng thiếu tag citation inline** — Coordinate/Evidence Recall nhóm `adversarial` tốt nhất (95%/85%) nhưng Citation Coverage thấp nhất (72.5%) | Case `ADV-018` — answer có citation hợp lệ trong metadata nhưng không câu nào chứa `[C1]` trong text | Không phải vấn đề retrieval — là prompt-adherence ở [`src/prompts/answer_v2.py`](../src/prompts/answer_v2.py) (Phase 3.1 / Phase 4.1 trong `RAG-ARCHITECTURE.md`). Sửa nhanh (prompt), không cần đợi Level 1. |
+
+> Report đầy đủ: `reports/rag_evaluation/2026-08-06_golden100_clean-baseline/report.json`. Lưu ý: Ragas (Faithfulness, Context Precision/Recall, Answer Relevancy qua LLM-judge) **chưa chạy được** do thiếu `RAGAS_API_KEY`/`OPENAI_API_KEY` trong `.env` — các số ở Mục 5 bên dưới chỉ gồm metric xác định (deterministic), không phải Ragas.
 
 ---
 
@@ -119,7 +136,7 @@ Level 0: Baseline RAG + Evals ✅ (Hiện tại: Ingestion, BM25+Dense Hybrid RR
 #### **Tiêu Chí Hoàn Thành (Definition of Done):**
 - [ ] Precision@5 trên Golden Set tăng ≥ 15% so với baseline.
 - [ ] Latency P95 tăng không quá 150ms (budget cho Stage 2 Reranker).
-- [ ] Đo bằng: `company-rag-evaluate --level 1 --compare-baseline`.
+- [ ] Đo bằng: `rag-eval e2e` trên toàn bộ golden set, so sánh `report.json` (aggregates) với baseline `2026-08-06_golden100_clean-baseline`. *(`--level`/`--compare-baseline` chưa tồn tại trong CLI hiện tại — cần thêm nếu muốn tự động hoá so sánh, xem Mục 4.7 quy trình Blue-Green.)*
 
 #### **Rollback Strategy:**
 - Nếu Reranker tăng latency > 200ms P95: tắt Stage 2, giữ MMR trên RRF output.
@@ -230,7 +247,7 @@ Bảo mật doanh nghiệp (chống Prompt Injection, Lethal Trifecta), tối ư
    - Cấu hình **HNSW + SQ8 / IVF-PQ** trên Qdrant khi corpus > 100k chunks.
    - **Redis Semantic Cache**: Trả kết quả ngay nếu Cosine Similarity > 0.95 với query cache — giảm 60-70% LLM calls cho câu hỏi lặp lại.
 4. **Continuous Evaluation CI/CD Pipeline (`.github/workflows/eval.yml`):**
-   - Trigger mỗi PR merge vào `main`: chạy `company-rag-evaluate` trên toàn bộ Golden Set.
+   - Trigger mỗi PR merge vào `main`: chạy `rag-eval e2e` trên toàn bộ Golden Set.
    - **Quality Gate:** Nếu `Faithfulness < 0.85` hoặc `Context Recall < 0.80` → block deployment tự động.
    - Ghi kết quả eval vào Langfuse dataset để track trend theo thời gian.
 
@@ -360,7 +377,7 @@ Khi bất kỳ chỉ số SLA nào bị vi phạm trong môi trường Productio
    - vLLM TTFT cao → kiểm tra Prefix Cache hit rate; restart vLLM service nếu cần.
 3. **Faithfulness sụt < 80%:**
    - Kiểm tra xem có chunk lạ / tài liệu mới inject noise vào Qdrant không.
-   - Kích hoạt re-evaluation ngay: `company-rag-evaluate --quick --top 50`.
+   - Kích hoạt re-evaluation ngay: `rag-eval e2e --limit 50` (chạy nhanh trên 50 case đầu để có tín hiệu sớm).
    - Nếu model provider thay đổi (API version bump) → pin lại model version trong `src/providers/`.
 
 #### 🟡 P2: Quality Degradation / Ingestion Chậm
@@ -400,8 +417,9 @@ Bước 2: Chạy ingestion pipeline song song vào collection mới
         (giữ nguyên collection cũ "company_rag_v{N}" đang phục vụ traffic)
 
 Bước 3: Chạy eval song song:
-        company-rag-evaluate --collection v{N}   → baseline
-        company-rag-evaluate --collection v{N+1} → candidate
+        QDRANT_COLLECTION=company_rag_v{N}   rag-eval e2e   → baseline
+        QDRANT_COLLECTION=company_rag_v{N+1} rag-eval e2e   → candidate
+        (rag-eval hiện chưa có cờ --collection; chọn collection qua biến môi trường/settings)
 
 Bước 4: Nếu v{N+1} ≥ SLA targets → Switch Traffic:
         Cập nhật config ACTIVE_COLLECTION = "company_rag_v{N+1}"
@@ -483,20 +501,32 @@ Level 3 (Agent) ──── Level 4 (Safety bao quanh toàn pipeline Agent)
 ```
 
 ### KPI Baseline Hiện Tại & Mục Tiêu:
-| Metric | Baseline (cần đo) | Target Level 1 | Target Level 3 | Target Level 4 |
-| --- | --- | --- | --- | --- |
-| `Faithfulness` | Đo bằng `company-rag-evaluate` | ≥ +5% | ≥ +10% (Self-RAG) | Ổn định, không regression |
-| `Context Recall` | Đo bằng `company-rag-evaluate` | ≥ +15% (Reranker) | ≥ +20% (CRAG) | Ổn định |
-| `Precision@5` | Đo bằng `company-rag-evaluate` | ≥ +15% | ≥ +20% | Ổn định |
-| `TTFT P95` | Đo bằng Langfuse | - | ≤ +150ms (acceptable) | < 100ms (vLLM) |
+
+Baseline dưới đây đo thật ngày 2026-08-06 bằng `rag-eval e2e` full 100/100 case, 0 lỗi (`reports/rag_evaluation/2026-08-06_golden100_clean-baseline/`). Tên metric bên trái là hệ quy chiếu roadmap gốc (Ragas); cột "Baseline đo được" dùng metric xác định (deterministic) hiện có trong `rag-eval` — **không phải cùng công thức với Ragas**, chỉ là proxy gần nhất cho tới khi bật `--ragas`.
+
+| Metric (Ragas) | Proxy đo được hiện tại | Baseline 2026-08-06 | Target Level 1 | Target Level 3 | Target Level 4 |
+| --- | --- | --- | --- | --- | --- |
+| `Faithfulness` | *(chưa đo — cần `RAGAS_API_KEY`/`OPENAI_API_KEY`)* | — | ≥ 90% (SLA Mục 4.5) | ≥ +10% (Self-RAG) | Ổn định, không regression |
+| `Context Recall` | `coordinate_recall` (tìm đúng Điều/Chương) + `evidence_recall` (đoạn trích khớp golden text) | **81.6% / 71.1%** (overall); yếu nhất: `hard` 56.4%/52.6%, `ambiguous` 72.1%/59.2% | ≥ 85% cả hai (mục tiêu SLA hiện có, chưa đạt) | ≥ +20% (CRAG) | Ổn định |
+| `Precision@5` | *(chưa đo trực tiếp — `rag-eval` hiện không tính precision, chỉ recall theo coordinate/evidence)* | — | ≥ +15% (cần thêm metric trước khi đo) | ≥ +20% | Ổn định |
+| `Citation Coverage/Validity` | `citation_coverage` (tag `[Cn]` inline) + `citation_validity` (không citation ảo) | **91.8% / 100%** overall; yếu nhất: `adversarial` citation_coverage 72.5% | ≥ 85% cả hai | Ổn định | Ổn định |
+| `TTFT P95` | *(chưa đo TTFT riêng — chỉ có end-to-end latency)* | End-to-end P95 **11.5s** (retrieval 4.7s + generation 2.4s trung bình) — đo **khi reranker đang TẮT** (`RERANKER_MODEL` trống, xem hàng "Two-Stage Reranking" ở Mục 1) | ≤ +150ms so với baseline này sau khi **bật** Stage-2 reranker (set `RERANKER_MODEL=jina-reranker-v3.5`) | < 100ms (vLLM) | < 100ms (vLLM) |
 
 ### Thứ Tự Ưu Tiên:
 
-1. **Ưu tiên 1 (Ngắn hạn - 1 đến 2 tuần):**
-   - Triển khai **Semantic Chunking** + **Parent-Child Chunking** (`src/ingestion/chunker.py`).
-   - Triển khai **Cross-Encoder Reranker** + **MMR** (`src/retrieval/hybrid.py`).
-   - Thêm **HyDE + Multi-Query Expansion** (`src/retrieval/query_transform.py`).
-   - **Đo ngay sau:** `company-rag-evaluate` để có baseline KPI cụ thể trước khi lên Level 3.
+0. **Ưu tiên 0 (Làm ngay — vài giờ đến 1-2 ngày, không phải "Advanced RAG"):**
+   Xuất phát trực tiếp từ 4 phát hiện có bằng chứng thật ở Mục 1.1 — rẻ hơn và cấp thiết hơn mọi mục Level 1-5, nên làm **trước** khi đầu tư vào kỹ thuật nâng cao:
+   - **Cô lập dữ liệu theo domain:** thêm field domain/corpus khi ingest (`src/ingestion/service.py`) + filter theo domain khi retrieve (`src/retrieval/qdrant_store.py`, `src/retrieval/hybrid.py`), hoặc tách collection riêng cho mỗi domain tài liệu (đăng ký doanh nghiệp vs. hộ tịch/cư trú/xe/thuế). Giải quyết case `AMB-001` và cả nhóm `ambiguous` (evidence recall 59.2%).
+   - **Bật Cross-Encoder Reranker đang có sẵn:** set `RERANKER_MODEL=jina-reranker-v3.5` trong `.env`, chạy lại `rag-eval e2e` để đo delta trước/sau — không cần code mới (xem Mục 1 hàng "Two-Stage Reranking").
+   - **Siết prompt citation cho câu adversarial:** bắt buộc câu mở đầu kiểu "Không đúng." cũng phải gắn `[Cn]` trong [`src/prompts/answer_v2.py`](../src/prompts/answer_v2.py). Giải quyết citation_coverage 72.5% của nhóm `adversarial`.
+   - **Theo dõi sức khoẻ Jina key pool:** thêm alert khi 1 key rơi vào cooldown liên tục (đã vá bug rotation, nhưng chưa có giám sát chủ động — xem Mục 4.6).
+   - **Đo ngay sau mỗi mục:** `rag-eval e2e`, so với baseline `2026-08-06_golden100_clean-baseline` để định lượng cải thiện trước khi báo cáo lên Level 1.
+
+1. **Ưu tiên 1 (Ngắn hạn - 1 đến 2 tuần, sau Ưu tiên 0):**
+   - Triển khai **Semantic Chunking** + **Parent-Child Chunking** (`src/ingestion/chunker.py`) — *lưu ý: baseline hiện tại không cho thấy chunking là điểm nghẽn (không case nào ở Mục 1.1 lỗi vì ranh giới chunk); ưu tiên thấp hơn 2 mục dưới trừ khi số liệu sau Ưu tiên 0 chỉ ra khác.*
+   - Tinh chỉnh **Cross-Encoder Reranker** (đã bật ở Ưu tiên 0) + thêm **MMR** (`src/retrieval/hybrid.py`).
+   - Thêm **HyDE + Multi-Query Expansion** (`src/retrieval/query_transform.py`) — nhắm thẳng vào điểm yếu multi-hop/hard (coordinate recall 56.4%) đã đo được.
+   - **Đo ngay sau:** `rag-eval e2e` để có baseline KPI cụ thể trước khi lên Level 3.
 
 2. **Ưu tiên 2 (Trung hạn - 3 đến 4 tuần, sau Level 1):**
    - Xây dựng **LangGraph Agentic RAG** (`src/agent/graph.py`) với Self-RAG + CRAG + Memory.

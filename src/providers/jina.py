@@ -31,7 +31,13 @@ def _jina_pool_from(api_key: str | ApiKeyPool) -> ApiKeyPool:
 
 def is_jina_quota_error(exc: Exception) -> bool:
     text = str(exc).casefold()
-    return "429" in text or "quota" in text or "rate limit" in text
+    return (
+        "429" in text
+        or "quota" in text
+        or "rate limit" in text
+        or "insufficient" in text
+        or "authz_insufficient_balance" in text
+    )
 
 
 class JinaEmbeddingProvider:

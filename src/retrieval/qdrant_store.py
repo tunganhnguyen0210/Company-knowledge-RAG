@@ -9,8 +9,8 @@ from qdrant_client import QdrantClient, models
 from qdrant_client.grpc import PointId
 
 from domain.schemas import Chunk, SearchHit
-from providers.base import EmbeddingProvider
-from retrieval.hybrid import (
+from providers.base import EmbeddingProvider, ProviderError
+from retrieval.retrieval_method.hybrid import (
     filter_by_min_score,
     lexical_rank,
     reciprocal_rank_fusion,
@@ -45,6 +45,7 @@ class QdrantChunkStore:
         lexical_candidate_limit: int = 500,
         min_dense_score: float = 0.35,
         reranker: Any | None = None,
+        rerank_candidate_limit: int = 50,
     ) -> None:
         self.client = QdrantClient(url=url, api_key=api_key or None, timeout=10)
         self.collection = collection
@@ -53,6 +54,7 @@ class QdrantChunkStore:
         self.lexical_candidate_limit = lexical_candidate_limit
         self.min_dense_score = min_dense_score
         self.reranker = reranker
+        self.rerank_candidate_limit = rerank_candidate_limit
         self._init_lock = Lock()
         self._initialized = False
 
@@ -146,11 +148,16 @@ class QdrantChunkStore:
                 models.FieldCondition(key="status", match=models.MatchValue(value="ready")),
             ]
         )
+        candidate_limit = (
+            max(self.rerank_candidate_limit, limit)
+            if self.reranker
+            else max(limit * 4, limit)
+        )
         dense_response = self.client.query_points(
             collection_name=self.collection,
             query=self.embedder.embed_query(query),
             query_filter=query_filter,
-            limit=max(limit * 4, limit),
+            limit=candidate_limit,
             with_payload=True,
         )
         dense = filter_by_min_score(
@@ -168,12 +175,13 @@ class QdrantChunkStore:
             with_vectors=False,
         )
         lexical_chunks = [_chunk_from_payload(record.payload) for record in records]
-        lexical = lexical_rank(query, lexical_chunks, max(limit * 4, limit))
-        rrf_limit = max(limit * 4, 20) if self.reranker else limit
-        fused = reciprocal_rank_fusion(dense, lexical, rrf_limit)
+        lexical = lexical_rank(query, lexical_chunks, candidate_limit)
+        fused = reciprocal_rank_fusion(dense, lexical, candidate_limit)
         if self.reranker and fused:
-            reranked: list[SearchHit] = self.reranker.rerank(query, fused, top_n=limit)
-            return reranked
+            try:
+                return self.reranker.rerank(query, fused, top_n=limit)
+            except ProviderError:
+                return fused[:limit]
         return fused[:limit]
 
     def list_document_chunks(

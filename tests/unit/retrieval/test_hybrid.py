@@ -1,5 +1,5 @@
 from domain.schemas import Chunk, DocumentStatus, SearchHit, SourceCoordinates
-from retrieval.hybrid import filter_by_min_score, reciprocal_rank_fusion
+from retrieval.retrieval_method.hybrid import filter_by_min_score, reciprocal_rank_fusion
 
 
 def _hit(chunk_id: str, score: float) -> SearchHit:

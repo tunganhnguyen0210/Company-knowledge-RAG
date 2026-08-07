@@ -21,6 +21,21 @@ def test_settings_reads_unprefixed_main_provider(monkeypatch) -> None:
     assert settings.main_provider == "openrouter"
 
 
+def test_settings_default_rerank_candidate_limit() -> None:
+    assert Settings(_env_file=None).rerank_candidate_limit == 50
+
+
+def test_jina_key_pool_includes_dotenv_fallback_keys() -> None:
+    settings = Settings(
+        jina_api_key="primary",
+        jina_api_fallback_key="fallback-1",
+        jina_api_fallback_key2="fallback-2",
+        _env_file=None,
+    )
+
+    assert settings.build_jina_key_pool().key_count == 3
+
+
 
 def test_settings_reject_full_tracing_without_explicit_consent() -> None:
     with pytest.raises(ValidationError, match="allow_sensitive_tracing"):
