@@ -271,3 +271,12 @@ def test_preflight_failures_are_retained_as_reports(
     assert report.errors[0].startswith("FileNotFoundError:")
     assert report.report_path is not None
     assert runner.repository.report_save_calls == 1
+
+
+def test_human_readable_run_id_format(tmp_path: Path) -> None:
+    runner = _runner(tmp_path)
+    request = EvaluationRequest(mode=EvaluationMode.VALIDATE, name="baseline-v1")
+    report = runner.run(request)
+    assert report.run_id.endswith("_validate_baseline-v1")
+    parts = report.run_id.split("_")
+    assert "h" in parts[1]  # HHhMM format, e.g. 17h42

@@ -65,6 +65,7 @@ class EvaluationRequest(BaseModel):
     force_reingest: bool = False
     from_run: str | None = None
     run_ragas: bool = False
+    name: str | None = None
     output_root: Path = Path("reports/rag_evaluation")
 
     @computed_field  # type: ignore[prop-decorator]
@@ -124,12 +125,8 @@ class RunManifest(ArtifactModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     mode: EvaluationMode
     arguments: dict[str, Any]
-    git_revision: str | None
     dataset_fingerprint: str
-    source_fingerprints: dict[str, str]
-    configuration_fingerprints: dict[str, str]
-    dependency_versions: dict[str, str]
-    artifact_lineage: dict[str, str]
+    environment_hash: str
 
 
 class IndexSnapshot(ArtifactModel):

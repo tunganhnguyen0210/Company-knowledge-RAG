@@ -4,6 +4,8 @@ import platform
 import subprocess
 from collections.abc import Sequence
 from hashlib import sha256
+import re
+from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 from pathlib import Path
@@ -128,8 +130,36 @@ class EvaluationRunner:
         self.runtime_configuration = runtime_configuration
         self.semantic_judge = semantic_judge
 
+    def _is_run_id_taken(self, run_id: str) -> bool:
+        if hasattr(self.repository, "manifests"):
+            return run_id in self.repository.manifests
+        if hasattr(self.repository, "root"):
+            return (getattr(self.repository, "root") / run_id / "manifest.json").exists()
+        return False
+
+    def _generate_run_id(self, request: EvaluationRequest) -> str:
+        timestamp = datetime.now(UTC).strftime("%d%b_%Hh%M")
+        mode_str = request.mode.value
+        tag = (
+            request.name
+            or self.runtime_configuration.get("generation_provider")
+            or self.runtime_configuration.get("embedding_model")
+        )
+        if tag:
+            clean_tag = re.sub(r"[^a-zA-Z0-9_\-]", "", str(tag).strip().replace(" ", "-")).lower()
+            base_id = f"{timestamp}_{mode_str}_{clean_tag}"
+        else:
+            base_id = f"{timestamp}_{mode_str}"
+
+        run_id = base_id
+        counter = 1
+        while self._is_run_id_taken(run_id):
+            run_id = f"{base_id}_{counter}"
+            counter += 1
+        return run_id
+
     def run(self, request: EvaluationRequest) -> EvaluationReport:
-        run_id = uuid4().hex
+        run_id = self._generate_run_id(request)
         manifest: RunManifest | None = None
         try:
             effective_request, dataset = self._resolve_dataset(request)
@@ -254,10 +284,7 @@ class EvaluationRunner:
         manifest: RunManifest | None,
     ) -> EvaluationReport:
         if manifest is not None:
-            final_manifest = manifest.model_copy(
-                update={"artifact_lineage": report.artifact_ids}
-            )
-            self.repository.save_manifest(final_manifest)
+            self.repository.save_manifest(manifest)
         path = self.repository.save_report(report)
         return report.model_copy(update={"report_path": path})
 
@@ -270,50 +297,29 @@ class EvaluationRunner:
         raw_path = request.ingestion_source or Path(
             "data/raw/01_2021_ND-CP_283247.docx"
         )
-        source_fingerprints = {
-            "canonical": sha256(request.canonical_source.read_bytes()).hexdigest()
-        }
-        if raw_path.exists():
-            source_fingerprints["raw"] = sha256(raw_path.read_bytes()).hexdigest()
-        try:
-            ragas_version = package_version("ragas")
-        except PackageNotFoundError:
-            ragas_version = "not-installed"
-        revision = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            capture_output=True,
-            check=False,
-            text=True,
+        source_bytes = request.canonical_source.read_bytes() + (
+            raw_path.read_bytes() if raw_path.exists() else b""
         )
+        env_payload = {
+            "source_sha256": sha256(source_bytes).hexdigest(),
+            "runtime": self.runtime_configuration,
+            "selection": {
+                "golden_dir": str(request.golden_dir),
+                "files": [str(path) for path in request.golden_files],
+                "types": sorted(item.value for item in request.question_types),
+                "case_ids": sorted(request.case_ids),
+                "limit": request.limit,
+                "canonical_source": str(request.canonical_source),
+            },
+        }
         return RunManifest(
             run_id=run_id,
             mode=request.mode,
             arguments=request.model_dump(mode="json"),
-            git_revision=(
-                revision.stdout.strip() if revision.returncode == 0 else None
-            ),
             dataset_fingerprint=fingerprint(
                 [case.model_dump(mode="json") for case in dataset.cases]
             ),
-            source_fingerprints=source_fingerprints,
-            configuration_fingerprints={
-                "runtime": fingerprint(self.runtime_configuration),
-                "selection": fingerprint(
-                    {
-                        "golden_dir": str(request.golden_dir),
-                        "files": [str(path) for path in request.golden_files],
-                        "types": sorted(item.value for item in request.question_types),
-                        "case_ids": sorted(request.case_ids),
-                        "limit": request.limit,
-                        "canonical_source": str(request.canonical_source),
-                    }
-                ),
-            },
-            dependency_versions={
-                "python": platform.python_version(),
-                "ragas": ragas_version,
-            },
-            artifact_lineage={},
+            environment_hash=fingerprint(env_payload),
         )
 
     def _run_validate(
@@ -511,7 +517,8 @@ class EvaluationRunner:
         if validation.errors:
             raise ValueError("; ".join(issue.message for issue in validation.errors))
         snapshot = self._build_snapshot(run_id, request, document, chunks, validation)
-        self.repository.save_snapshot(snapshot)
+        if request.mode is EvaluationMode.INGEST or request.ingestion_source is not None:
+            self.repository.save_snapshot(snapshot)
         artifacts: list[RetrievalCaseArtifact] = []
         errors: list[str] = []
         for case in selected:

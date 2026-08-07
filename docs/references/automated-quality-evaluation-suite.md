@@ -115,55 +115,52 @@ Configured via `TRACE_MODE` in `settings.py`:
 
 ## 6. Output Folder Structure
 
-Every evaluation execution generates a unique UUID run directory inside `reports/rag_evaluation/`:
+Every evaluation execution generates a human-readable, chronologically sortable directory inside `reports/rag_evaluation/`:
 
+### Naming Scheme:
+```
+reports/rag_evaluation/<DDMon_HHhMM>_<mode>[_<tag-or-model>]
+```
+
+- **`DDMon_HHhMM`**: Readable timestamp (Day, Month Abbreviation, Hour & Minute; e.g. `07Aug_17h20` for August 7, 17:20).
+- **`<mode>`**: Evaluation mode (`e2e`, `retrieval`, `generation`, `ingest`, `validate`).
+- **`[<tag-or-model>]`**: Optional human-readable experiment name (`--name baseline`) or main model/provider slug (e.g. `gemini`, `bm25-rerank`).
+
+### Example Folder Structure:
 ```
 reports/
 └── rag_evaluation/
-    └── <run_uuid>/
-        ├── manifest.json              # Write-once execution metadata & lineage
+    └── 07Aug_17h20_e2e_baseline/        # Human-readable experiment directory
+        ├── manifest.json              # Write-once execution metadata & environment hash
         ├── report.json                # Aggregate metrics, validation, & case scores
-        ├── index_snapshot.json        # (ingest/retrieval/e2e) Qdrant collection & chunk snapshot
+        ├── index_snapshot.json        # (ingest mode only) Qdrant collection & chunk snapshot
         ├── retrieval.jsonl            # (retrieval/e2e) Header + per-case retrieval executions
         └── generation.jsonl           # (generation/e2e) Header + per-case generation executions
 ```
+
+> [!TIP]
+> **Performance Optimization**: `index_snapshot.json` is written to disk **only** during `rag-eval ingest` (or `--ingest`) runs. Regular `retrieval` and `e2e` evaluation runs skip writing this redundant 142-chunk payload file to prevent disk bloat.
 
 ---
 
 ## 7. Output File Specifications & Data Structures
 
 ### A. `manifest.json` (`RunManifest`)
-Write-once record establishing run provenance, environmental context, and artifact lineage.
+Streamlined write-once record establishing run parameters, dataset hash, and environment hash.
 
 ```json
 {
-  "run_id": "c7a84e9d01f24a...",
-  "created_at": "2026-08-07T10:15:00Z",
+  "run_id": "07Aug_17h20_e2e_baseline",
+  "created_at": "2026-08-07T17:20:00Z",
   "mode": "e2e",
   "arguments": {
     "golden_dir": "evaluation/golden_set",
     "limit": 10,
-    "run_ragas": true
+    "run_ragas": true,
+    "name": "baseline"
   },
-  "git_revision": "a1b2c3d4...",
-  "dataset_fingerprint": "8f3d0a...",
-  "source_fingerprints": {
-    "canonical": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "raw": "f4c8996fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149a"
-  },
-  "configuration_fingerprints": {
-    "runtime": "9b12c8...",
-    "selection": "3f4a12..."
-  },
-  "dependency_versions": {
-    "python": "3.11.9",
-    "ragas": "0.1.15"
-  },
-  "artifact_lineage": {
-    "index_snapshot": "a8f12c...",
-    "retrieval_run": "b9e34d...",
-    "generation_run": "c0d56e..."
-  }
+  "dataset_fingerprint": "8f3d0a2b1c4e...",
+  "environment_hash": "9b12c8a45e6f..."
 }
 ```
 
@@ -172,7 +169,7 @@ The main summary output containing validation status, aggregate metrics, target 
 
 ```json
 {
-  "run_id": "c7a84e9d01f24a...",
+  "run_id": "0708_1720_e2e_baseline",
   "mode": "e2e",
   "status": "complete",
   "dataset_size": 100,
@@ -298,3 +295,75 @@ To prevent skewed or partial benchmark submissions from overwriting baseline ben
 4. `golden_dir == "evaluation/golden_set"` (default production golden directory).
 5. `canonical_source == "data/extracted/01_2021_ND-CP_283247.md"`.
 6. Dataset size = 100 cases, evaluated cases = 100 (unfiltered, no `--type`, `--golden-file`, `--case-id`, or `--limit` flags).
+
+---
+
+## 9. Autonomous AI Agent Evaluation & Optimization Loop
+
+When an AI Coding Agent operates autonomously to optimize RAG performance, it leverages `dataset_fingerprint`, `environment_hash`, and the evaluation output files (`report.json`, `retrieval.jsonl`, `generation.jsonl`) to execute an automated **Analyze → Hypothesize → Implement → Verify → Benchmark** loop.
+
+```
+                  ┌─────────────────────────────────────┐
+                  │ 1. Run Evaluation Command           │
+                  │    rag-eval e2e --name "exp-hybrid" │
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │ 2. Check Hashes & Validation        │
+                  │    Verify dataset_fingerprint &     │
+                  │    environment_hash against baseline│
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │ 3. Inspect report.json Aggregates   │
+                  │    Locate failing metrics & targets │
+                  │    (e.g., coordinate_recall < 0.85) │
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │ 4. Deep-Dive Log Inspection         │
+                  │    Inspect retrieval.jsonl &        │
+                  │    generation.jsonl per-case hits   │
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │ 5. Form Hypothesis & Implement Code │
+                  │    Refactor retrieval / prompts     │
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │ 6. Re-evaluate & Run Delta Compare  │
+                  │    rag-eval compare --baseline ...  │
+                  └─────────────────────────────────────┘
+```
+
+### Agent Inspection & Diagnostic Workflow
+
+#### Step 1: Pre-Flight Hash Verification (`manifest.json`)
+Before analyzing metrics, the Coding Agent compares hashes in `manifest.json`:
+- **`dataset_fingerprint`**: Verifies that the golden question/answer dataset has not been corrupted or modified.
+- **`environment_hash`**: Verifies whether the source markdown/DOCX data, Qdrant collection settings, or candidate search limits differ from the baseline run.
+
+#### Step 2: Target Deficit Analysis (`report.json`)
+The Agent reads `report.json` and parses `target_comparison` to pinpoint exact failure domains:
+- **If `coordinate_recall` / `evidence_recall` < 0.85**: The issue is in the **Retrieval Layer** (e.g. dense score thresholding, BM25 weights, or chunking granularity).
+- **If `citation_validity` < 1.0**: The issue is a **System Safety Defect** (the LLM generated inline citation tags `[C<n>]` that were not present in retrieved context hits).
+- **If `citation_coverage` < 0.90**: The issue is a **Prompting Defect** (the LLM failed to attach citation brackets to non-abstained sentences).
+- **If `abstention_accuracy` < 1.0**: The issue is a **Hallucination / Guardrail Defect** (the LLM attempted to answer an `unanswerable` golden case instead of returning the strict abstention phrase).
+
+#### Step 3: Granular Failure Localization (`retrieval.jsonl` & `generation.jsonl`)
+The Agent reads per-case outputs to isolate exact root causes:
+1. **Retrieval Defect Inspection**: Filter `retrieval.jsonl` for cases where `deterministic_scores.coordinate_recall < 1.0` (e.g., `MH-005`). Compare `golden_contexts` required legal coordinates vs. `retrieval.hits[].chunk.coordinates`.
+   * *Example Finding*: `MH-005` required Article 14 and Article 22, but `min_dense_score=0.7` filtered out Article 22.
+2. **Generation Defect Inspection**: Filter `generation.jsonl` for cases where `citation_validity < 1.0` or answer contains bad formatting.
+   * *Example Finding*: The LLM cited `[C3]`, but only 2 chunks (`[C1]`, `[C2]`) were supplied in the prompt context.
+
+#### Step 4: Code Modification & Verification
+- The Agent applies targeted code edits (e.g., modifying `min_dense_score` in [settings.py](file:///e:/VIN-INTERNSHIP/Cowork-RAG/src/settings.py) or updating prompt templates in [prompts/](file:///e:/VIN-INTERNSHIP/Cowork-RAG/src/prompts/)).
+- The Agent runs `rag-eval compare --baseline reports/rag_evaluation/07Aug_17h20_e2e_baseline/report.json --candidate reports/rag_evaluation/07Aug_17h45_e2e_candidate/report.json`.
+- It verifies that metrics report `🟢 IMPROVED` and latencies remain `🟢 WITHIN SLA`.

@@ -43,7 +43,17 @@ def _add_validation_scope(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_name(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--name",
+        type=str,
+        default=None,
+        help="Optional human-readable experiment tag/name for run directory (e.g. baseline, hyde-test)",
+    )
+
+
 def _add_output(parser: argparse.ArgumentParser) -> None:
+    _add_name(parser)
     parser.add_argument("--output-root", type=Path, default=Path("reports/rag_evaluation"))
 
 

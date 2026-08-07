@@ -61,12 +61,12 @@ evidence without building runtime providers or making network calls.
 ```powershell
 rag-eval validate
 rag-eval ingest --source data/raw/01_2021_ND-CP_283247.docx
-rag-eval retrieval --type multi_hop --limit 10
+rag-eval retrieval --type multi_hop --limit 10 --name "hyde-test"
 rag-eval generation --from-run <retrieval-run-id>
-rag-eval e2e --limit 10
+rag-eval e2e --limit 10 --name "baseline"
 rag-eval e2e --limit 10 --ragas
 rag-eval e2e --ingest data/raw/01_2021_ND-CP_283247.docx --limit 10
-rag-eval compare --baseline reports/rag_evaluation/base/report.json --candidate reports/rag_evaluation/cand/report.json
+rag-eval compare --baseline reports/rag_evaluation/07Aug_17h20_e2e_base/report.json --candidate reports/rag_evaluation/07Aug_17h45_e2e_cand/report.json
 ```
 
 `data/raw/01_2021_ND-CP_283247.docx` is the raw ingestion identity. Its
@@ -97,12 +97,10 @@ golden files are selected. Generation accepts only `--from-run`: it inherits
 the saved retrieval selection and canonical source, and rejects incompatible
 dataset or artifact fingerprints.
 
-Each invocation writes a new UUID directory below `reports/rag_evaluation/`.
-It contains a write-once `manifest.json` (arguments, source/configuration
-fingerprints, dependency versions, and lineage) and `report.json`; index runs
-also write `index_snapshot.json`, retrieval writes `retrieval.jsonl`, and
-generation writes `generation.jsonl`. These ignored artifacts preserve
-provenance without embedding credentials.
+Each invocation writes a human-readable, chronologically sortable directory below `reports/rag_evaluation/` using the format `reports/rag_evaluation/<DDMon_HHhMM>_<mode>[_<tag-or-model>]` (e.g. `07Aug_17h20_e2e_baseline`).
+It contains a write-once `manifest.json` (arguments, `dataset_fingerprint`, and `environment_hash`) and `report.json`; `ingest` mode runs also write `index_snapshot.json` (skipped on standard retrieval/e2e runs to prevent disk bloat), retrieval writes `retrieval.jsonl`, and generation writes `generation.jsonl`. These ignored artifacts preserve provenance without embedding credentials.
+
+Autonomous AI agents leverage `dataset_fingerprint` and `environment_hash` to execute automated **Analyze → Hypothesize → Fix → Benchmark** loops, inspecting `retrieval.jsonl` and `generation.jsonl` for failing case IDs and verifying improvements via `rag-eval compare`.
 
 `--ragas` is opt-in and report-only: it scores captured retrieval/generation
 evidence and does not rerun the application pipeline. A requested Ragas failure
