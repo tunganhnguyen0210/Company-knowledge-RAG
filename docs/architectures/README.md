@@ -16,6 +16,7 @@ The table below maps each detailed architecture file to its topic, primary focus
 | [`04-retrieval-generation-and-citations.md`](04-retrieval-generation-and-citations.md) | Retrieval & Generation Engine | Hybrid search (RRF), prompt templates, citation gating | [`src/retrieval/hybrid.py`](../../src/retrieval/hybrid.py), [`src/generation/service.py`](../../src/generation/service.py) |
 | [`05-observability-evaluation-and-operations.md`](05-observability-evaluation-and-operations.md) | Operations & Observability | Langfuse telemetry tracing, golden set benchmark runner | [`src/observability/tracing.py`](../../src/observability/tracing.py), [`src/evaluation/runner.py`](../../src/evaluation/runner.py) |
 | [`06-simple-rag-vs-company-rag-comparison.md`](06-simple-rag-vs-company-rag-comparison.md) | RAG Pipeline Comparison | Baseline vs. Production RAG side-by-side comparison | All core pipeline files |
+| [`../references/CHUNKING-AND-RETRIEVAL-FLOW.md`](../references/CHUNKING-AND-RETRIEVAL-FLOW.md) | Chunking and Retrieval Deep Dive *(Vietnamese)* | End-to-end walkthrough with real input/output at every stage; sibling expansion internals | [`src/ingestion/chunker.py`](../../src/ingestion/chunker.py), [`src/retrieval/hierarchical.py`](../../src/retrieval/hierarchical.py) |
 
 ---
 

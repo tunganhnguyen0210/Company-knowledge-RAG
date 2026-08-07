@@ -2,7 +2,7 @@
 
 > ⚠️ **MỘT PHẦN TÀI LIỆU NÀY ĐÃ LỖI THỜI (2026-08-07).** Xem [`HIERARCHICAL-RETRIEVAL-REPORT.md`](./HIERARCHICAL-RETRIEVAL-REPORT.md).
 >
-> - **Mục "1. `Chunk.parent_text`" bên dưới đã bị BÁC BỎ.** Nó khuyến nghị generation dùng `chunk.parent_text or chunk.text`. Cách đó **không hoạt động**: `score_retrieval_case` chỉ đọc `text` của các SearchHit *được trả về*, nên nhét `parent_text` vào prompt không cải thiện được metric nào. Cách đã triển khai là **trả về sibling chunk** từ trong `store.search()`. `Chunk.parent_text` hiện **không còn ai đọc**.
+> - **Mục "1. `Chunk.parent_text`" đã bị BÁC BỎ và **đã gỡ khỏi code (2026-08-07)**.** Nó khuyến nghị generation dùng `chunk.parent_text or chunk.text`. Cách đó **không hoạt động**: `score_retrieval_case` chỉ đọc `text` của các SearchHit *được trả về*, nên nhét `parent_text` vào prompt không cải thiện được metric nào. Cách đã triển khai là **trả về sibling chunk** từ trong `store.search()`. `Chunk.parent_text`, `ChunkingConfig.parent_child_enabled/parent_max_chars` và hai biến `CHUNK_PARENT_CHILD_ENABLED`/`CHUNK_PARENT_MAX_CHARS` **đã bị xóa hẳn**.
 > - **Mục "Vì sao không có số đo KPI" đã sai.** KPI đã đo đầy đủ: evidence_recall 71.1% → 84.4% trên production. Xem báo cáo mới.
 > - Phần **Semantic Chunking, RAPTOR, MRL, Contextual Embeddings** trong tài liệu này vẫn còn hiệu lực — chúng độc lập với hierarchical retrieval và vẫn mặc định TẮT.
 
@@ -17,7 +17,7 @@ Tất cả tính năng mới **mặc định TẮT** — hành vi ingest hiện 
 | Tính năng | Cờ bật (`.env`) | Mặc định | File |
 |---|---|---|---|
 | Semantic Chunking | `CHUNK_SEMANTIC_ENABLED` | `false` | `src/ingestion/chunker.py` |
-| Parent-Child Chunking | `CHUNK_PARENT_CHILD_ENABLED` | `false` | `src/ingestion/chunker.py` |
+| ~~Parent-Child Chunking~~ | ~~`CHUNK_PARENT_CHILD_ENABLED`~~ | **đã gỡ 2026-08-07** | — thay bằng sibling expansion trong `src/retrieval/hierarchical.py` |
 | RAPTOR Summarization | `RAPTOR_ENABLED` | `false` | `src/ingestion/raptor.py` |
 | MRL (truncated vector) | `ENRICH_MRL_ENABLED` | `false` | `src/ingestion/enrichment.py` |
 
@@ -25,10 +25,8 @@ Contextual Embeddings (đã có sẵn) được tăng cường thêm: nếu chun
 
 ## Interface bàn giao cho #3 (Reranking/MMR) và #4 (Query Transformation)
 
-### 1. `Chunk.parent_text: str | None` — dành cho ai làm generation/citation context injection
-Khi Parent-Child chunking bật, mỗi child chunk (đơn vị index/embed, ~1200 chars) có thêm `parent_text` = toàn bộ legal section chứa nó (cap `CHUNK_PARENT_MAX_CHARS`, mặc định 6000 chars), chỉ khi nó thực sự lớn hơn child (nếu section == chunk thì `parent_text = None` để tránh trùng lặp vô nghĩa).
-
-**Chưa ai tiêu thụ field này.** Nếu muốn "nạp Parent Chunk vào context window" như roadmap mô tả, chỗ cần sửa là nơi build prompt/citation trong `src/generation/service.py`: ưu tiên `chunk.parent_text or chunk.text` khi ghép context, thay vì chỉ `chunk.text`. `retrieval_text` (dùng cho search/embedding) không đổi — vẫn là child.
+### 1. ~~`Chunk.parent_text: str | None`~~ — ĐÃ GỠ (2026-08-07)
+Field này, cùng `ChunkingConfig.parent_child_enabled`/`parent_max_chars` và hai biến `.env` `CHUNK_PARENT_CHILD_ENABLED`/`CHUNK_PARENT_MAX_CHARS`, **đã bị xóa khỏi code**. Lý do: không metric nào đọc nó — xem banner đầu tài liệu. Nhu cầu "nạp trọn section vào context" đã được giải quyết bằng **sibling expansion** (`src/retrieval/hierarchical.py`), trả về chunk thật có toạ độ thật nên citable hợp lệ. Payload Qdrant cũ còn key `parent_text` vẫn load được (pydantic bỏ qua field thừa), không cần re-index.
 
 ### 2. `Chunk.mrl_vector_128: list[float] | None` — dành cho ai làm two-stage retrieval
 Khi `ENRICH_MRL_ENABLED=true`, mỗi chunk có thêm 1 vector rút gọn (mặc định 128-d, đổi qua `ENRICH_MRL_DIMENSIONS`) embed từ `retrieval_text`, dùng cùng model/pool với embedding chính (Jina hỗ trợ `dimensions` param native; Gemini có Matryoshka truncation sẵn — xem `src/api/app.py::_build_embedding_provider`).
@@ -55,7 +53,6 @@ Theo kế hoạch, toàn bộ dev/test phải chạy trên **collection Qdrant r
 ```bash
 # 1. Bật các cờ muốn thử nghiệm trong .env, ví dụ:
 #    CHUNK_SEMANTIC_ENABLED=true
-#    CHUNK_PARENT_CHILD_ENABLED=true
 #    RAPTOR_ENABLED=true
 #    ENRICH_MRL_ENABLED=true
 #    ENABLE_ENRICHMENT=true   (bắt buộc để enrichment chạy)

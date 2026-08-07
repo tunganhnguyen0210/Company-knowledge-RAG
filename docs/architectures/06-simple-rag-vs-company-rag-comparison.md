@@ -10,7 +10,7 @@ This document compares the baseline **Simple RAG Pipeline** (documented in [`Sim
 
 | Pipeline Phase | Baseline Simple RAG | Current Production RAG Pipeline | Evolution & Enhancements |
 | :--- | :--- | :--- | :--- |
-| **1. Ingestion & Indexing** | PDF loading, text cleaning, Recursive Text Splitter, HuggingFace embeddings, ChromaDB vector store | Multi-format parsing (PDF, MD, TXT, DOCX), text cleaning, Section-Aware Chunking, Gemini embeddings (`gemini-embedding-001`), Qdrant Vector DB with status filtering | **Aligned & Enhanced**: Multi-format & section-aware structure parsing, upgraded vector database (1024d Cosine) with state metadata (`status == "ready"`). |
+| **1. Ingestion & Indexing** | PDF loading, text cleaning, Recursive Text Splitter, HuggingFace embeddings, ChromaDB vector store | Multi-format parsing (PDF, MD, TXT, DOCX), text cleaning, Section-Aware Chunking, Jina embeddings (`jina-embeddings-v5-omni-small`, 1024d), Qdrant Vector DB with status filtering | **Aligned & Enhanced**: Multi-format & section-aware structure parsing, upgraded vector database (1024d Cosine) with state metadata (`status == "ready"`). |
 | **2. Retrieval Engine** | Single-stream Dense Similarity Search (Cosine / top-k=4) | **Hybrid Retrieval**: Parallel Qdrant Dense Search (top-20) + In-process BM25 Lexical Search (limit 500) fused via **Reciprocal Rank Fusion (RRF k=60)** & `min_dense_score` (0.35) gating | **Major Upgrade**: Solves exact keyword matching limitations (names, technical terms, IDs) present in vector-only search, gated by score thresholding. |
 | **3. Generation & LLM Routing** | Single local HuggingFace LLM pipeline (`Qwen/Qwen2.5-3B-Instruct`) | Context prompt with explicit citation markers (`[C1]`, `[C2]`), dispatched via Instructor structured output & a **Provider Router** (Gemini, OpenRouter, OpenAI) | **Major Upgrade**: Context-isolated prompt engineering, structured instructor outputs, and resilient multi-provider fallback. |
 | **4. Citation Verification & Safety** | Basic answer output parser (prefix stripping) | **Deterministic Citation Gating & Abstention Guard**: Instructor structured schema (`GroundedAnswer`) + citation index range validation + score gating | **Major Upgrade**: Eliminates hallucinations by forcing deterministic Vietnamese abstention if hits are missing or citations are invalid. |
@@ -69,7 +69,7 @@ flowchart TD
     end
 
     subgraph C_P3["Phase 3: Generation and LLM Routing"]
-        C_GateScore -->|Hits Pass| C_Prompt["Context Prompt Construction (answer_v2.py)"]
+        C_GateScore -->|Hits Pass| C_Prompt["Context Prompt Construction (answer_v4.py)"]
         C_Prompt --> C_Router["LLM Provider Router (Primary/Fallback)"]
         C_Router --> C_Trace["Langfuse Observability Tracing"]
     end
@@ -91,7 +91,7 @@ flowchart TD
 - **Current Pipeline Enhancements**:
   - **Multi-Format Parsing**: Supports `.md`, `.txt`, `.pdf`, and `.docx` parsing in [`parser.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/ingestion/parser.py).
   - **Section-Aware Chunking**: Extracts Markdown headers (`#` through `######`) via `_sections()` before paragraph splitting up to ~1,200 chars in [`chunker.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/ingestion/chunker.py).
-  - **Vector Storage**: Upgrades from local HuggingFace embeddings (`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`) and ChromaDB to high-dimensional Gemini embeddings (`gemini-embedding-001`, 1024d) and Qdrant Vector DB with metadata status filtering (`status == "ready"`).
+  - **Vector Storage**: Upgrades from local HuggingFace embeddings (`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`) and ChromaDB to Jina embeddings (`jina-embeddings-v5-omni-small`, 1024d cosine) and Qdrant Vector DB with metadata status filtering (`status == "ready"`).
 
 ### Phase 2: Retrieval Pipeline
 - **Baseline**: Uses single-stream **Dense Similarity Search** via `ChromaDB` (Bi-Encoder embeddings only).
@@ -104,7 +104,7 @@ flowchart TD
 ### Phase 3: Generation & Routing Pipeline
 - **Baseline**: Passes context chunks into a basic `PromptTemplate` and generates text using a single local model (`Qwen2.5-3B-Instruct`).
 - **Current Pipeline**:
-  - **Prompt Formatting**: Renders context chunks with explicit citation markers `[C{index}] source={chunk.source_name} version={chunk.version}` inside [`answer_v2.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/prompts/answer_v2.py).
+  - **Prompt Formatting**: Renders context chunks with explicit citation markers `[C{index}] source={chunk.source_name} version={chunk.version}` inside [`answer_v4.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/prompts/answer_v4.py).
   - **Provider Failover Router**: Dispatches prompts through a multi-provider **Router** ([`router.py`](file:///E:/VIN-INTERNSHIP/Cowork-RAG/src/providers/router.py)) supporting primary (Gemini) and fallback providers (OpenRouter, OpenAI) with automatic retry failover.
   - **Structured Generation**: Utilizes Instructor structured output generation (`generate_structured`) enforcing the Pydantic `GroundedAnswer` schema.
 

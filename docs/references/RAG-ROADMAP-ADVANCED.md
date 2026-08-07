@@ -1,6 +1,6 @@
 # Lộ Trình Phát Triển RAG: Từ Baseline Đến Advanced & Agentic RAG
 
-> **Phiên bản hiện tại:** `v1.4` | **Cập nhật lần cuối:** 2026-08-06 | **Trạng thái:** 🟢 Active
+> **Phiên bản hiện tại:** `v1.6` | **Cập nhật lần cuối:** 2026-08-07 | **Trạng thái:** 🟢 Active
 
 Tài liệu này định hình lộ trình nâng cấp hệ thống **Company Knowledge RAG** từ kiến trúc **Baseline RAG + Evaluation** hiện tại tiến lên các cấp độ **Advanced RAG**, **GraphRAG**, **Agentic RAG**, và **Production LLMOps**.
 
@@ -10,6 +10,8 @@ Tài liệu này định hình lộ trình nâng cấp hệ thống **Company Kn
 
 | Phiên bản | Ngày | Nội dung thay đổi | Tác giả |
 |---|---|---|---|
+| `v1.6` | 2026-08-07 | Prompt `answer_v2` → `answer_v4`: citation_coverage 93.2% → 99.5%, `adversarial` 69.6% → 97.5%, abstention giữ 100%. Cập nhật hàng Citation ở bảng KPI Mục 5 và Ưu Tiên 0 | Team AI |
+| `v1.5` | 2026-08-07 | Triển khai **Hierarchical Sibling Expansion** (thay hướng Parent-Child đã bị bác bỏ bằng đo đạc) + `RETRIEVAL_LIMIT` 5→9: cập nhật KPI Mục 5 (evidence_recall 71.1% → 84.8%, coordinate_recall 81.6% → 86.0%, 100/100 case 0 lỗi), sửa Mục 3 Cấp Độ 1 action item #1, đánh dấu Ưu Tiên 1 chunking đã xong. Xem `HIERARCHICAL-RETRIEVAL-REPORT.md` | Team AI |
 | `v1.4` | 2026-08-06 | Đối chiếu với golden-set eval thật (100/100 case): sửa Mục 1 (embedding model/dim, trạng thái reranker đã có), thêm Mục 1.1 phát hiện từ eval, điền KPI Baseline thật vào Mục 5, sửa tên lệnh CLI `company-rag-evaluate` → `rag-eval`, thêm Ưu Tiên 0 | Team AI |
 | `v1.3` | 2026-08-05 | Bổ sung mục 4.8 System Rate Limiting, Throttling & Cost Control Strategy | Team AI |
 | `v1.2` | 2026-08-05 | Bổ sung mục 4.5 SLA, 4.6 Incident Runbook, 4.7 Schema Versioning & Migration Strategy | Team AI |
@@ -48,7 +50,7 @@ Chạy `rag-eval e2e` full 100/100 case lần đầu có giá trị baseline th�
 | 1 | **Đã sửa** — bug rotation key Jina khiến 34/100 case lỗi trắng khi 1 trong 3 key hết credit (`is_jina_quota_error` chỉ nhận diện `429`/`quota`, không nhận diện 403 `AUTHZ_INSUFFICIENT_BALANCE`) | Case `DL-002`, `MH-003`, `UA-003`... — fix tại [`src/providers/jina.py`](../src/providers/jina.py) | Không thuộc Level nào — là bug reliability tầng Provider, ảnh hưởng cả production. Nên thêm health-check định kỳ cho key pool vào Mục 4.6 (Incident Runbook). |
 | 2 | **Câu hỏi ngắn/mơ hồ bị lạc sang tài liệu khác domain** — Coordinate Recall nhóm `ambiguous` chỉ 72.1%, Evidence Recall 59.2% (thấp nhất trong nhóm có golden context) | Case `AMB-001` ("Ai là người ký tên vào hồ sơ?") — top-5 kết quả lẫn hit từ `dang_ky_ket_hon.md`, `dang_ky_tam_tru.md` (tài liệu vừa ingest thêm, khác domain hoàn toàn với Nghị định 01/2021 của golden set) | **Vấn đề data isolation, không phải kỹ thuật retrieval nâng cao** — cần xử lý *trước* Level 1 (Semantic Chunking không giải quyết được việc này). Xem Ưu Tiên 0 ở Mục 5. |
 | 3 | **Multi-hop + độ khó "hard" yếu nhất hệ thống** — Coordinate Recall nhóm `hard` chỉ 56.4% (n=13), thấp hơn hẳn `easy` (84.9%) và `medium` (95%) | Case `MH-003` (cần gộp ≥2 Điều về lệ phí + thời hạn) — cả coordinate_recall và evidence_recall đều 0% | Củng cố bằng chứng thực tế cho **Query Transformation (Multi-Query Expansion)** ở Level 1 và **GraphRAG multi-hop** ở Level 2 — không còn là nhu cầu giả định, đã có số đo cụ thể để làm baseline so sánh sau khi triển khai. |
-| 4 | **Adversarial: retrieval đúng nhưng thiếu tag citation inline** — Coordinate/Evidence Recall nhóm `adversarial` tốt nhất (95%/85%) nhưng Citation Coverage thấp nhất (72.5%) | Case `ADV-018` — answer có citation hợp lệ trong metadata nhưng không câu nào chứa `[C1]` trong text | Không phải vấn đề retrieval — là prompt-adherence ở [`src/prompts/answer_v2.py`](../src/prompts/answer_v2.py) (Phase 3.1 / Phase 4.1 trong `RAG-ARCHITECTURE.md`). Sửa nhanh (prompt), không cần đợi Level 1. |
+| 4 | **Adversarial: retrieval đúng nhưng thiếu tag citation inline** — Coordinate/Evidence Recall nhóm `adversarial` tốt nhất (95%/85%) nhưng Citation Coverage thấp nhất (72.5%) | Case `ADV-018` — answer có citation hợp lệ trong metadata nhưng không câu nào chứa `[C1]` trong text | Không phải vấn đề retrieval — là prompt-adherence ở [`src/prompts/answer_v4.py`](../src/prompts/answer_v4.py) (Phase 3.1 / Phase 4.1 trong `RAG-ARCHITECTURE.md`). Sửa nhanh (prompt), không cần đợi Level 1. |
 
 > Report đầy đủ: `reports/rag_evaluation/2026-08-06_golden100_clean-baseline/report.json`. Lưu ý: Ragas (Faithfulness, Context Precision/Recall, Answer Relevancy qua LLM-judge) **chưa chạy được** do thiếu `RAGAS_API_KEY`/`OPENAI_API_KEY` trong `.env` — các số ở Mục 5 bên dưới chỉ gồm metric xác định (deterministic), không phải Ragas.
 
@@ -119,7 +121,7 @@ Level 0: Baseline RAG + Evals ✅ (Hiện tại: Ingestion, BM25+Dense Hybrid RR
 #### **Hành Động Triển Khai (Action Items):**
 1. **Nâng Cấp Chunking Strategies (`src/ingestion/chunker.py`):**
    - Thêm **Semantic Chunking**: Cắt theo ranh giới thay đổi chủ đề (Cosine Similarity ~0.85 giữa các câu liên tiếp), giúp chunk tự nhiên hơn Fixed-size.
-   - Triển khai **Parent-Child Chunking**: Lưu Child Chunk (256 tokens) trong Qdrant; khi generate nạp Parent Chunk (1024 tokens) vào Context Window.
+   - ~~Triển khai **Parent-Child Chunking**~~ — **ĐÃ LÀM, nhưng theo cách khác (2026-08-07).** Hướng "nạp `parent_text` vào Context Window" **đã bị bác bỏ bằng đo đạc**: metric chỉ đọc `text` của SearchHit được trả về, nên nhét thêm văn bản vào prompt không đổi được metric nào. Thay vào đó là **Hierarchical Sibling Expansion** (`src/retrieval/hierarchical.py`): `search()` tự bổ sung các sibling chunk còn thiếu để hoàn thiện trọn section — chunk thật, toạ độ thật, citable hợp lệ. Xem [`HIERARCHICAL-RETRIEVAL-REPORT.md`](./HIERARCHICAL-RETRIEVAL-REPORT.md).
    - Thêm **RAPTOR Tree Summarization** (`src/ingestion/raptor.py`): Cluster chunks → LLM tóm tắt đệ quy, index cả summary nodes vào Qdrant để hỗ trợ query tổng hợp.
 2. **Nâng Cấp Enrichment (`src/ingestion/enrichment.py`):**
    - Thêm **Contextual Embeddings** (Anthropic pattern): Prepend 1–2 câu tóm tắt ngữ cảnh văn bản vào đầu từng chunk trước khi embed.
@@ -502,15 +504,20 @@ Level 3 (Agent) ──── Level 4 (Safety bao quanh toàn pipeline Agent)
 
 ### KPI Baseline Hiện Tại & Mục Tiêu:
 
-Baseline dưới đây đo thật ngày 2026-08-06 bằng `rag-eval e2e` full 100/100 case, 0 lỗi (`reports/rag_evaluation/2026-08-06_golden100_clean-baseline/`). Tên metric bên trái là hệ quy chiếu roadmap gốc (Ragas); cột "Baseline đo được" dùng metric xác định (deterministic) hiện có trong `rag-eval` — **không phải cùng công thức với Ragas**, chỉ là proxy gần nhất cho tới khi bật `--ragas`.
+Hai cột số dưới đây đều đo thật bằng `rag-eval e2e` full **100/100 case, 0 lỗi**:
 
-| Metric (Ragas) | Proxy đo được hiện tại | Baseline 2026-08-06 | Target Level 1 | Target Level 3 | Target Level 4 |
-| --- | --- | --- | --- | --- | --- |
-| `Faithfulness` | *(chưa đo — cần `RAGAS_API_KEY`/`OPENAI_API_KEY`)* | — | ≥ 90% (SLA Mục 4.5) | ≥ +10% (Self-RAG) | Ổn định, không regression |
-| `Context Recall` | `coordinate_recall` (tìm đúng Điều/Chương) + `evidence_recall` (đoạn trích khớp golden text) | **81.6% / 71.1%** (overall); yếu nhất: `hard` 56.4%/52.6%, `ambiguous` 72.1%/59.2% | ≥ 85% cả hai (mục tiêu SLA hiện có, chưa đạt) | ≥ +20% (CRAG) | Ổn định |
-| `Precision@5` | *(chưa đo trực tiếp — `rag-eval` hiện không tính precision, chỉ recall theo coordinate/evidence)* | — | ≥ +15% (cần thêm metric trước khi đo) | ≥ +20% | Ổn định |
-| `Citation Coverage/Validity` | `citation_coverage` (tag `[Cn]` inline) + `citation_validity` (không citation ảo) | **91.8% / 100%** overall; yếu nhất: `adversarial` citation_coverage 72.5% | ≥ 85% cả hai | Ổn định | Ổn định |
-| `TTFT P95` | *(chưa đo TTFT riêng — chỉ có end-to-end latency)* | End-to-end P95 **11.5s** (retrieval 4.7s + generation 2.4s trung bình) — đo **khi reranker đang TẮT** (`RERANKER_MODEL` trống, xem hàng "Two-Stage Reranking" ở Mục 1) | ≤ +150ms so với baseline này sau khi **bật** Stage-2 reranker (set `RERANKER_MODEL=jina-reranker-v3.5`) | < 100ms (vLLM) | < 100ms (vLLM) |
+- **Baseline 2026-08-06** — `reports/rag_evaluation/2026-08-06_golden100_clean-baseline/`, collection `company_knowledge`, `RETRIEVAL_LIMIT=5`, không có sibling expansion.
+- **Hiện tại 2026-08-07** — `reports/prod_clean/run1/`, collection `company_knowledge_v2`, `RETRIEVAL_LIMIT=9` + **Hierarchical Sibling Expansion** (3 parent / 8 000 chars). Chi tiết thiết kế, đối chứng scramble và 6 arm A/B: [`HIERARCHICAL-RETRIEVAL-REPORT.md`](./HIERARCHICAL-RETRIEVAL-REPORT.md).
+
+Tên metric bên trái là hệ quy chiếu roadmap gốc (Ragas); các cột đo được dùng metric xác định (deterministic) hiện có trong `rag-eval` — **không phải cùng công thức với Ragas**, chỉ là proxy gần nhất cho tới khi bật `--ragas`.
+
+| Metric (Ragas) | Proxy đo được hiện tại | Baseline 2026-08-06 | **Hiện tại 2026-08-07** | Target Level 1 | Target Level 3 | Target Level 4 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Faithfulness` | *(chưa đo — cần `RAGAS_API_KEY`/`OPENAI_API_KEY`)* | — | — | ≥ 90% (SLA Mục 4.5) | ≥ +10% (Self-RAG) | Ổn định, không regression |
+| `Context Recall` | `coordinate_recall` (tìm đúng Điều/Chương) + `evidence_recall` (đoạn trích khớp golden text) | 81.6% / 71.1%; yếu nhất: `hard` 56.4%/52.6%, `ambiguous` 72.1%/59.2% | **86.0% / 84.8%** (**+4.5pp / +13.7pp**); `hard` 74.4%/76.9%, `ambiguous` 75.8%/69.2% | ≥ 85% cả hai — **coordinate_recall đạt 86.0% ✅, evidence_recall đạt 84.8% (thiếu 0.2pp)** | ≥ +20% (CRAG) | Ổn định |
+| `Precision@5` | *(chưa đo trực tiếp — `rag-eval` hiện không tính precision, chỉ recall theo coordinate/evidence)* | — | — (nhưng đo gián tiếp: hiệu suất khai thác pool 87.2% → 98.5%) | ≥ +15% (cần thêm metric trước khi đo) | ≥ +20% | Ổn định |
+| `Citation Coverage/Validity` | `citation_coverage` (tag `[Cn]` inline) + `citation_validity` (không citation ảo) | 91.8% / 100%; yếu nhất: `adversarial` 72.5% | **99.5% / 100%** (prompt `answer_v4`); `adversarial` **97.5%**, chỉ còn 1/100 case trượt | ≥ 85% cả hai — **đạt ✅** | Ổn định | Ổn định |
+| `TTFT P95` | *(chưa đo TTFT riêng — chỉ có end-to-end latency)* | End-to-end P95 **11.5s** (retrieval 4.7s + generation 2.4s trung bình) — đo **khi reranker đang TẮT** | End-to-end P95 **4.3s**, mean 2.9s (retrieval P95 2.7s / generation P95 2.0s) — reranker vẫn TẮT. ⚠️ Biến động giữa các lần chạy lớn ngang hiệu ứng đo được — xem Mục 5(b) của báo cáo hierarchical | ≤ +150ms so với baseline sau khi **bật** Stage-2 reranker (`RERANKER_MODEL=jina-reranker-v3.5`) | < 100ms (vLLM) | < 100ms (vLLM) |
 
 ### Thứ Tự Ưu Tiên:
 
@@ -518,12 +525,12 @@ Baseline dưới đây đo thật ngày 2026-08-06 bằng `rag-eval e2e` full 10
    Xuất phát trực tiếp từ 4 phát hiện có bằng chứng thật ở Mục 1.1 — rẻ hơn và cấp thiết hơn mọi mục Level 1-5, nên làm **trước** khi đầu tư vào kỹ thuật nâng cao:
    - **Cô lập dữ liệu theo domain:** thêm field domain/corpus khi ingest (`src/ingestion/service.py`) + filter theo domain khi retrieve (`src/retrieval/qdrant_store.py`, `src/retrieval/hybrid.py`), hoặc tách collection riêng cho mỗi domain tài liệu (đăng ký doanh nghiệp vs. hộ tịch/cư trú/xe/thuế). Giải quyết case `AMB-001` và cả nhóm `ambiguous` (evidence recall 59.2%).
    - **Bật Cross-Encoder Reranker đang có sẵn:** set `RERANKER_MODEL=jina-reranker-v3.5` trong `.env`, chạy lại `rag-eval e2e` để đo delta trước/sau — không cần code mới (xem Mục 1 hàng "Two-Stage Reranking").
-   - **Siết prompt citation cho câu adversarial:** bắt buộc câu mở đầu kiểu "Không đúng." cũng phải gắn `[Cn]` trong [`src/prompts/answer_v2.py`](../src/prompts/answer_v2.py). Giải quyết citation_coverage 72.5% của nhóm `adversarial`.
+   - ✅ **ĐÃ XONG (2026-08-07) — siết prompt citation.** `answer_v2` → **`answer_v4`**: citation_coverage 93.2% → **99.5%**, nhóm `adversarial` 69.6% → **97.5%**, `abstention_accuracy` giữ nguyên 100%. Không chỉ là câu mở đầu "Không đúng." — có **ba** nguyên nhân, trong đó một là marker gộp `[C3, C4]` mà regex của metric không đọc được. Chi tiết + một lần thất bại có ghi lại (`answer_v3` làm sập abstention xuống 45%): [`HIERARCHICAL-RETRIEVAL-REPORT.md`](./HIERARCHICAL-RETRIEVAL-REPORT.md) Mục 9.
    - **Theo dõi sức khoẻ Jina key pool:** thêm alert khi 1 key rơi vào cooldown liên tục (đã vá bug rotation, nhưng chưa có giám sát chủ động — xem Mục 4.6).
    - **Đo ngay sau mỗi mục:** `rag-eval e2e`, so với baseline `2026-08-06_golden100_clean-baseline` để định lượng cải thiện trước khi báo cáo lên Level 1.
 
 1. **Ưu tiên 1 (Ngắn hạn - 1 đến 2 tuần, sau Ưu tiên 0):**
-   - Triển khai **Semantic Chunking** + **Parent-Child Chunking** (`src/ingestion/chunker.py`) — *lưu ý: baseline hiện tại không cho thấy chunking là điểm nghẽn (không case nào ở Mục 1.1 lỗi vì ranh giới chunk); ưu tiên thấp hơn 2 mục dưới trừ khi số liệu sau Ưu tiên 0 chỉ ra khác.*
+   - ✅ **ĐÃ XONG (2026-08-07) — Hierarchical Sibling Expansion.** Chẩn đoán "chunking không phải điểm nghẽn" đúng **về ranh giới chunk** nhưng bỏ sót vấn đề thật: retrieval tìm đúng Điều nhưng chỉ trả về *một mảnh* của section — đúng 14 case, đã đóng gần hết khoảng cách coordinate_recall − evidence_recall (10.5pp → 1.3pp). **Semantic Chunking vẫn chưa bật** (`CHUNK_SEMANTIC_ENABLED=false`) — vẫn chưa có bằng chứng nó cần thiết.
    - Tinh chỉnh **Cross-Encoder Reranker** (đã bật ở Ưu tiên 0) + thêm **MMR** (`src/retrieval/hybrid.py`).
    - Thêm **HyDE + Multi-Query Expansion** (`src/retrieval/query_transform.py`) — nhắm thẳng vào điểm yếu multi-hop/hard (coordinate recall 56.4%) đã đo được.
    - **Đo ngay sau:** `rag-eval e2e` để có baseline KPI cụ thể trước khi lên Level 3.
