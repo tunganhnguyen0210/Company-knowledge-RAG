@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from domain.schemas import DocumentStatus
-from ingestion.chunker import ChunkingConfig
 from ingestion.raptor import RaptorConfig
 from ingestion.service import IngestionService
 from providers.base import GenerationRequest, GenerationResult
@@ -176,20 +175,6 @@ def test_ingestion_persists_canonical_legal_coordinates(tmp_path: Path) -> None:
     article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
     assert article_chunks
     assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)
-
-
-def test_parent_child_chunking_config_flows_through_ingestion(tmp_path: Path) -> None:
-    store = MemoryChunkStore()
-    service = IngestionService(
-        DocumentRegistry(tmp_path / "registry.json"),
-        store,
-        chunking_config=ChunkingConfig(max_chars=20, parent_child_enabled=True, parent_max_chars=6000),
-    )
-
-    service.ingest_bytes("policy.md", b"Noi dung chinh sach nghi phep rat dai can duoc cat nho ra.")
-
-    assert store.all_chunks
-    assert all(chunk.parent_text is not None for chunk in store.all_chunks)
 
 
 def test_raptor_disabled_by_default_adds_no_summary_nodes(tmp_path: Path) -> None:

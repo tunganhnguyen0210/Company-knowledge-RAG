@@ -256,8 +256,6 @@ def _build_chunking_config(settings: Settings) -> ChunkingConfig:
         semantic_enabled=settings.chunk_semantic_enabled,
         semantic_threshold=settings.chunk_semantic_threshold,
         embedder=embedder,
-        parent_child_enabled=settings.chunk_parent_child_enabled,
-        parent_max_chars=settings.chunk_parent_max_chars,
     )
 
 

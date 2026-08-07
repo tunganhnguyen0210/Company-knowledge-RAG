@@ -31,7 +31,6 @@ def test_default_config_matches_legacy_fixed_window_splitting() -> None:
     explicit_default = chunk_document(_document(), text, config=ChunkingConfig(max_chars=1200))
 
     assert [chunk.text for chunk in legacy] == [chunk.text for chunk in explicit_default]
-    assert all(chunk.parent_text is None for chunk in legacy)
 
 
 def test_semantic_chunking_splits_on_topic_change() -> None:
@@ -95,28 +94,6 @@ def test_semantic_chunking_still_enforces_hard_max_chars() -> None:
     assert all(len(chunk.text) <= 100 for chunk in chunks)
 
 
-def test_parent_child_populates_parent_text_only_when_it_adds_context() -> None:
-    text = "# Section\n\n" + ("Câu dài. " * 40)
-    config = ChunkingConfig(max_chars=60, parent_child_enabled=True, parent_max_chars=6000)
-
-    chunks = chunk_document(_document(), text, config=config)
-
-    assert len(chunks) > 1
-    assert all(chunk.parent_text is not None for chunk in chunks)
-    assert all(chunk.text in chunk.parent_text for chunk in chunks)
-    assert all(len(chunk.parent_text) >= len(chunk.text) for chunk in chunks)
-
-
-def test_parent_child_leaves_parent_text_none_when_section_fits_in_one_chunk() -> None:
-    text = "Đoạn ngắn vừa đủ một chunk."
-    config = ChunkingConfig(max_chars=1200, parent_child_enabled=True)
-
-    chunks = chunk_document(_document(), text, config=config)
-
-    assert len(chunks) == 1
-    assert chunks[0].parent_text is None
-
-
 def test_parent_identity_is_shared_across_siblings_and_distinct_across_sections() -> None:
     text = "# A\n\n" + ("Câu một. " * 40) + "\n\n# B\n\nNgắn."
 
@@ -155,11 +132,3 @@ def test_parent_id_is_version_scoped() -> None:
     v2 = chunk_document(bumped, text)
 
     assert v1[0].parent_id != v2[0].parent_id
-
-
-def test_parent_child_disabled_by_default() -> None:
-    text = "# Section\n\n" + ("Câu dài. " * 40)
-
-    chunks = chunk_document(_document(), text, max_chars=60)
-
-    assert all(chunk.parent_text is None for chunk in chunks)

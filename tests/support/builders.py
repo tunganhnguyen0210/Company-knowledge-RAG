@@ -18,7 +18,6 @@ def make_chunk(
     parent_id: str | None = None,
     parent_child_count: int | None = None,
     child_index: int = 0,
-    parent_text: str | None = None,
 ) -> Chunk:
     return Chunk(
         id=chunk_id,
@@ -36,7 +35,6 @@ def make_chunk(
         parent_id=parent_id,
         parent_child_count=parent_child_count,
         child_index=child_index,
-        parent_text=parent_text,
     )
 
 

@@ -88,8 +88,6 @@ class Settings(BaseSettings):
     enable_enrichment: bool = False
     chunk_semantic_enabled: bool = False
     chunk_semantic_threshold: float = Field(default=0.85, ge=0.0, le=1.0)
-    chunk_parent_child_enabled: bool = False
-    chunk_parent_max_chars: int = Field(default=6000, ge=1)
     raptor_enabled: bool = False
     raptor_cluster_size: int = Field(default=5, ge=2)
     raptor_max_depth: int = Field(default=1, ge=1, le=3)
