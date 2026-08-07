@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import logging
+import time
+from collections.abc import Callable
+from functools import partial
 from hashlib import sha256
 from threading import Lock
-from typing import Any
+from typing import Any, TypeVar
 
 from pydantic import ValidationError
 from qdrant_client import QdrantClient, models
 from qdrant_client.grpc import PointId
+from qdrant_client.http.exceptions import ResponseHandlingException, UnexpectedResponse
 
 from domain.schemas import Chunk, SearchHit
 from providers.base import EmbeddingProvider, ProviderError
@@ -16,6 +21,50 @@ from retrieval.hybrid import (
     lexical_rank,
     reciprocal_rank_fusion,
 )
+
+logger = logging.getLogger(__name__)
+
+MAX_READ_ATTEMPTS = 3
+BASE_RETRY_DELAY_SECONDS = 0.5
+MAX_RETRY_DELAY_SECONDS = 4.0
+
+T = TypeVar("T")
+
+
+def _is_transient_qdrant_error(exc: BaseException) -> bool:
+    """Connection drops and 5xx deserve another try; 4xx means the request itself is wrong."""
+    if isinstance(exc, ResponseHandlingException):
+        # Wraps the httpx transport failure (connect reset, read timeout, DNS).
+        return True
+    if isinstance(exc, UnexpectedResponse):
+        return exc.status_code is None or exc.status_code >= 500
+    return isinstance(exc, (ConnectionError, TimeoutError, OSError))
+
+
+def _read_with_retry(operation: Callable[[], T], description: str) -> T:
+    """Retry an idempotent Qdrant read past transient disconnects.
+
+    Qdrant Cloud drops connections often enough that a single blip used to fail a
+    whole evaluation case. Reads carry no side effects, so replaying them is safe;
+    writes are deliberately left alone.
+    """
+    last_error: BaseException | None = None
+    for attempt in range(MAX_READ_ATTEMPTS):
+        try:
+            return operation()
+        except Exception as exc:
+            if not _is_transient_qdrant_error(exc):
+                raise
+            last_error = exc
+            if attempt + 1 < MAX_READ_ATTEMPTS:
+                delay = min(BASE_RETRY_DELAY_SECONDS * (2.0**attempt), MAX_RETRY_DELAY_SECONDS)
+                logger.warning(
+                    "Qdrant %s failed (%s), retrying in %.1fs", description, type(exc).__name__, delay
+                )
+                time.sleep(delay)
+    raise RuntimeError(
+        f"Qdrant {description} failed after {MAX_READ_ATTEMPTS} attempts: {last_error}"
+    ) from last_error
 
 
 def _chunk_payload(chunk: Chunk) -> dict[str, object]:
@@ -156,12 +205,16 @@ class QdrantChunkStore:
             if self.reranker
             else max(limit * 4, limit)
         )
-        dense_response = self.client.query_points(
-            collection_name=self.collection,
-            query=self.embedder.embed_query(query),
-            query_filter=query_filter,
-            limit=candidate_limit,
-            with_payload=True,
+        query_vector = self.embedder.embed_query(query)
+        dense_response = _read_with_retry(
+            lambda: self.client.query_points(
+                collection_name=self.collection,
+                query=query_vector,
+                query_filter=query_filter,
+                limit=candidate_limit,
+                with_payload=True,
+            ),
+            "dense query",
         )
         dense = filter_by_min_score(
             [
@@ -170,12 +223,15 @@ class QdrantChunkStore:
             ],
             self.min_dense_score,
         )
-        records, _ = self.client.scroll(
-            collection_name=self.collection,
-            scroll_filter=query_filter,
-            limit=self.lexical_candidate_limit,
-            with_payload=True,
-            with_vectors=False,
+        records, _ = _read_with_retry(
+            lambda: self.client.scroll(
+                collection_name=self.collection,
+                scroll_filter=query_filter,
+                limit=self.lexical_candidate_limit,
+                with_payload=True,
+                with_vectors=False,
+            ),
+            "lexical scroll",
         )
         lexical_chunks = [_chunk_from_payload(record.payload) for record in records]
         lexical = lexical_rank(query, lexical_chunks, candidate_limit)
@@ -218,13 +274,17 @@ class QdrantChunkStore:
         output: list[Chunk] = []
         offset: models.ExtendedPointId | PointId | None = None
         while True:
-            records, next_offset = self.client.scroll(
-                collection_name=self.collection,
-                scroll_filter=models.Filter(must=must),
-                limit=256,
-                offset=offset,
-                with_payload=True,
-                with_vectors=False,
+            records, next_offset = _read_with_retry(
+                partial(
+                    self.client.scroll,
+                    collection_name=self.collection,
+                    scroll_filter=models.Filter(must=must),
+                    limit=256,
+                    offset=offset,
+                    with_payload=True,
+                    with_vectors=False,
+                ),
+                "document scroll",
             )
             output.extend(_chunk_from_payload(record.payload) for record in records)
             if next_offset is None:
@@ -238,12 +298,16 @@ class QdrantChunkStore:
         counts: dict[str, int] = {}
         offset: models.ExtendedPointId | PointId | None = None
         while True:
-            records, next_offset = self.client.scroll(
-                collection_name=self.collection,
-                limit=256,
-                offset=offset,
-                with_payload=True,
-                with_vectors=False,
+            records, next_offset = _read_with_retry(
+                partial(
+                    self.client.scroll,
+                    collection_name=self.collection,
+                    limit=256,
+                    offset=offset,
+                    with_payload=True,
+                    with_vectors=False,
+                ),
+                "collection scroll",
             )
             for record in records:
                 payload = record.payload or {}

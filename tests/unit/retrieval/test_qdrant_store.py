@@ -201,3 +201,69 @@ def test_rrf_only_search_preserves_expanded_candidate_pool() -> None:
     store.search("policy", limit=2)
 
     assert store.client.dense_limit == 8
+
+
+def test_transient_read_error_classification() -> None:
+    from httpx import ConnectError
+    from qdrant_client.http.exceptions import ResponseHandlingException, UnexpectedResponse
+
+    from retrieval.qdrant_store import _is_transient_qdrant_error
+
+    assert _is_transient_qdrant_error(ResponseHandlingException(ConnectError("reset")))
+    assert _is_transient_qdrant_error(UnexpectedResponse(503, "Service Unavailable", b"", {}))
+    assert not _is_transient_qdrant_error(UnexpectedResponse(404, "Not Found", b"", {}))
+    assert not _is_transient_qdrant_error(ValueError("bad payload"))
+
+
+def test_read_retry_recovers_from_a_disconnect(monkeypatch: pytest.MonkeyPatch) -> None:
+    from httpx import ReadTimeout
+    from qdrant_client.http.exceptions import ResponseHandlingException
+
+    from retrieval import qdrant_store
+
+    monkeypatch.setattr(qdrant_store.time, "sleep", lambda _seconds: None)
+    attempts = {"count": 0}
+
+    def flaky() -> str:
+        attempts["count"] += 1
+        if attempts["count"] < 3:
+            raise ResponseHandlingException(ReadTimeout("timed out"))
+        return "ok"
+
+    assert qdrant_store._read_with_retry(flaky, "test read") == "ok"
+    assert attempts["count"] == 3
+
+
+def test_read_retry_gives_up_after_max_attempts(monkeypatch: pytest.MonkeyPatch) -> None:
+    from httpx import ConnectError
+    from qdrant_client.http.exceptions import ResponseHandlingException
+
+    from retrieval import qdrant_store
+
+    monkeypatch.setattr(qdrant_store.time, "sleep", lambda _seconds: None)
+    attempts = {"count": 0}
+
+    def always_down() -> str:
+        attempts["count"] += 1
+        raise ResponseHandlingException(ConnectError("connection reset"))
+
+    with pytest.raises(RuntimeError, match="failed after 3 attempts"):
+        qdrant_store._read_with_retry(always_down, "test read")
+    assert attempts["count"] == qdrant_store.MAX_READ_ATTEMPTS
+
+
+def test_read_retry_does_not_replay_a_client_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    from qdrant_client.http.exceptions import UnexpectedResponse
+
+    from retrieval import qdrant_store
+
+    monkeypatch.setattr(qdrant_store.time, "sleep", lambda _seconds: None)
+    attempts = {"count": 0}
+
+    def bad_request() -> str:
+        attempts["count"] += 1
+        raise UnexpectedResponse(400, "Bad Request", b"", {})
+
+    with pytest.raises(UnexpectedResponse):
+        qdrant_store._read_with_retry(bad_request, "test read")
+    assert attempts["count"] == 1
