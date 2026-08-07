@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from domain.schemas import Chunk
 from prompts.loader import load_prompt, render_user_template
 
-_PROMPT = load_prompt("answer_v2.yaml")
+_PROMPT = load_prompt("answer_v4.yaml")
 PROMPT_VERSION = f"{_PROMPT.id}_{_PROMPT.version}"
 
 

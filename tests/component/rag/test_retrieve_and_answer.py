@@ -2,7 +2,7 @@ import pytest
 
 from domain.schemas import Chunk, DocumentStatus, SourceCoordinates
 from generation.service import ChatService
-from prompts.answer_v2 import PROMPT_VERSION
+from prompts.answer_v4 import PROMPT_VERSION
 from retrieval.memory_store import MemoryChunkStore
 from settings import Settings, TraceMode
 from tests.support.providers import CitedProvider

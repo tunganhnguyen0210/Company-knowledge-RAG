@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 from uuid import uuid4
 
@@ -13,17 +14,45 @@ from generation.execution import (
     RetrievalExecution,
 )
 from observability.tracing import Tracer
-from prompts.answer_v2 import PROMPT_VERSION, render_answer_prompt
+from prompts.answer_v4 import PROMPT_VERSION, render_answer_prompt
 from providers.base import GenerationProvider, GenerationRequest
 from retrieval.base import ChunkStore
 
 ABSTENTION = "Không tìm thấy thông tin phù hợp trong tài liệu được phép truy cập."
 
+_GROUPED_MARKER_RE = re.compile(r"\[\s*C\s*\d+(?:\s*[,;]\s*C?\s*\d+)+\s*\]")
+_MARKER_NUMBER_RE = re.compile(r"\d+")
+
+
+def normalize_citation_markers(answer: str) -> str:
+    """Rewrite grouped markers like `[C1, C3]` into the canonical `[C1][C3]` form.
+
+    The model is told to emit one bracket per source, but it groups them often
+    enough to matter: a sentence whose *only* marker is grouped reads as
+    uncited to every consumer that looks for `[C<n>]`, including
+    `evaluation/metrics.py::score_generation_case`. Prompt wording alone is
+    best-effort; this makes the shape deterministic. Purely a reformat -- the
+    cited numbers are unchanged, and `citations` (the structured field that
+    drives `citation_validity`) never passes through here.
+    """
+
+    def expand(match: re.Match[str]) -> str:
+        return "".join(f"[C{number}]" for number in _MARKER_NUMBER_RE.findall(match.group()))
+
+    return _GROUPED_MARKER_RE.sub(expand, answer)
+
+
 
 class GroundedAnswer(BaseModel):
     """Output contract every provider must satisfy, enforced by instructor."""
 
-    answer: str = Field(description="Câu trả lời tiếng Việt, mỗi nhận định kèm marker [C1], [C2].")
+    answer: str = Field(
+        description=(
+            "Câu trả lời tiếng Việt. Mọi câu — kể cả câu phán quyết ngắn như 'Không đúng' — "
+            "phải kèm marker đặt trước dấu kết câu. Nhiều nguồn thì viết liền [C1][C2], "
+            "không gộp thành [C1, C2]."
+        )
+    )
     citations: list[int] = Field(
         description="Số thứ tự các đoạn CONTEXT đã dùng, ví dụ [1, 3]. Rỗng nếu không đủ bằng chứng."
     )
@@ -153,7 +182,7 @@ class ChatService:
                 )
                 for index in cited_indexes
             ]
-            answer = result.value.answer if citations else ABSTENTION
+            answer = normalize_citation_markers(result.value.answer) if citations else ABSTENTION
             self.tracer.update(
                 observation,
                 {
