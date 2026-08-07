@@ -75,6 +75,8 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("vector_size", "embedding_dimensions"),
     )
     upload_dir: Path = Path("data/uploads")
+    raw_dir: Path = Path("data/raw")
+    extracted_dir: Path = Path("data/extracted")
     registry_path: Path = Path("data/registry.json")
     max_upload_bytes: int = 20 * 1024 * 1024
     retrieval_limit: int = 5

@@ -43,7 +43,14 @@ def create_app(
     registry = DocumentRegistry(settings.registry_path)
     enricher = LLMChunkEnricher(provider) if settings.enable_enrichment else None
     tracer = Tracer(settings)
-    ingestion = IngestionService(registry, store, settings.upload_dir, enricher, tracer)
+    ingestion = IngestionService(
+        registry,
+        store,
+        settings.upload_dir,
+        enricher,
+        tracer,
+        extracted_dir=settings.extracted_dir,
+    )
     from retrieval.retrieval import UnifiedRetriever
 
     reranker = getattr(store, "reranker", None)

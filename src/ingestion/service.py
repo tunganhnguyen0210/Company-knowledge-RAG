@@ -27,10 +27,12 @@ class IngestionService:
         upload_dir: Path | None = None,
         enricher: ChunkEnricher | None = None,
         tracer: Tracer | None = None,
+        extracted_dir: Path | None = None,
     ) -> None:
         self.registry = registry
         self.store = store
         self.upload_dir = upload_dir
+        self.extracted_dir = extracted_dir
         self.enricher = enricher
         self.tracer = tracer if tracer is not None else Tracer(Settings(_env_file=None, trace_mode=TraceMode.OFF))
         self._ingest_lock = Lock()
@@ -157,6 +159,10 @@ class IngestionService:
             self.upload_dir.mkdir(parents=True, exist_ok=True)
             suffix = Path(filename).suffix.lower()
             (self.upload_dir / f"{document.id}.v{document.version}{suffix}").write_bytes(content)
+        if self.extracted_dir is not None and text.strip():
+            self.extracted_dir.mkdir(parents=True, exist_ok=True)
+            stem = Path(filename).stem
+            (self.extracted_dir / f"{stem}.md").write_text(text, encoding="utf-8")
         if status is DocumentStatus.READY:
             indexing_started = time.perf_counter()
             with self.tracer.span(

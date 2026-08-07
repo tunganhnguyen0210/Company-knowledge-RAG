@@ -23,7 +23,16 @@
 ### Collection Configuration (`QdrantChunkStore`)
 - **Collection Name**: Configurable via `QDRANT_COLLECTION` (defaults to `"company_knowledge"`).
 - **Vector Parameters**: 1024 dimensions, Cosine distance similarity.
-- **Payload Indexing**: Qdrant payload index created on `status` (`ready`, `processing`, `needs_ocr`, `failed`) to enable instant filtered retrieval.
+- **Payload Indexing**: Qdrant payload indexes are created on six fields at collection initialization (`qdrant_store.py:87`):
+
+  | Field | Type | Purpose |
+  | --- | --- | --- |
+  | `status` | KEYWORD | **Active retrieval gate** — all search queries filter on `status = "ready"` |
+  | `document_id` | KEYWORD | Document lifecycle — used to delete/replace chunks on reindex |
+  | `version` | INTEGER | Version cleanup — preserves newest version, purges older chunks |
+  | `doc_id` | KEYWORD | Pre-indexed for future per-coordinate filtering (not yet queried) |
+  | `chapter` | KEYWORD | Pre-indexed for future per-coordinate filtering (not yet queried) |
+  | `article` | KEYWORD | Pre-indexed for future per-coordinate filtering (not yet queried) |
 
 ### Status-Based Vector Filtering
 In the single-user open workspace model, vector queries search across all processed documents by enforcing a simple, robust status filter:

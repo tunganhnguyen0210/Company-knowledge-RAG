@@ -19,7 +19,7 @@
    - Xác nhận biển số xe trúng đấu giá.
    - Bấm biển số mới nếu chưa có biển số định danh.
 
-4. Hệ thống thông báo cho chủ xe:
+4. Hệ thống thông báo cho chủ xe: 
    - Mã dịch vụ công.
    - Biển số xe được cấp.
    - Hướng dẫn nộp lệ phí đăng ký xe.

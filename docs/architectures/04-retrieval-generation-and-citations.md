@@ -15,12 +15,12 @@ flowchart TD
     Query[User Question Payload] --> Dense[Qdrant Dense Vector Search]
     Query --> Lexical[In-Process BM25 Lexical Search]
 
-    Dense --> RRF[Reciprocal Rank Fusion RRF k=60]
+    Dense --> MinScore{Filter Dense Score >= min_dense_score}
+    MinScore --> RRF[Reciprocal Rank Fusion RRF k=60]
     Lexical --> RRF
 
-    RRF --> MinScore{Filter Score >= min_dense_score}
-    MinScore -->|Hits Found| Prompt[Render System Prompt with Context Chunks]
-    MinScore -->|No Hits| Abstain[Return Abstention Response]
+    RRF -->|Hits Found| Prompt[Render System Prompt with Context Chunks]
+    RRF -->|No Hits| Abstain[Return Abstention Response]
 
     Prompt --> LLM[Call Provider Router Gemini / OpenRouter / OpenAI]
     LLM --> Structured[Instructor Validates GroundedAnswer Schema + Reask on Failure]
@@ -32,14 +32,14 @@ flowchart TD
 
 ## Detailed Workflow Steps
 
-### 1. Hybrid Search (`src/retrieval/qdrant_store.py` & `src/retrieval/hybrid.py`)
-- **Dense Vector Search**: Embeds the user query via Gemini (`gemini-embedding-001`, task `RETRIEVAL_QUERY`) and queries Qdrant with a filter on `status == "ready"`.
+### 1. Hybrid Search (`src/retrieval/qdrant_store.py` & `src/retrieval/retrieval_method/hybrid.py`)
+- **Dense Vector Search**: Embeds the user query via the configured embedding provider (default: Jina, model `jina-embeddings-v5-omni-small`, task `retrieval.query`; Gemini fallback uses task `RETRIEVAL_QUERY`) and queries Qdrant with a filter on `status == "ready"`.
 - **Lexical Search (BM25)**: Tokenizes ready chunk payloads using regex word boundaries and ranks them using `BM25Okapi`.
 - **Reciprocal Rank Fusion**: Combines dense and lexical ranks using RRF scoring:
   $$\text{Score}(d) = \sum_{m \in \{\text{dense}, \text{lexical}\}} \frac{1}{60 + \text{rank}_m(d)}$$
 
 ### 2. Prompt Construction & System Safeguards (`src/prompts/answer_v2.py`)
-- Retained context chunks are rendered inside strict untrusted data blocks (`<context>` tags) in system prompts.
+- Retained context chunks are rendered as numbered blocks prefixed with `[C{index}] source=<source_name> version=<version>` followed by the chunk text, separated by blank lines.
 - The prompt explicitly instructs the LLM to format every factual claim with citation tags (`[C1]`, `[C2]`) referencing the index of the corresponding context chunk, and to repeat those indexes in the structured `citations` field.
 
 ### 3. Provider Failover Router (`src/providers/router.py`)

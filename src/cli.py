@@ -25,10 +25,16 @@ def serve() -> None:
 
 
 def ingest() -> None:
-    parser = argparse.ArgumentParser(description="Ingest a file or directory")
-    parser.add_argument("path", type=Path)
-    args = parser.parse_args()
     settings = Settings()
+    parser = argparse.ArgumentParser(description="Ingest a file or directory")
+    parser.add_argument(
+        "path",
+        type=Path,
+        nargs="?",
+        default=getattr(settings, "raw_dir", Path("data/raw")),
+        help="Path to file or directory to ingest (defaults to data/raw)",
+    )
+    args = parser.parse_args()
     app = create_app(settings)
     try:
         paths = sorted(args.path.iterdir()) if args.path.is_dir() else [args.path]

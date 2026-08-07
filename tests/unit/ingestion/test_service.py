@@ -163,3 +163,20 @@ def test_ingestion_persists_canonical_legal_coordinates(tmp_path: Path) -> None:
     article_chunks = [chunk for chunk in chunks if chunk.coordinates.article is not None]
     assert article_chunks
     assert all(chunk.coordinates.chapter is not None for chunk in article_chunks)
+
+
+def test_ingestion_service_saves_extracted_markdown(tmp_path: Path) -> None:
+    store = MemoryChunkStore()
+    extracted_dir = tmp_path / "extracted"
+    service = IngestionService(
+        DocumentRegistry(tmp_path / "registry.json"),
+        store,
+        extracted_dir=extracted_dir,
+    )
+
+    document = service.ingest_bytes("policy_doc.md", b"# Policy\n\nSample content.")
+
+    assert document.status is DocumentStatus.READY
+    extracted_file = extracted_dir / "policy_doc.md"
+    assert extracted_file.exists()
+    assert "# Policy" in extracted_file.read_text(encoding="utf-8")

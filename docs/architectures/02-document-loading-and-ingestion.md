@@ -27,11 +27,11 @@ flowchart LR
 
     Chunk --> Enrich{Enable Enrichment?}
     Enrich -->|Yes| LLMEnrich[Generate Summary & Qs]
-    Enrich -->|No| Store
-    LLMEnrich --> Store[Embed Vectors & Save to Qdrant]
+    Enrich -->|No| WriteDisk[Write Source Bytes to Disk]
+    LLMEnrich --> WriteDisk
+    WriteDisk --> Store[Embed Vectors & Save to Qdrant]
 
-    Store --> WriteDisk[Write Source Bytes to Disk]
-    WriteDisk --> SaveReg[Upsert Document Registry]
+    Store --> SaveReg[Upsert Document Registry]
 ```
 
 ## Key Ingestion Steps
@@ -68,15 +68,15 @@ for the exact recovery and verification sequence.
 
 ### 3. Section-Aware Chunking (`src/ingestion/chunker.py`)
 - Documents are split into logical chunks based on headings and paragraph boundaries (target size ~1,200 characters).
-- Each chunk preserves section metadata and position indices to maintain logical context during retrieval.
+- Each chunk preserves section metadata, position indices, and legal source coordinates (`doc_id`, `chapter`, `article` via `src/ingestion/structure.py`) to maintain logical context during retrieval.
 
 ### 4. Optional Contextual LLM Enrichment (`src/ingestion/enrichment.py`)
 - When `ENABLE_ENRICHMENT=true` in `settings.py`, an LLM pass returns a validated `ChunkEnrichment` object (instructor-backed, so no hand-rolled JSON parsing) containing:
   1. A concise chunk summary.
   2. Hypothetical user questions answered by the chunk (capped at 5).
   3. A contextual prefix and key/value metadata labels.
-- These synthetic additions are prepended to `retrieval_text`, dramatically improving dense vector retrieval hit rates for abstract questions.
+- The contextual prefix is prepended to `retrieval_text`, dramatically improving dense vector retrieval hit rates for abstract questions.
 
 ### 5. Vector Store Upsert (`src/retrieval/qdrant_store.py`)
-- Chunks are embedded using Gemini (`gemini-embedding-001`, task `RETRIEVAL_DOCUMENT`) into 1024-dimensional vectors.
-- Payload objects containing chunk text, source name, status (`ready`), document ID, and version are written to Qdrant.
+- Chunks are embedded using Jina (`jina-embeddings-v5-omni-small`, task `retrieval.passage`, with Gemini `RETRIEVAL_DOCUMENT` fallback) into 1024-dimensional vectors.
+- Payload objects containing chunk text, source name, status (`ready`), document ID, version, position, section, and source coordinates (`doc_id`, `chapter`, `article`) are written to Qdrant.

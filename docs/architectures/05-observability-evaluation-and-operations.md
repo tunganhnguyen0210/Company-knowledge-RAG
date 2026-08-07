@@ -19,8 +19,8 @@ The system captures structured telemetry across three nested span levels:
 ### Trace Modes & Privacy Rules
 Configured via `TRACE_MODE` in `settings.py`:
 - **`off`**: Disables all tracing telemetry.
-- **`metadata-only`** *(Default)*: Sends request IDs, timestamps, latency, token usage, hit counts, chunk identity, and source coordinates to Langfuse, but redacts raw query text, document content, prompts, and answers.
-- **`full`**: Captures complete prompt text, context chunks, raw chunk `text`, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
+- **`metadata-only`**: Sends request IDs, timestamps, latency, token usage, hit counts, chunk identity, and source coordinates to Langfuse, but redacts raw query text, document content, prompts, and answers.
+- **`full`** *(Default)*: Captures complete prompt text, context chunks, raw chunk `text`, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
 
 Retrieval enrichment fields (`retrieval_text`, `summary`,
 `hypothesis_questions`, and `auto_metadata`) are never copied into retrieval
@@ -46,8 +46,9 @@ The system actively traces two primary workflows: the **Query & Generation Pipel
 | **`ingestion`** | Parent Trace | `source_name` (filename), `file_bytes` | Pipeline status & completion time |
 | **`parse`** | Child Span | `source_name`, `file_bytes` | Extracted text size and document parse latency |
 | **`chunking`** | Child Span | `document_id`, `version` | Total chunk count, safe chunk metadata, and `doc_id`/chapter/article coordinates; raw chunk `text` appears only in full mode |
-| **`registry`** | Child Span | `document_id`, `version` | Document metadata registration status |
+| **`enrichment`** | Child Span | `document_id`, `version` | Optional LLM chunk summary, hypothesis questions, and contextual metadata enrichment latency |
 | **`indexing`** | Child Span | `document_id`, `version` | Vector embedding generation & Qdrant insertion latency |
+| **`registry`** | Child Span | `document_id`, `version` | Document metadata registration status |
 
 ## Automated Quality Evaluation Suite
 
@@ -65,6 +66,7 @@ rag-eval generation --from-run <retrieval-run-id>
 rag-eval e2e --limit 10
 rag-eval e2e --limit 10 --ragas
 rag-eval e2e --ingest data/raw/01_2021_ND-CP_283247.docx --limit 10
+rag-eval compare --baseline reports/rag_evaluation/base/report.json --candidate reports/rag_evaluation/cand/report.json
 ```
 
 `data/raw/01_2021_ND-CP_283247.docx` is the raw ingestion identity. Its
@@ -115,15 +117,16 @@ The evaluator computes deterministic metrics before optional Ragas reporting:
 
 | Evaluation Metric | Description | Success Target |
 | --- | --- | --- |
-| **Retrieval Hit Rate** | Ratio of test cases where expected source documents are present in retrieved context. | $\ge 0.85$ |
-| **Groundedness** | Ratio of non-abstained answers supported by citation sources. | $1.00$ |
-| **Citation Coverage** | Percentage of generated sentences containing valid `[C<n>]` citations. | $\ge 0.90$ |
-| **Abstention Precision** | Accuracy of abstaining on unanswerable questions. | $1.00$ |
-| **Average Latency** | Mean end-to-end response time across all golden set questions. | $< 3000\text{ ms}$ |
+| **`coordinate_recall`** | Ratio of required legal source coordinates (`doc_id`, `chapter`, `article`) present in retrieved chunks. | $\ge 0.85$ |
+| **`evidence_recall`** | Ratio of golden context substrings present in retrieved text. | $\ge 0.85$ |
+| **`citation_validity`** | Ratio of cases where cited chunk IDs are valid subsets of retrieved chunks. | $1.00$ |
+| **`citation_coverage`** | Percentage of generated non-abstained sentences containing valid `[C<n>]` citations. | $\ge 0.90$ |
+| **`abstention_accuracy`** | Accuracy of correctly abstaining on unanswerable questions (`GoldenType.UNANSWERABLE`). | $1.00$ |
+| **`end_to_end_latency_ms_p95`** | P95 end-to-end response time across evaluation test cases. | $\le 3000\text{ ms}$ |
 
 ## Operational Health & Readiness Endpoints
 
 - **Liveness Probe (`GET /health`)**:
-  Returns process status and active LLM provider model string (`status: "ok"`).
+  Returns process status and active LLM provider model identity (`{"status": "ok", "active_model": "<model_name>"}`).
 - **Readiness Probe (`GET /ready`)**:
-  Verifies connectivity to Qdrant vector database and LLM provider ready status (`status: "ready"`). Returns HTTP 503 if dependencies are unreachable.
+  Verifies connectivity to Qdrant vector database and probes active provider readiness (`{"status": "ready", "probed_model": "<model_name>"}`). Returns HTTP 503 if dependencies are unreachable.
