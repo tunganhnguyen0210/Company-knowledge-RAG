@@ -22,30 +22,29 @@ Production-oriented Retrieval-Augmented Generation (RAG) system for internal com
 ```mermaid
 flowchart TD
     subgraph Ingestion["📥 Ingestion Pipeline"]
-        A[📄 Raw Documents<br/><i>.md, .txt, .pdf, .docx</i>] --> B[🔍 Parser & NFC Sanitizer]
+        A[📄 Raw Documents<br/><i>.md, .txt, .pdf, .docx</i>] --> B[🔍 Parser & Structure Extractor]
         B --> C[✂️ Section-Aware Chunking]
-        C --> D[✨ LLM Context Enrichment]
-        D --> E[🔤 Dual Indexing]
-        E -->|Dense Embeddings| F[(🗄️ Qdrant Vector DB)]
-        E -->|Lexical Tokens| G[(📚 BM25 Index)]
+        C --> D[✨ Optional LLM Enrichment]
+        D --> E[🔤 Embedding Engine<br/><i>Jina / Gemini 1024d</i>]
+        E -->|Vector Embeddings| F[(🗄️ Qdrant Vector DB)]
+        E -->|Document Metadata| G[(📋 SQLite Registry)]
     end
 
     subgraph Query["💬 Chat & Retrieval Pipeline"]
         H[👤 User Question] --> I[🚀 FastAPI /v1/chat]
-        I --> J[🔎 Hybrid Retrieval Engine]
-        J -->|Vector Search| F
-        J -->|Lexical Search| G
-        F --> K[🔀 RRF Fusion & Re-ranking]
-        G --> K
-        K --> L[🛡️ Provider Failover Router<br/><i>Gemini ➔ OpenRouter ➔ OpenAI</i>]
-        L --> M[📝 Instructor Structured Output]
-        M --> N{✅ Citation Validation}
-        N -->|Valid| O[🎯 Grounded Response]
-        N -->|Invalid / Uncited| P[🚫 Abstention Response]
+        I --> J[🔄 Unified Retriever & Query Transform<br/><i>Multi-Query / HyDE</i>]
+        J --> K[🔎 Parallel Hybrid Search<br/><i>Qdrant Dense + In-Memory BM25</i>]
+        K -->|Dense Hits| F
+        K --> L[🔀 RRF Fusion & Jina Reranking]
+        L --> M[🛡️ Provider Failover Router<br/><i>Gemini ➔ OpenRouter ➔ OpenAI</i>]
+        M --> N[📝 Instructor Structured Schema]
+        N --> O{✅ Citation Range & Grounding Check}
+        O -->|Valid Citations| P[🎯 Grounded Response]
+        O -->|Invalid / Uncited| Q[🚫 Abstention Response]
     end
 
     subgraph Telemetry["📊 Observability"]
-        I -.-> Q[📡 Langfuse Tracing<br/><i>metadata-only</i>]
+        I -.-> R[📡 Langfuse Tracing<br/><i>metadata-only</i>]
     end
 
     style Ingestion fill:#f4f8ff,stroke:#2b6cb0,stroke-width:1px
