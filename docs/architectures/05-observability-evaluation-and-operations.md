@@ -20,12 +20,60 @@ The system captures structured telemetry across three nested span levels:
 Configured via `TRACE_MODE` in `settings.py`:
 - **`off`**: Disables all tracing telemetry.
 - **`metadata-only`**: Sends request IDs, timestamps, latency, token usage, hit counts, chunk identity, and source coordinates to Langfuse, but redacts raw query text, document content, prompts, and answers.
-- **`full`** *(Default)*: Captures complete prompt text, context chunks, raw chunk `text`, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
+- **`full`**: Captures complete prompt text, context chunks, raw chunk `text`, and raw LLM answers. Requires explicit `ALLOW_SENSITIVE_TRACING=true`.
 
-Retrieval enrichment fields (`retrieval_text`, `summary`,
-`hypothesis_questions`, and `auto_metadata`) are never copied into retrieval
-trace payloads in either mode. They improve indexing and ranking, but are not
-trace evidence.
+Retrieval enrichment fields (`retrieval_text`, `summary`, `hypothesis_questions`, and `auto_metadata`) are never copied into retrieval trace payloads in either mode. They improve indexing and ranking, but are not trace evidence.
+
+#### Abstract Payload Comparison (`metadata-only` vs. `full`)
+
+For a user query `"Thủ tục cấp Giấy chứng nhận đăng ký doanh nghiệp thế nào?"`:
+
+**1. `metadata-only` Mode Payload (Enterprise Privacy & GDPR Compliant)**
+```json
+{
+  "name": "generation",
+  "metadata": {
+    "request_id": "req-8f92a4b1",
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "input_tokens": 842,
+    "output_tokens": 156,
+    "latency_ms": 1240,
+    "retrieved_chunk_count": 5,
+    "cited_chunk_ids": ["ecb49b09-v2:10"],
+    "source_coordinates": [
+      { "doc_id": "01_2021_ND-CP_283247.md", "chapter": "Chương I", "article": "Điều 6" }
+    ]
+  }
+}
+```
+*(All sensitive text fields — `question`, `prompt`, `user_prompt`, `system_instruction`, `context`, `text`, `parsed_text`, `response`, `answer` — are stripped before transmission to Langfuse).*
+
+**2. `full` Mode Payload (Staging & Local Debugging)**
+```json
+{
+  "name": "generation",
+  "metadata": {
+    "request_id": "req-8f92a4b1",
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "input_tokens": 842,
+    "output_tokens": 156,
+    "latency_ms": 1240,
+    "question": "Thủ tục cấp Giấy chứng nhận đăng ký doanh nghiệp thế nào?",
+    "context": [
+      {
+        "chunk_id": "ecb49b09-v2:10",
+        "doc_id": "01_2021_ND-CP_283247.md",
+        "article": "Điều 6",
+        "text": "### Điều 6. Giấy chứng nhận đăng ký doanh nghiệp..."
+      }
+    ],
+    "user_prompt": "Answer the question using only the retrieved context...",
+    "answer": "Giấy chứng nhận đăng ký doanh nghiệp được cấp cho doanh nghiệp khi có đủ hồ sơ hợp lệ... [C1]"
+  }
+}
+```
 
 ### Active Traced Pipelines & Payload Schema
 
