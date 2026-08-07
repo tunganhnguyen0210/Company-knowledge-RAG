@@ -14,7 +14,7 @@ flowchart TD
     C -- No --> E{Secondary Provider Configured?}
     E -- Yes --> F[Fallback Provider e.g. OpenRouter / DeepSeek]
     E -- No --> G[Raise GeminiKeysExhausted]
-    
+
     D -- Success 200 OK --> H[Return Result]
     D -- Quota Error 429 / RESOURCE_EXHAUSTED --> I[Mark Key Cooldown e.g. 60s]
     I --> B
